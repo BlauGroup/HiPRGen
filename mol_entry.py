@@ -407,6 +407,14 @@ class MoleculeEntry(MSONable):
     def __str__(self):
         return self.__repr__()
 
+    def __eq__(self, other):
+        if type(self) == type(other):
+            return str(self) == str(other)
+        else:
+            return False
+
+
+
 
 class MoleculeEntryError(Exception):
     def __init__(self, message):
