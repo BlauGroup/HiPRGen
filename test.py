@@ -1,6 +1,7 @@
 from monty.serialization import loadfn, dumpfn
 from species_filter import *
 from bucketing import *
+from reaction_gen import *
 
 class bcolors:
     PASS = '\u001b[32;1m'
@@ -23,9 +24,14 @@ def test_species_filter(ronald_LIBE):
 
 def test_bucketing(mol_entries):
     b = Bucket(mol_entries, './scratch/buckets.sqlite')
+    # TODO: write some test logic
 
+def test_reaction_gen(mol_entries):
+    d = dispatcher(mol_entries, './scratch/buckets.sqlite', './scratch/rn.sqlite')
+    # TODO: write some test logic
 
 ronald_LIBE = loadfn("./data/ronald_LIBE.json")
 
 ronald_mol_entries = test_species_filter(ronald_LIBE)
 test_bucketing(ronald_mol_entries)
+test_reaction_gen(ronald_mol_entries)

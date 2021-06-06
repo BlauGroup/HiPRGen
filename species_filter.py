@@ -5,10 +5,10 @@ from mol_entry import MoleculeEntry
 Phase 1: species filtering
 input: a list of dataset entries
 output: a filtered list of mol_entries with fixed indices
-description: this is where we remove isomorphic species, and do other forms of filtering. species_filter_decision_tree contains the filters
+description: this is where we remove isomorphic species, and do other forms of filtering. species_filter contains the filters
 """
 
-def species_filter(dataset_entries, species_filter_decision_tree):
+def species_filter(dataset_entries, species_filter):
     mol_entries = [ MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
 
     # TODO implement filtering
