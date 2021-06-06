@@ -49,11 +49,11 @@ insert_reaction = """
 
 def dispatcher(mol_entries, bucket_db, rn_db, commit_freq=1000):
     reaction_queue = Queue()
+    processes = {}
 
     bucket_con = sqlite3.connect(bucket_db)
     bucket_cur = bucket_con.cursor()
 
-    processes = {}
     res = bucket_cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
     for name in res:
         table = name[0]
