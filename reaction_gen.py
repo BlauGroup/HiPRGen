@@ -4,6 +4,8 @@ from multiprocessing import Process, Queue
 import sqlite3
 
 """
+Phases 3 & 4 run in paralell.
+
 Phase 3: reaction gen and filtering
 input: a bucket labeled by atom count
 output: a list of reactions from that bucket
