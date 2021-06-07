@@ -3,6 +3,7 @@ from itertools import combinations
 from functools import partial
 from multiprocessing import Process, Queue
 from enum import Enum
+from constants import *
 import sqlite3
 
 """
@@ -82,6 +83,16 @@ def run_decision_tree(reaction, mol_entries, decision_tree):
         print(node)
         raise Exception("unexpected node type reached")
 
+def default_rate(dG):
+    kT = KB * ROOM_TEMP
+    max_rate = kT / PLANCK
+
+    if dG < 0:
+        rate = max_rate
+    else:
+        rate = max_rate * math.exp(- dG / kT)
+
+    return rate
 
 def dG_above_threshold(threshold, reaction, mol_entries):
     dG = 0.0
@@ -98,6 +109,7 @@ def dG_above_threshold(threshold, reaction, mol_entries):
         return True
     else:
         reaction['dG'] = dG
+        reaction['rate'] = default_rate(dG)
         return False
 
 def default_true(reaction, mols):
@@ -228,17 +240,13 @@ def reaction_filter(mol_entries, bucket_db, table, reaction_queue, decision_tree
             'reactants' : reactants,
             'products' : products,
             'number_of_reactants' : len([i for i in reactants if i != -1]),
-            'number_of_products' : len([i for i in products if i != -1]),
-            'rate' : 0.0
-        }
+            'number_of_products' : len([i for i in products if i != -1])}
 
         reverse_reaction = {
             'reactants' : reaction['products'],
             'products' : reaction['reactants'],
             'number_of_reactants' : reaction['number_of_products'],
-            'number_of_products' : reaction['number_of_reactants'],
-            'rate' : 0.0
-        }
+            'number_of_products' : reaction['number_of_reactants']}
 
         if run_decision_tree(reaction, mol_entries, decision_tree):
             reaction_queue.put(reaction)
