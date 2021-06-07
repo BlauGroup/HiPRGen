@@ -1,5 +1,6 @@
 from mol_entry import MoleculeEntry
 from itertools import combinations
+from functools import partial
 from multiprocessing import Process, Queue
 from enum import Enum
 import sqlite3
@@ -52,6 +53,64 @@ description: the worker processes from phase 3 are sending their reactions to th
 """
 
 
+
+### decision tree
+
+class Terminal(Enum):
+    KEEP = 1
+    DISCARD = -1
+
+def run_decision_tree(reaction, mol_entries, decision_tree):
+    node = decision_tree
+
+    while type(node) == list:
+        next_node = None
+        for (question, new_node) in node:
+            if question(reaction, mol_entries):
+                next_node = new_node
+                break
+
+        node = next_node
+
+
+    if type(node) == Terminal:
+        if node == Terminal.KEEP:
+            return True
+        else:
+            return False
+    else:
+        print(node)
+        raise Exception("unexpected node type reached")
+
+
+def dG_above_threshold(threshold, reaction, mol_entries):
+    dG = 0.0
+
+    for index in reaction['reactants']:
+        if index != -1:
+            dG -= mol_entries[index].get_free_energy()
+
+    for index in reaction['products']:
+        if index != -1:
+            dG += mol_entries[index].get_free_energy()
+
+    if dG > threshold:
+        return True
+    else:
+        reaction['dG'] = dG
+        return False
+
+def default_true(reaction, mols):
+    return True
+
+standard_decision_tree = [
+    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+    (default_true, Terminal.KEEP)
+    ]
+
+
+### dispatcher
+
 def list_or(a_list):
     return True in a_list
 
@@ -85,7 +144,7 @@ insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
-def dispatcher(mol_entries, bucket_db, rn_db, commit_freq=1000):
+def dispatcher(mol_entries, bucket_db, rn_db, decision_tree, commit_freq=1000):
     reaction_queue = Queue()
     processes = {}
 
@@ -101,7 +160,8 @@ def dispatcher(mol_entries, bucket_db, rn_db, commit_freq=1000):
                 mol_entries,
                 bucket_db,
                 table,
-                reaction_queue))
+                reaction_queue,
+                decision_tree))
 
         processes[table] = p
 
@@ -151,9 +211,9 @@ def dispatcher(mol_entries, bucket_db, rn_db, commit_freq=1000):
     rn_con.close()
 
 
+### filter worker
 
-
-def reaction_filter(mol_entries, bucket_db, table, reaction_queue):
+def reaction_filter(mol_entries, bucket_db, table, reaction_queue, decision_tree):
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
     bucket = []
@@ -169,10 +229,22 @@ def reaction_filter(mol_entries, bucket_db, table, reaction_queue):
             'products' : products,
             'number_of_reactants' : len([i for i in reactants if i != -1]),
             'number_of_products' : len([i for i in products if i != -1]),
-            'rate' : 0.0,
-            'dG' : 0.0 }
+            'rate' : 0.0
+        }
+
+        reverse_reaction = {
+            'reactants' : reaction['products'],
+            'products' : reaction['reactants'],
+            'number_of_reactants' : reaction['number_of_products'],
+            'number_of_products' : reaction['number_of_reactants'],
+            'rate' : 0.0
+        }
+
+        if run_decision_tree(reaction, mol_entries, decision_tree):
+            reaction_queue.put(reaction)
+
+        if run_decision_tree(reverse_reaction, mol_entries, decision_tree):
+            reaction_queue.put(reverse_reaction)
 
 
-
-        reaction_queue.put(reaction)
 
