@@ -17,7 +17,7 @@ description: Loop through all possible reactions in the bucket and apply the dec
 
 The reaction decision tree:
 
-A question is a function q(reaction, mol_entries) -> Bool
+A question is a function q(reaction, mol_entries, params) -> Bool
 
 reaction is a dict:
 
@@ -62,13 +62,13 @@ class Terminal(Enum):
     KEEP = 1
     DISCARD = -1
 
-def run_decision_tree(reaction, mol_entries, decision_tree):
+def run_decision_tree(reaction, mol_entries, params, decision_tree):
     node = decision_tree
 
     while type(node) == list:
         next_node = None
         for (question, new_node) in node:
-            if question(reaction, mol_entries):
+            if question(reaction, mol_entries, params):
                 next_node = new_node
                 break
 
@@ -84,7 +84,7 @@ def run_decision_tree(reaction, mol_entries, decision_tree):
         print(node)
         raise Exception("unexpected node type reached")
 
-def default_rate(dG):
+def default_rate(dG, params):
     kT = KB * ROOM_TEMP
     max_rate = kT / PLANCK
 
@@ -95,7 +95,7 @@ def default_rate(dG):
 
     return rate
 
-def dG_above_threshold(threshold, reaction, mol_entries):
+def dG_above_threshold(threshold, reaction, mol_entries, params):
     dG = 0.0
 
     for index in reaction['reactants']:
@@ -110,10 +110,10 @@ def dG_above_threshold(threshold, reaction, mol_entries):
         return True
     else:
         reaction['dG'] = dG
-        reaction['rate'] = default_rate(dG)
+        reaction['rate'] = default_rate(dG, params)
         return False
 
-def default_true(reaction, mols):
+def default_true(reaction, mols, params):
     return True
 
 standard_decision_tree = [
@@ -157,7 +157,12 @@ insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
-def dispatcher(mol_entries, bucket_db, rn_db, decision_tree, commit_freq=1000):
+def dispatcher(mol_entries,
+               bucket_db,
+               rn_db,
+               decision_tree,
+               params=None,
+               commit_freq=1000):
     reaction_queue = Queue()
     processes = {}
 
@@ -174,6 +179,7 @@ def dispatcher(mol_entries, bucket_db, rn_db, decision_tree, commit_freq=1000):
                 bucket_db,
                 table,
                 reaction_queue,
+                params,
                 decision_tree))
 
         processes[table] = p
@@ -226,7 +232,13 @@ def dispatcher(mol_entries, bucket_db, rn_db, decision_tree, commit_freq=1000):
 
 ### filter worker
 
-def reaction_filter(mol_entries, bucket_db, table, reaction_queue, decision_tree):
+def reaction_filter(mol_entries,
+                    bucket_db,
+                    table,
+                    reaction_queue,
+                    params,
+                    decision_tree):
+
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
     bucket = []
@@ -249,10 +261,10 @@ def reaction_filter(mol_entries, bucket_db, table, reaction_queue, decision_tree
             'number_of_reactants' : reaction['number_of_products'],
             'number_of_products' : reaction['number_of_reactants']}
 
-        if run_decision_tree(reaction, mol_entries, decision_tree):
+        if run_decision_tree(reaction, mol_entries, params, decision_tree):
             reaction_queue.put(reaction)
 
-        if run_decision_tree(reverse_reaction, mol_entries, decision_tree):
+        if run_decision_tree(reverse_reaction, mol_entries, params, decision_tree):
             reaction_queue.put(reverse_reaction)
 
 
