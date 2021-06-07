@@ -5,6 +5,7 @@ from multiprocessing import Process, Queue
 from enum import Enum
 from constants import *
 import sqlite3
+import math
 
 """
 Phases 3 & 4 run in paralell.
