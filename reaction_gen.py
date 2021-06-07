@@ -25,9 +25,14 @@ reaction is a dict:
             'reactants' : reactant indices
             'products' : product indices,
             'number_of_reactants',
-            'number_of_products',
-            'rate',
-            'dG'}
+            'number_of_products'}
+
+params is a dict:
+
+        params = {
+           'temp'
+           'electron_free_energy'
+        }
 
 The lists of reactant and product indices always have length two. We use -1 when there is a only a single reactant or product.
 
