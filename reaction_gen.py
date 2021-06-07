@@ -1,6 +1,7 @@
 from mol_entry import MoleculeEntry
 from itertools import combinations
 from multiprocessing import Process, Queue
+from enum import Enum
 import sqlite3
 
 """
@@ -9,13 +10,47 @@ Phases 3 & 4 run in paralell.
 Phase 3: reaction gen and filtering
 input: a bucket labeled by atom count
 output: a list of reactions from that bucket
-description: Loop through all possible reactions in the bucket and apply a list of filters. This will run in parallel over each bucket. The filters are organized into a decision tree so we don't need to run expensive filters for every single reaction (the expensive ones occur deep in the tree). Filters will be writable by hand, or we could have machine learning filters. Also, the reaction rate will be set during this phase so need to percolate through the decision tree
+description: Loop through all possible reactions in the bucket and apply the decision tree. This will run in parallel over each bucket.
+
+The decision tree:
+
+A question is a function q(reaction, mol_entries) -> Bool
+
+reaction is a dict:
+
+        reaction = {
+            'reactants' : reactant indices
+            'products' : product indices,
+            'number_of_reactants',
+            'number_of_products',
+            'rate',
+            'dG'}
+
+The lists of reactant and product indices always have length two. We use -1 when there is a only a single reactant or product.
+
+The questions can also set the rate / dG
+
+Questions will be writable by hand, or we could have machine learning filters.
+
+A node is either a Terminal or a non empty list [(question, node)]
+
+class Terminal(Enum):
+    KEEP = 1
+    DISCARD = -1
+
+For the return value of a question, True means travel to this node and False means try next question in the list.
+
+for non terminal nodes, it is an error if every question returns False. i.e getting stuck at a non terminal node is an error.
+
+Once a Terminal node is reached, it tells us whether to keep or discard the reaction.
+
 
 Phase 4: collating and indexing
-input: all the outputs of phase 3 as they are generated (so phase 3 and 4 will be running at the same time)
-output: the final list of reactions (or db assuming it is to big to hold in memory)
-description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3, so we will actually get a massive performance boost for writing to the DB also
+input: all the outputs of phase 3 as they are generated
+output: reaction network database
+description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3 which means we don't need extra index tables on the db.
 """
+
 
 def list_or(a_list):
     return True in a_list
