@@ -12,7 +12,7 @@ input: a bucket labeled by atom count
 output: a list of reactions from that bucket
 description: Loop through all possible reactions in the bucket and apply the decision tree. This will run in parallel over each bucket.
 
-The decision tree:
+The reaction decision tree:
 
 A question is a function q(reaction, mol_entries) -> Bool
 
@@ -54,6 +54,7 @@ description: the worker processes from phase 3 are sending their reactions to th
 
 def list_or(a_list):
     return True in a_list
+
 
 create_metadata_table = """
     CREATE TABLE metadata (
