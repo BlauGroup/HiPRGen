@@ -2,11 +2,18 @@ from monty.serialization import loadfn, dumpfn
 from species_filter import *
 from bucketing import *
 from reaction_gen import *
+import os
 
 class bcolors:
     PASS = '\u001b[32;1m'
     FAIL = '\u001b[31;1m'
     ENDC = '\u001b[0m'
+
+if os.path.isfile('./scratch/buckets.sqlite'):
+    os.remove('./scratch/buckets.sqlite')
+
+if os.path.isfile('./scratch/rn.sqlite'):
+    os.remove('./scratch/rn.sqlite')
 
 
 
@@ -35,3 +42,5 @@ ronald_LIBE = loadfn("./data/ronald_LIBE.json")
 ronald_mol_entries = test_species_filter(ronald_LIBE)
 test_bucketing(ronald_mol_entries)
 test_reaction_gen(ronald_mol_entries)
+
+
