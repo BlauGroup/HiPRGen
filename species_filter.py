@@ -107,10 +107,10 @@ def run_decision_tree(mol_entry, decision_tree):
         raise Exception("unexpected node type reached")
 
 
-default_decision_tree = Terminal.KEEP
+standard_mol_decision_tree = Terminal.KEEP
 
 def species_filter(dataset_entries,
-                   species_decision_tree,
+                   species_decision_tree=standard_mol_decision_tree,
                    number_of_processes=8):
 
     mol_entries_unfiltered = [
@@ -126,7 +126,7 @@ def species_filter(dataset_entries,
 
     mol_entries = [
         m for m in mol_entries_no_iso
-        if run_decision_tree(m, default_decision_tree)]
+        if run_decision_tree(m, species_decision_tree)]
 
 
     for i, e in enumerate(mol_entries):

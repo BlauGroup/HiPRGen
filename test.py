@@ -18,7 +18,7 @@ if os.path.isfile('./scratch/rn.sqlite'):
 
 
 def test_species_filter(ronald_LIBE):
-    ronald_mol_entries = species_filter(ronald_LIBE, default_decision_tree)
+    ronald_mol_entries = species_filter(ronald_LIBE)
     ronald_mol_entries_from_disk = loadfn("./data/ronald_mol_entries.json")
 
 
@@ -34,7 +34,7 @@ def test_bucketing(mol_entries):
     # TODO: write some test logic
 
 def test_reaction_gen(mol_entries):
-    d = dispatcher(mol_entries, './scratch/buckets.sqlite', './scratch/rn.sqlite', standard_decision_tree)
+    d = dispatcher(mol_entries, './scratch/buckets.sqlite', './scratch/rn.sqlite')
     # TODO: write some test logic
 
 ronald_LIBE = loadfn("./data/ronald_LIBE.json")

@@ -122,7 +122,7 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
 def default_true(reaction, mols, params):
     return True
 
-standard_decision_tree = [
+standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
@@ -166,7 +166,7 @@ insert_reaction = """
 def dispatcher(mol_entries,
                bucket_db,
                rn_db,
-               decision_tree,
+               reaction_decision_tree=standard_reaction_decision_tree,
                params={
                    'temperature' : ROOM_TEMP,
                    'electron_free_energy' : -1.4
@@ -196,7 +196,7 @@ def dispatcher(mol_entries,
                 table_queue,
                 reaction_queue,
                 params,
-                decision_tree))
+                reaction_decision_tree))
 
         processes[pid] = p
 
@@ -213,7 +213,9 @@ def dispatcher(mol_entries,
     reaction_index = 0
 
     while living_children:
-        if reaction_queue.empty():
+        # if reaction queue and table queue are empty, enter a spin lock to
+        # wait for spawned children to exit.
+        if reaction_queue.empty() and table_queue.empty():
             living_bools = [processes[pid].is_alive() for pid in processes]
             living_children = list_or(living_bools)
 
@@ -258,9 +260,16 @@ def reaction_filter(mol_entries,
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
 
+    # empty is non blocking, and get with a timeout can return empty even when the queue is not empty.
+    # To overcome this, we get the next table with a timeout and if we run out of time, then explicitly check whether the queue is empty again.
     while not table_queue.empty():
 
-        table = table_queue.get()
+        try:
+            table = table_queue.get(timeout=0.1)
+        except:
+            continue
+
+
         bucket = []
         res = cur.execute("SELECT * FROM " + table)
         for pair in res:
