@@ -18,7 +18,7 @@ if os.path.isfile('./scratch/rn.sqlite'):
 
 
 def test_species_filter(ronald_LIBE):
-    ronald_mol_entries = species_filter(ronald_LIBE, None)
+    ronald_mol_entries = species_filter(ronald_LIBE, default_decision_tree)
     ronald_mol_entries_from_disk = loadfn("./data/ronald_mol_entries.json")
 
 
