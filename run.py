@@ -10,6 +10,6 @@ if len(sys.argv) != 4:
 
 
 database_entries = loadfn(sys.argv[1])
-mol_entries = species_filter(database_entries, default_mol_decision_tree)
+mol_entries = species_filter(database_entries)
 Bucket(mol_entries, sys.argv[2])
-dispatcher(mol_entries, sys.argv[2], sys.argv[3], standard_decision_tree)
+dispatcher(mol_entries, sys.argv[2], sys.argv[3])

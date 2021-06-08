@@ -119,11 +119,59 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
         reaction['rate'] = default_rate(dG, params)
         return False
 
+def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
+    reactant_bond_count = {}
+    for reactant_index in reaction['reactants']:
+        if reactant_index != -1:
+            mol = mol_entries[reactant_index]
+            species = mol.species
+            bonds = mol.bonds
+            for bond in bonds:
+                species_0 = species[bond[0]]
+                species_1 = species[bond[1]]
+                tag = frozenset([species_0, species_1])
+                if tag in reactant_bond_count:
+                    reactant_bond_count[tag] += 1
+                else:
+                    reactant_bond_count[tag] = 1
+
+    product_bond_count = {}
+    for product_index in reaction['products']:
+        if product_index != -1:
+            mol = mol_entries[product_index]
+            species = mol.species
+            bonds = mol.bonds
+            for bond in bonds:
+                species_0 = species[bond[0]]
+                species_1 = species[bond[1]]
+                tag = frozenset([species_0, species_1])
+                if tag in product_bond_count:
+                    reactant_bond_count[tag] += 1
+                else:
+                    reactant_bond_count[tag] = 1
+
+    count = 0
+    for tag in reactant_bond_count:
+        if reactant_bond_count.get(tag, 0) != product_bond_count.get(tag,0):
+            count += 1
+
+    if count > threshold:
+        return True
+    else:
+        return False
+
+
+
+
 def default_true(reaction, mols, params):
     return True
 
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+    # if two bonds or less are breaking and forming
+    # then <= 4 of the tallies are going to be different.
+
+    (partial(bond_count_diff_above_threshold, 4), Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
 
