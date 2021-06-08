@@ -300,6 +300,3 @@ def reaction_filter(mol_entries,
                                  params,
                                  decision_tree):
                 reaction_queue.put(reverse_reaction)
-
-
-
