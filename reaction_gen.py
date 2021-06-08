@@ -265,7 +265,8 @@ def reaction_filter(mol_entries,
     while not table_queue.empty():
 
         try:
-            table = table_queue.get(timeout=0.1)
+            # timeout is 1 centisecond
+            table = table_queue.get(timeout=0.01)
         except:
             continue
 
