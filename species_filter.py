@@ -109,13 +109,19 @@ def run_decision_tree(mol_entry, decision_tree):
 
 default_decision_tree = Terminal.KEEP
 
-def species_filter(dataset_entries, species_decision_tree, number_of_processes=8):
+def species_filter(dataset_entries,
+                   species_decision_tree,
+                   number_of_processes=8):
+
     mol_entries_unfiltered = [
         MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
 
     # currently, take lowest energy mol in each iso class
+    def collapse_isomorphism_class(g):
+        return min(g,key=lambda x: x.get_free_energy())
+
     mol_entries_no_iso = [
-        min(g,key=lambda x: x.get_free_energy())
+        collapse_isomorphism_class(g)
         for g in groupby_isomorphism(mol_entries_unfiltered, number_of_processes)]
 
     mol_entries = [

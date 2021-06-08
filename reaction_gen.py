@@ -171,8 +171,11 @@ def dispatcher(mol_entries,
                    'temperature' : ROOM_TEMP,
                    'electron_free_energy' : -1.4
                    },
-               commit_freq=1000):
+               commit_freq=1000,
+               number_of_processes=8
+               ):
     reaction_queue = Queue()
+    table_queue = Queue()
     processes = {}
 
     bucket_con = sqlite3.connect(bucket_db)
@@ -181,17 +184,21 @@ def dispatcher(mol_entries,
     res = bucket_cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
     for name in res:
         table = name[0]
+        table_queue.put(table)
+
+    for pid in range(number_of_processes):
+
         p = Process(
             target=reaction_filter,
             args=(
                 mol_entries,
                 bucket_db,
-                table,
+                table_queue,
                 reaction_queue,
                 params,
                 decision_tree))
 
-        processes[table] = p
+        processes[pid] = p
 
     rn_con = sqlite3.connect(rn_db)
     rn_cur = rn_con.cursor()
@@ -199,15 +206,15 @@ def dispatcher(mol_entries,
     rn_cur.execute(create_reactions_table)
     rn_con.commit()
 
-    for table in processes:
-        processes[table].start()
+    for pid in processes:
+        processes[pid].start()
 
     living_children = True
     reaction_index = 0
 
     while living_children:
         if reaction_queue.empty():
-            living_bools = [processes[table].is_alive() for table in processes]
+            living_bools = [processes[pid].is_alive() for pid in processes]
             living_children = list_or(living_bools)
 
         else:
@@ -243,38 +250,46 @@ def dispatcher(mol_entries,
 
 def reaction_filter(mol_entries,
                     bucket_db,
-                    table,
+                    table_queue,
                     reaction_queue,
                     params,
                     decision_tree):
 
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
-    bucket = []
 
+    while not table_queue.empty():
 
-    res = cur.execute("SELECT * FROM " + table)
-    for pair in res:
-        bucket.append(pair)
+        table = table_queue.get()
+        bucket = []
+        res = cur.execute("SELECT * FROM " + table)
+        for pair in res:
+            bucket.append(pair)
 
-    for (reactants, products) in combinations(bucket, 2):
-        reaction = {
-            'reactants' : reactants,
-            'products' : products,
-            'number_of_reactants' : len([i for i in reactants if i != -1]),
-            'number_of_products' : len([i for i in products if i != -1])}
+        for (reactants, products) in combinations(bucket, 2):
+            reaction = {
+                'reactants' : reactants,
+                'products' : products,
+                'number_of_reactants' : len([i for i in reactants if i != -1]),
+                'number_of_products' : len([i for i in products if i != -1])}
 
-        reverse_reaction = {
-            'reactants' : reaction['products'],
-            'products' : reaction['reactants'],
-            'number_of_reactants' : reaction['number_of_products'],
-            'number_of_products' : reaction['number_of_reactants']}
+            reverse_reaction = {
+                'reactants' : reaction['products'],
+                'products' : reaction['reactants'],
+                'number_of_reactants' : reaction['number_of_products'],
+                'number_of_products' : reaction['number_of_reactants']}
 
-        if run_decision_tree(reaction, mol_entries, params, decision_tree):
-            reaction_queue.put(reaction)
+            if run_decision_tree(reaction,
+                                 mol_entries,
+                                 params,
+                                 decision_tree):
+                reaction_queue.put(reaction)
 
-        if run_decision_tree(reverse_reaction, mol_entries, params, decision_tree):
-            reaction_queue.put(reverse_reaction)
+            if run_decision_tree(reverse_reaction,
+                                 mol_entries,
+                                 params,
+                                 decision_tree):
+                reaction_queue.put(reverse_reaction)
 
 
 
