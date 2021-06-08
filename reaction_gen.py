@@ -260,7 +260,7 @@ def reaction_filter(mol_entries,
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
 
-    # empty is non blocking so it can return non empty while another processes is taking the last element, and get with a timeout can return empty even when the queue is not empty.
+    # empty is non blocking so it can return non empty while another processes is taking the last element, and get with a timeout can return empty even when the queue is not empty (if a bunch of other processes are reading from the queue and also probably other reasons)
     # To overcome this, we get the next table with a timeout and if we run out of time, then explicitly check whether the queue is empty again.
     while not table_queue.empty():
 
