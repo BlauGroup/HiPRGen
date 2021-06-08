@@ -29,14 +29,15 @@ reaction is a dict:
 
 params is a dict:
 
+
         params = {
-           'temp'
+           'temperature'
            'electron_free_energy'
         }
 
 The lists of reactant and product indices always have length two. We use -1 when there is a only a single reactant or product.
 
-The questions can also set the rate / dG
+The questions can also set reaction['rate'] and reaction['dG']
 
 Questions will be writable by hand, or we could have machine learning filters.
 
@@ -90,7 +91,7 @@ def run_decision_tree(reaction, mol_entries, params, decision_tree):
         raise Exception("unexpected node type reached")
 
 def default_rate(dG, params):
-    kT = KB * ROOM_TEMP
+    kT = KB * params['temperature']
     max_rate = kT / PLANCK
 
     if dG < 0:
@@ -166,7 +167,10 @@ def dispatcher(mol_entries,
                bucket_db,
                rn_db,
                decision_tree,
-               params=None,
+               params={
+                   'temperature' : ROOM_TEMP,
+                   'electron_free_energy' : -1.4
+                   },
                commit_freq=1000):
     reaction_queue = Queue()
     processes = {}
