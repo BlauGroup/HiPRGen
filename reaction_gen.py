@@ -341,9 +341,13 @@ def reaction_filter(mol_entries,
             }
 
             # reaction atom mapping is one of the most expensive operations we do
-            # it takes 0.02 seconds. If we compute the atom mapping for a reaction
+            # it takes ~0.02 seconds. If we compute the atom mapping for a reaction
             # we don't need to also compute if for the reverse reaction, so we couple
             # reaction / reverse pairs to facilitate that.
+
+            # this attribute is only here for performance reasons. Question functions
+            # should absolutely not be touching it unless they are about to compute
+            # an atom mapping
             reaction['reverse'] = reverse_reaction
 
             if run_decision_tree(reaction,
