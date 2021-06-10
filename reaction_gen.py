@@ -331,11 +331,20 @@ def reaction_filter(mol_entries,
                 'number_of_reactants' : len([i for i in reactants if i != -1]),
                 'number_of_products' : len([i for i in products if i != -1])}
 
+
             reverse_reaction = {
                 'reactants' : reaction['products'],
                 'products' : reaction['reactants'],
                 'number_of_reactants' : reaction['number_of_products'],
-                'number_of_products' : reaction['number_of_reactants']}
+                'number_of_products' : reaction['number_of_reactants'],
+                'reverse' : reaction
+            }
+
+            # reaction atom mapping is one of the most expensive operations we do
+            # it takes 0.02 seconds. If we compute the atom mapping for a reaction,
+            # we don't need to also compute if for the reverse reaction, so we couple
+            # reaction / reverse pairs to facilitate that.
+            reaction['reverse'] = reverse_reaction
 
             if run_decision_tree(reaction,
                                  mol_entries,
