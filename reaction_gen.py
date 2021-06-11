@@ -68,13 +68,24 @@ class Terminal(Enum):
     KEEP = 1
     DISCARD = -1
 
-def run_decision_tree(reaction, mol_entries, params, decision_tree):
+def run_decision_tree(
+        reaction,
+        mol_entries,
+        params,
+        decision_tree,
+        decision_pathway=None):
     node = decision_tree
 
     while type(node) == list:
         next_node = None
         for (question, new_node) in node:
             if question(reaction, mol_entries, params):
+
+                # if logging pathway is a list, append the question which
+                # answered true i.e the edge we follow
+                if decision_pathway is not None:
+                    decision_pathway.append(question)
+
                 next_node = new_node
                 break
 
