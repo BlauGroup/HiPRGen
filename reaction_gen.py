@@ -166,15 +166,70 @@ def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
     else:
         return False
 
+def star_count_diff_above_threshold(
+        threshold,
+        reaction,
+        mol_entries,
+        params):
+    reactant_0_index = reaction['reactants'][0]
+    reactant_1_index = reaction['reactants'][1]
+    product_0_index = reaction['products'][0]
+    product_1_index = reaction['products'][1]
+
+    if reactant_0_index != -1:
+        reactant_0_stars = mol_entries[reactant_0_index].aux_data['stars']
+    else:
+        reactant_0_stars = {}
+
+    if reactant_1_index != -1:
+        reactant_1_stars = mol_entries[reactant_1_index].aux_data['stars']
+    else:
+        reactant_1_stars = {}
+
+    if product_0_index != -1:
+        product_0_stars = mol_entries[product_0_index].aux_data['stars']
+    else:
+        product_0_stars = {}
+
+    if product_1_index != -1:
+        product_1_stars = mol_entries[product_0_index].aux_data['stars']
+    else:
+        product_1_stars = {}
+
+
+    stars = set().union(*[
+        set(reactant_0_stars.keys()),
+        set(reactant_1_stars.keys()),
+        set(product_0_stars.keys()),
+        set(product_1_stars.keys())])
+
+    count = 0
+
+    for star in stars:
+        count += abs(reactant_0_stars.get(star, 0) +
+                     reactant_1_stars.get(star, 0) -
+                     product_0_stars.get(star, 0) -
+                     product_0_stars.get(star, 0))
+
+    if count > threshold:
+        return True
+    else:
+        return False
+
+
+
 def default_true(reaction, mols, params):
     return True
 
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
-    # if two bonds or less are breaking and forming
-    # then <= 4 of the tallies are going to be different.
 
+    # when two covalent bonds change, the bond count diff must be <= 4
     (partial(bond_count_diff_above_threshold, 4), Terminal.DISCARD),
+
+    # when two covalent bonds change, the star count diff must be <= 3
+    # assuming that both bonds share an atom
+    (partial(star_count_diff_above_threshold, 3), Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
 
