@@ -106,8 +106,68 @@ def run_decision_tree(mol_entry, decision_tree):
         print(node)
         raise Exception("unexpected node type reached")
 
+#TODO: make this more general in terms of metals
+def add_covalent_bond_count(mol_entry):
+    mol_bond_count = {}
+    species = mol_entry.species
+    bonds = mol_entry.bonds
+    for bond in bonds:
+        species_0 = species[bond[0]]
+        species_1 = species[bond[1]]
+        tag = frozenset([species_0, species_1])
+        if 'Li' not in tag:
+            if tag in mol_bond_count:
+                mol_bond_count[tag] += 1
+            else:
+                mol_bond_count[tag] = 1
 
-standard_mol_decision_tree = Terminal.KEEP
+    mol_entry.aux_data['bond_count'] = mol_bond_count
+    return False
+
+def add_covalent_stars(mol_entry):
+    species = mol_entry.species
+    bonds = mol_entry.bonds
+    stars = {}
+
+    for i in range(mol_entry.num_atoms):
+        if species[i] != 'Li':
+            end_counts = {}
+
+            for bond in bonds:
+                if i in bond:
+                    if bond[0] == i:
+                        end = species[bond[1]]
+                    if bond[1] == i:
+                        end = species[bond[0]]
+
+                    if end in end_counts:
+                        end_counts[end] += 1
+                    else:
+                        end_counts[end] = 1
+
+            star = (species[i], frozenset(end_counts.items()))
+            if star in stars:
+                stars[star] += 1
+            else:
+                stars[star] = 1
+
+    mol_entry.aux_data['stars'] = stars
+    return False
+
+
+
+
+    return False
+
+def default_true(mols):
+    return True
+
+standard_mol_decision_tree = [
+    # add_covalent_bond_count always returns False
+    (add_covalent_bond_count,Terminal.KEEP),
+    (add_covalent_stars, Terminal.KEEP),
+    (default_true, Terminal.KEEP)
+    ]
 
 def species_filter(dataset_entries,
                    species_decision_tree=standard_mol_decision_tree,

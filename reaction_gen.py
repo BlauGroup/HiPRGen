@@ -120,48 +120,51 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
         return False
 
 def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
-    reactant_bond_count = {}
-    for reactant_index in reaction['reactants']:
-        if reactant_index != -1:
-            mol = mol_entries[reactant_index]
-            species = mol.species
-            bonds = mol.bonds
-            for bond in bonds:
-                species_0 = species[bond[0]]
-                species_1 = species[bond[1]]
-                tag = frozenset([species_0, species_1])
-                if tag in reactant_bond_count:
-                    reactant_bond_count[tag] += 1
-                else:
-                    reactant_bond_count[tag] = 1
 
-    product_bond_count = {}
-    for product_index in reaction['products']:
-        if product_index != -1:
-            mol = mol_entries[product_index]
-            species = mol.species
-            bonds = mol.bonds
-            for bond in bonds:
-                species_0 = species[bond[0]]
-                species_1 = species[bond[1]]
-                tag = frozenset([species_0, species_1])
-                if tag in product_bond_count:
-                    reactant_bond_count[tag] += 1
-                else:
-                    reactant_bond_count[tag] = 1
+    reactant_0_index = reaction['reactants'][0]
+    reactant_1_index = reaction['reactants'][1]
+    product_0_index = reaction['products'][0]
+    product_1_index = reaction['products'][1]
+
+    if reactant_0_index != -1:
+        reactant_0_bond_count = mol_entries[reactant_0_index].aux_data['bond_count']
+    else:
+        reactant_0_bond_count = {}
+
+    if reactant_1_index != -1:
+        reactant_1_bond_count = mol_entries[reactant_1_index].aux_data['bond_count']
+    else:
+        reactant_1_bond_count = {}
+
+    if product_0_index != -1:
+        product_0_bond_count = mol_entries[product_0_index].aux_data['bond_count']
+    else:
+        product_0_bond_count = {}
+
+    if product_1_index != -1:
+        product_1_bond_count = mol_entries[product_0_index].aux_data['bond_count']
+    else:
+        product_1_bond_count = {}
+
+
+    tags = set().union(*[
+        set(reactant_0_bond_count.keys()),
+        set(reactant_1_bond_count.keys()),
+        set(product_0_bond_count.keys()),
+        set(product_1_bond_count.keys())])
 
     count = 0
-    for tag in reactant_bond_count:
-        if reactant_bond_count.get(tag, 0) != product_bond_count.get(tag,0):
-            count += 1
+
+    for tag in tags:
+        count += abs(reactant_0_bond_count.get(tag, 0) +
+                     reactant_1_bond_count.get(tag, 0) -
+                     product_0_bond_count.get(tag, 0) -
+                     product_0_bond_count.get(tag, 0))
 
     if count > threshold:
         return True
     else:
         return False
-
-
-
 
 def default_true(reaction, mols, params):
     return True
