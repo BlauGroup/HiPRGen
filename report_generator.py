@@ -43,7 +43,7 @@ class ReportGenerator:
     def __init__(
             self,
             mol_entries,
-            mol_pictures_folder=None,
-            report_folder):
+            mol_pictures_folder=None, # use full file path
+            report_name):
 
         pass
