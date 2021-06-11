@@ -36,3 +36,14 @@ def visualize_molecule_entry(molecule_entry, path):
     agraph.layout()
     agraph.draw(path, format="pdf")
 
+
+
+class ReportGenerator:
+
+    def __init__(
+            self,
+            mol_entries,
+            mol_pictures_folder=None,
+            report_folder):
+
+        pass
