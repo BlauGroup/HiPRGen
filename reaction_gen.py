@@ -93,6 +93,9 @@ def run_decision_tree(
 
 
     if type(node) == Terminal:
+        if decision_pathway is not None:
+            decision_pathway.append(node)
+
         if node == Terminal.KEEP:
             return True
         else:
