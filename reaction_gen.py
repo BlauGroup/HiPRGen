@@ -236,9 +236,6 @@ def star_count_diff_above_threshold(
 def default_true(reaction, mols, params):
     return True
 
-def default_false(reaction, mols, params):
-    return True
-
 standard_logging_decision_tree = Terminal.DISCARD
 
 standard_reaction_decision_tree = [
