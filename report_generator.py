@@ -60,13 +60,14 @@ class ReportGenerator:
             mol_pictures_folder, # use full file path
             rebuild_mol_pictures=True
     ):
-
+        self.report_file_name = os.path.abspath(report_file_name)
+        self.mol_pictures_folder = os.path.abspath(mol_pictures_folder)
         if rebuild_mol_pictures:
-            visualize_molecules(mol_entries, mol_pictures_folder)
+            visualize_molecules(mol_entries, self.mol_pictures_folder)
 
         self.mol_entries = mol_entries
-        self.f = open(report_file_name, 'w')
-        self.mol_pictures_folder = mol_pictures_folder
+        self.f = open(self.report_file_name, 'w')
+
 
         # write in header
         self.f.write("\\documentclass{article}\n")
@@ -86,16 +87,32 @@ class ReportGenerator:
             "\\raisebox{-.5\\height}{"
             + "\\includegraphics[scale=0.2]{"
             + self.mol_pictures_folder
+            + '/'
             + str(species_index)
             + ".pdf}}\n"
         )
 
+    def emit_newline(self):
+        self.f.write(
+            "\n\\vspace{1cm}\n")
+
+    def emit_verbatim(self, s):
+        self.f.write('\\begin{verbatim}\n')
+        self.f.write(s)
+        self.f.write('\n')
+        self.f.write('\\end{verbatim}\n')
+
 
     def emit_reaction(self, reaction):
+        reactants_filtered = [i for i in reaction['reactants']
+                              if i != -1]
+
+        products_filtered = [i for i in reaction['products']
+                             if i != -1]
         self.f.write("$$\n")
         first = True
 
-        for reactant_index in reaction["reactants"]:
+        for reactant_index in reactants_filtered:
             if first:
                 first = False
             else:
@@ -103,11 +120,15 @@ class ReportGenerator:
 
             self.emit_molecule(reactant_index)
 
-        self.f.write(
-            "\\xrightarrow{" + ("%.2f" % reaction["dG"]) + "}\n")
+        if 'dG' in reaction:
+            self.f.write(
+                "\\xrightarrow{" + ("%.2f" % reaction["dG"]) + "}\n")
+        else:
+            self.f.write(
+                "\\xrightarrow{}\n")
 
         first = True
-        for product_index in reaction["products"]:
+        for product_index in products_filtered:
             if first:
                 first = False
             else:

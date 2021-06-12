@@ -30,5 +30,6 @@ let
 in mkShell rec {
   buildInputs = [ pythonEnv
                   sqlitebrowser
+                  texlive.combined.scheme-small
                 ];
 }

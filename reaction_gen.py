@@ -308,6 +308,11 @@ def dispatcher(mol_entries,
     logging_queue = Queue()
     processes = {}
 
+    report_generator = ReportGenerator(
+        mol_entries,
+        report_folder + "/generation_report.tex",
+        report_folder + "/mol_pics")
+
 
     bucket_con = sqlite3.connect(bucket_db)
     bucket_cur = bucket_con.cursor()
@@ -345,14 +350,15 @@ def dispatcher(mol_entries,
     living_children = True
     reaction_index = 0
 
-    while living_children:
+    while ( living_children or
+            not reaction_queue.empty() or
+            not logging_queue.empty()):
         # if reaction queue and table queue are empty, enter a spin lock to
         # wait for spawned children to exit.
-        if reaction_queue.empty() and table_queue.empty():
-            living_bools = [processes[pid].is_alive() for pid in processes]
-            living_children = list_or(living_bools)
+        living_bools = [processes[pid].is_alive() for pid in processes]
+        living_children = list_or(living_bools)
 
-        else:
+        if not reaction_queue.empty():
             reaction = reaction_queue.get()
             rn_cur.execute(
                 insert_reaction,
@@ -371,14 +377,24 @@ def dispatcher(mol_entries,
             if reaction_index % commit_freq == 0:
                 rn_con.commit()
 
+        if not logging_queue.empty():
+            reaction, decision_path = logging_queue.get()
+            report_generator.emit_verbatim(
+                '\n'.join([str(f) for f in decision_path]))
+            report_generator.emit_reaction(reaction)
+            report_generator.emit_newline()
+
     rn_cur.execute(
         insert_metadata,
         (len(mol_entries) + 1,
          reaction_index + 1))
 
+
+    report_generator.finished()
     rn_con.commit()
     bucket_con.close()
     rn_con.close()
+
 
 
 ### filter worker
@@ -454,3 +470,17 @@ def reaction_filter(mol_entries,
                                  decision_pathway_reverse
                                  ):
                 reaction_queue.put(reverse_reaction)
+
+            if run_decision_tree(reaction,
+                                 mol_entries,
+                                 params,
+                                 logging_decision_tree):
+                logging_queue.put(
+                    (reaction, decision_pathway_forward))
+
+            if run_decision_tree(reverse_reaction,
+                                 mol_entries,
+                                 params,
+                                 logging_decision_tree):
+                logging_queue.put(
+                    (reverse_reaction, decision_pathway_reverse))
