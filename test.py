@@ -32,7 +32,7 @@ def test_bucketing(mol_entries):
     # TODO: write some test logic
 
 def test_reaction_gen(mol_entries):
-    d = dispatcher(mol_entries, './scratch/buckets.sqlite', './scratch/rn.sqlite', './scratch')
+    d = dispatcher(mol_entries, './scratch/buckets.sqlite', './scratch/rn.sqlite', './scratch', logging_decision_tree=Terminal.KEEP)
     # TODO: write some test logic
 
 ronald_LIBE = loadfn("./data/ronald_LIBE.json")

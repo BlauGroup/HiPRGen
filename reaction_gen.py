@@ -308,6 +308,7 @@ def dispatcher(mol_entries,
     logging_queue = Queue()
     processes = {}
 
+
     bucket_con = sqlite3.connect(bucket_db)
     bucket_cur = bucket_con.cursor()
 
@@ -378,14 +379,6 @@ def dispatcher(mol_entries,
     rn_con.commit()
     bucket_con.close()
     rn_con.close()
-
-    # logging
-    report_generator = ReportGenerator(
-        mol_entries,
-        report_folder + "/generation_report.tex",
-        report_folder + "/mol_pics")
-
-
 
 
 ### filter worker
@@ -461,21 +454,3 @@ def reaction_filter(mol_entries,
                                  decision_pathway_reverse
                                  ):
                 reaction_queue.put(reverse_reaction)
-
-            if run_decision_tree(reaction,
-                                 mol_entries,
-                                 params,
-                                 logging_decision_tree):
-
-                logging_queue.put(
-                    (reaction, decision_pathway_forward))
-
-
-            if run_decision_tree(reverse_reaction,
-                                 mol_entries,
-                                 params,
-                                 logging_decision_tree):
-
-                logging_queue.put(
-                    (reaction, decision_pathway_reverse))
-
