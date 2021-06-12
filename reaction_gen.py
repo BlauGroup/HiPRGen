@@ -236,7 +236,6 @@ def star_count_diff_above_threshold(
 def default_true(reaction, mols, params):
     return True
 
-standard_logging_decision_tree = Terminal.DISCARD
 
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
@@ -291,7 +290,7 @@ def dispatcher(mol_entries,
                rn_db,
                report_folder,
                reaction_decision_tree=standard_reaction_decision_tree,
-               logging_decision_tree=standard_logging_decision_tree,
+               logging_decision_tree=Terminal.DISCARD,
                params={
                    'temperature' : ROOM_TEMP,
                    'electron_free_energy' : -1.4
