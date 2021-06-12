@@ -25,6 +25,7 @@ let
       ps: [ ps.pymatgen
             ps.monty
             ps.openbabel-bindings
+            ps.pygraphviz
           ]);
 in mkShell rec {
   buildInputs = [ pythonEnv

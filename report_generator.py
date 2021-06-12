@@ -1,6 +1,6 @@
 import networkx as nx
 from copy import deepcopy
-
+import os
 def visualize_molecule_entry(molecule_entry, path):
     """
     visualize a molecule using graphviz and
@@ -69,16 +69,16 @@ class ReportGenerator:
         self.mol_pictures_folder = mol_pictures_folder
 
         # write in header
-        f.write("\\documentclass{article}\n")
-        f.write("\\usepackage{graphicx}\n")
-        f.write("\\usepackage[margin=1cm]{geometry}\n")
-        f.write("\\usepackage{amsmath}\n")
-        f.write("\\pagenumbering{gobble}\n")
-        f.write("\\begin{document}\n")
+        self.f.write("\\documentclass{article}\n")
+        self.f.write("\\usepackage{graphicx}\n")
+        self.f.write("\\usepackage[margin=1cm]{geometry}\n")
+        self.f.write("\\usepackage{amsmath}\n")
+        self.f.write("\\pagenumbering{gobble}\n")
+        self.f.write("\\begin{document}\n")
 
     def finished(self):
-        f.write("\\end{document}")
-        f.close()
+        self.f.write("\\end{document}")
+        self.f.close()
 
     def emit_molecule(self, species_index):
         self.f.write(str(species_index) + "\n")

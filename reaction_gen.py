@@ -2,6 +2,7 @@ from mol_entry import MoleculeEntry
 from itertools import combinations
 from functools import partial
 from multiprocessing import Process, Queue
+from report_generator import ReportGenerator
 from enum import Enum
 from constants import *
 import sqlite3
@@ -235,6 +236,11 @@ def star_count_diff_above_threshold(
 def default_true(reaction, mols, params):
     return True
 
+def default_false(reaction, mols, params):
+    return True
+
+standard_logging_decision_tree = Terminal.DISCARD
+
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
@@ -286,16 +292,20 @@ insert_reaction = """
 def dispatcher(mol_entries,
                bucket_db,
                rn_db,
+               report_folder,
                reaction_decision_tree=standard_reaction_decision_tree,
+               logging_decision_tree=standard_logging_decision_tree,
                params={
                    'temperature' : ROOM_TEMP,
                    'electron_free_energy' : -1.4
                    },
                commit_freq=1000,
                number_of_processes=8
+
                ):
     reaction_queue = Queue()
     table_queue = Queue()
+    logging_queue = Queue()
     processes = {}
 
     bucket_con = sqlite3.connect(bucket_db)
@@ -315,8 +325,10 @@ def dispatcher(mol_entries,
                 bucket_db,
                 table_queue,
                 reaction_queue,
+                logging_queue,
                 params,
-                reaction_decision_tree))
+                reaction_decision_tree,
+                logging_decision_tree))
 
         processes[pid] = p
 
@@ -367,6 +379,14 @@ def dispatcher(mol_entries,
     bucket_con.close()
     rn_con.close()
 
+    # logging
+    report_generator = ReportGenerator(
+        mol_entries,
+        report_folder + "/generation_report.tex",
+        report_folder + "/mol_pics")
+
+
+
 
 ### filter worker
 
@@ -374,8 +394,10 @@ def reaction_filter(mol_entries,
                     bucket_db,
                     table_queue,
                     reaction_queue,
+                    logging_queue,
                     params,
-                    decision_tree):
+                    decision_tree,
+                    logging_decision_tree):
 
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
@@ -422,14 +444,38 @@ def reaction_filter(mol_entries,
             # an atom mapping
             reaction['reverse'] = reverse_reaction
 
+            decision_pathway_forward = []
+            decision_pathway_reverse = []
             if run_decision_tree(reaction,
                                  mol_entries,
                                  params,
-                                 decision_tree):
+                                 decision_tree,
+                                 decision_pathway_forward
+                                 ):
                 reaction_queue.put(reaction)
 
             if run_decision_tree(reverse_reaction,
                                  mol_entries,
                                  params,
-                                 decision_tree):
+                                 decision_tree,
+                                 decision_pathway_reverse
+                                 ):
                 reaction_queue.put(reverse_reaction)
+
+            if run_decision_tree(reaction,
+                                 mol_entries,
+                                 params,
+                                 logging_decision_tree):
+
+                logging_queue.put(
+                    (reaction, decision_pathway_forward))
+
+
+            if run_decision_tree(reverse_reaction,
+                                 mol_entries,
+                                 params,
+                                 logging_decision_tree):
+
+                logging_queue.put(
+                    (reaction, decision_pathway_reverse))
+
