@@ -301,7 +301,6 @@ def dispatcher(mol_entries,
                    },
                commit_freq=1000,
                number_of_processes=8
-
                ):
     reaction_queue = Queue()
     table_queue = Queue()
