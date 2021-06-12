@@ -7,7 +7,10 @@ def visualize_molecule_entry(molecule_entry, path):
     output the resulting pdf to path
     """
 
-    atom_colors = {"O": "red", "H": "gray", "C": "black", "Li": "purple"}
+    atom_colors = {"O": "red",
+                   "H": "gray",
+                   "C": "black",
+                   "Li": "purple"}
 
     graph = deepcopy(molecule_entry.graph).to_undirected()
 
@@ -17,7 +20,8 @@ def visualize_molecule_entry(molecule_entry, path):
     nx.set_node_attributes(graph, "0.2", "width")
     nx.set_node_attributes(
         graph,
-        dict(enumerate([atom_colors[a] for a in molecule_entry.species])),
+        dict(enumerate([atom_colors[a]
+                        for a in molecule_entry.species])),
         "color",
     )
 
@@ -37,14 +41,79 @@ def visualize_molecule_entry(molecule_entry, path):
     agraph.draw(path, format="pdf")
 
 
+def visualize_molecules(mol_entries, folder):
+
+    os.mkdir(folder)
+    for index, molecule_entry in enumerate(mol_entries):
+        visualize_molecule_entry(
+            molecule_entry,
+            folder + "/" + str(index) + ".pdf")
+
+
 
 class ReportGenerator:
 
     def __init__(
             self,
             mol_entries,
-            report_file_name,
-            mol_pictures_folder=None # use full file path
+            report_file_name,    # use full file path
+            mol_pictures_folder, # use full file path
+            rebuild_mol_pictures=True
     ):
 
-        pass
+        if rebuild_mol_pictures:
+            visualize_molecules(mol_entries, mol_pictures_folder)
+
+        self.mol_entries = mol_entries
+        self.f = open(report_file_name, 'w')
+        self.mol_pictures_folder = mol_pictures_folder
+
+        # write in header
+        f.write("\\documentclass{article}\n")
+        f.write("\\usepackage{graphicx}\n")
+        f.write("\\usepackage[margin=1cm]{geometry}\n")
+        f.write("\\usepackage{amsmath}\n")
+        f.write("\\pagenumbering{gobble}\n")
+        f.write("\\begin{document}\n")
+
+    def finished(self):
+        f.write("\\end{document}")
+        f.close()
+
+    def emit_molecule(self, species_index):
+        self.f.write(str(species_index) + "\n")
+        self.f.write(
+            "\\raisebox{-.5\\height}{"
+            + "\\includegraphics[scale=0.2]{"
+            + self.mol_pictures_folder
+            + str(species_index)
+            + ".pdf}}\n"
+        )
+
+
+    def emit_reaction(self, reaction):
+        self.f.write("$$\n")
+        first = True
+
+        for reactant_index in reaction["reactants"]:
+            if first:
+                first = False
+            else:
+                self.f.write("+\n")
+
+            self.emit_molecule(reactant_index)
+
+        self.f.write(
+            "\\xrightarrow{" + ("%.2f" % reaction["dG"]) + "}\n")
+
+        first = True
+        for product_index in reaction["products"]:
+            if first:
+                first = False
+            else:
+                self.f.write("+\n")
+
+            self.emit_molecule(product_index)
+
+        self.f.write("$$")
+        self.f.write("\n\n\n")
