@@ -9,11 +9,9 @@ class bcolors:
     FAIL = '\u001b[31;1m'
     ENDC = '\u001b[0m'
 
-if os.path.isfile('./scratch/buckets.sqlite'):
-    os.remove('./scratch/buckets.sqlite')
-
-if os.path.isfile('./scratch/rn.sqlite'):
-    os.remove('./scratch/rn.sqlite')
+if os.path.isdir('./scratch'):
+    os.system('rm -r ./scratch')
+    os.system('mkdir scratch')
 
 
 
