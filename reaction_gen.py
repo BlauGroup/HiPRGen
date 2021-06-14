@@ -142,12 +142,12 @@ def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mol_entries[reactant_index]
-        tags.union(mol.aux_data['bond_count'].keys())
+        tags.update(mol.aux_data['bond_count'].keys())
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mol_entries[product_index]
-        tags.union(mol.aux_data['bond_count'].keys())
+        tags.update(mol.aux_data['bond_count'].keys())
 
 
     count = 0
@@ -182,12 +182,12 @@ def star_count_diff_above_threshold(
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mol_entries[reactant_index]
-        stars.union(mol.aux_data['stars'].keys())
+        stars.update(mol.aux_data['stars'].keys())
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mol_entries[product_index]
-        stars.union(mol.aux_data['stars'].keys())
+        stars.update(mol.aux_data['stars'].keys())
 
 
     count = 0
