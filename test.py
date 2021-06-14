@@ -11,7 +11,8 @@ class bcolors:
 
 if os.path.isdir('./scratch'):
     os.system('rm -r ./scratch')
-    os.system('mkdir scratch')
+
+os.system('mkdir scratch')
 
 
 
