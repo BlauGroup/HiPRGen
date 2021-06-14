@@ -249,6 +249,7 @@ standard_reaction_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
+standard_logging_decision_tree = Terminal.DISCARD
 
 ### dispatcher
 
@@ -288,9 +289,9 @@ insert_reaction = """
 def dispatcher(mol_entries,
                bucket_db,
                rn_db,
-               report_folder,
+               generation_report_path,
                reaction_decision_tree=standard_reaction_decision_tree,
-               logging_decision_tree=Terminal.DISCARD,
+               logging_decision_tree=standard_logging_decision_tree,
                params={
                    'temperature' : ROOM_TEMP,
                    'electron_free_energy' : -1.4
@@ -305,8 +306,8 @@ def dispatcher(mol_entries,
 
     report_generator = ReportGenerator(
         mol_entries,
-        report_folder + "/generation_report.tex",
-        report_folder + "/mol_pics")
+        generation_report_path)
+
 
 
     bucket_con = sqlite3.connect(bucket_db)

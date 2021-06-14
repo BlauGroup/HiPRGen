@@ -36,7 +36,9 @@ def test_reaction_gen(mol_entries):
         mol_entries,
         './scratch/buckets.sqlite',
         './scratch/rn.sqlite',
-        './scratch')
+        './scratch/generation_report.tex',
+        logging_decision_tree=Terminal.KEEP
+    )
     # TODO: write some test logic
 
 ronald_LIBE = loadfn("./data/ronald_LIBE.json")

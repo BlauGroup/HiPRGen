@@ -1,6 +1,8 @@
 import networkx as nx
 from copy import deepcopy
 import os
+from pathlib import Path
+
 def visualize_molecule_entry(molecule_entry, path):
     """
     visualize a molecule using graphviz and
@@ -38,16 +40,16 @@ def visualize_molecule_entry(molecule_entry, path):
         )
 
     agraph.layout()
-    agraph.draw(path, format="pdf")
+    agraph.draw(path.as_posix(), format="pdf")
 
 
 def visualize_molecules(mol_entries, folder):
 
-    os.mkdir(folder)
+    folder.mkdir()
     for index, molecule_entry in enumerate(mol_entries):
         visualize_molecule_entry(
             molecule_entry,
-            folder + "/" + str(index) + ".pdf")
+            folder.joinpath(str(index) + ".pdf"))
 
 
 
@@ -56,17 +58,18 @@ class ReportGenerator:
     def __init__(
             self,
             mol_entries,
-            report_file_name,    # use full file path
-            mol_pictures_folder, # use full file path
+            report_file_path,
             rebuild_mol_pictures=True
     ):
-        self.report_file_name = os.path.abspath(report_file_name)
-        self.mol_pictures_folder = os.path.abspath(mol_pictures_folder)
+        self.report_file_path = Path(report_file_path)
+        self.mol_pictures_folder = self.report_file_path.parent.joinpath(
+            'mol_pictures')
+
         if rebuild_mol_pictures:
             visualize_molecules(mol_entries, self.mol_pictures_folder)
 
         self.mol_entries = mol_entries
-        self.f = open(self.report_file_name, 'w')
+        self.f = self.report_file_path.open(mode='w')
 
 
         # write in header
@@ -86,8 +89,7 @@ class ReportGenerator:
         self.f.write(
             "\\raisebox{-.5\\height}{"
             + "\\includegraphics[scale=0.2]{"
-            + self.mol_pictures_folder
-            + '/'
+            + './mol_pictures/'
             + str(species_index)
             + ".pdf}}\n"
         )
