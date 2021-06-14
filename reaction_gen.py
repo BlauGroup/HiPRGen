@@ -175,7 +175,7 @@ def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
         count += abs(reactant_0_bond_count.get(tag, 0) +
                      reactant_1_bond_count.get(tag, 0) -
                      product_0_bond_count.get(tag, 0) -
-                     product_0_bond_count.get(tag, 0))
+                     product_1_bond_count.get(tag, 0))
 
     if count > threshold:
         return True
