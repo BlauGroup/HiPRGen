@@ -149,7 +149,6 @@ def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
         mol = mol_entries[product_index]
         tags.update(mol.aux_data['bond_count'].keys())
 
-
     count = 0
 
     for tag in tags:
@@ -221,10 +220,12 @@ def default_true(reaction, mols, params):
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
+    # when two covalent bonds change, the bond count diff must be <= 4
+    (partial(bond_count_diff_above_threshold, 3), Terminal.DISCARD),
+
     # when two covalent bonds change, the star count diff must be <= 3
     # assuming that both bonds share an atom
     (partial(star_count_diff_above_threshold, 3), Terminal.DISCARD),
-
     (default_true, Terminal.KEEP)
     ]
 
