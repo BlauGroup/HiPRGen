@@ -225,7 +225,7 @@ def star_count_diff_above_threshold(
         count += abs(reactant_0_stars.get(star, 0) +
                      reactant_1_stars.get(star, 0) -
                      product_0_stars.get(star, 0) -
-                     product_0_stars.get(star, 0))
+                     product_1_stars.get(star, 0))
 
     if count > threshold:
         return True
