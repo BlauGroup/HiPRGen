@@ -221,7 +221,7 @@ standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
     # when two covalent bonds change, the bond count diff must be <= 4
-    (partial(bond_count_diff_above_threshold, 4), Terminal.DISCARD),
+    (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
 
     # when two covalent bonds change, the star count diff must be <= 3
     # assuming that both bonds share an atom

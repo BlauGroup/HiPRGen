@@ -2,6 +2,7 @@ from monty.serialization import loadfn, dumpfn
 from species_filter import *
 from bucketing import *
 from reaction_gen import *
+from functools import partial
 import os
 
 class bcolors:
@@ -38,7 +39,11 @@ def test_reaction_gen(mol_entries):
         './scratch/buckets.sqlite',
         './scratch/rn.sqlite',
         './scratch/generation_report.tex',
-        logging_decision_tree=Terminal.KEEP
+        logging_decision_tree=[
+            (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+            (partial(bond_count_diff_above_threshold, 2), Terminal.KEEP),
+            (default_true, Terminal.DISCARD)
+        ]
     )
     # TODO: write some test logic
 
