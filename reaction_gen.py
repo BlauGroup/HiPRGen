@@ -158,7 +158,7 @@ def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
         product_0_bond_count = {}
 
     if product_1_index != -1:
-        product_1_bond_count = mol_entries[product_0_index].aux_data['bond_count']
+        product_1_bond_count = mol_entries[product_1_index].aux_data['bond_count']
     else:
         product_1_bond_count = {}
 
@@ -208,7 +208,7 @@ def star_count_diff_above_threshold(
         product_0_stars = {}
 
     if product_1_index != -1:
-        product_1_stars = mol_entries[product_0_index].aux_data['stars']
+        product_1_stars = mol_entries[product_1_index].aux_data['stars']
     else:
         product_1_stars = {}
 
