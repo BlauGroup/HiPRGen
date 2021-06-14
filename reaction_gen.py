@@ -82,7 +82,8 @@ def run_decision_tree(
         for (question, new_node) in node:
             if question(reaction, mol_entries, params):
 
-                # if logging pathway is a list, append the question which
+                # if decision_pathway is a list,
+                # append the question which
                 # answered true i.e the edge we follow
                 if decision_pathway is not None:
                     decision_pathway.append(question)
