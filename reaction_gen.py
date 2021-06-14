@@ -137,45 +137,34 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
 
 def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
 
-    reactant_0_index = reaction['reactants'][0]
-    reactant_1_index = reaction['reactants'][1]
-    product_0_index = reaction['products'][0]
-    product_1_index = reaction['products'][1]
+    tags = set()
 
-    if reactant_0_index != -1:
-        reactant_0_bond_count = mol_entries[reactant_0_index].aux_data['bond_count']
-    else:
-        reactant_0_bond_count = {}
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        mol = mol_entries[reactant_index]
+        tags.union(mol.aux_data['bond_count'].keys())
 
-    if reactant_1_index != -1:
-        reactant_1_bond_count = mol_entries[reactant_1_index].aux_data['bond_count']
-    else:
-        reactant_1_bond_count = {}
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        mol = mol_entries[product_index]
+        tags.union(mol.aux_data['bond_count'].keys())
 
-    if product_0_index != -1:
-        product_0_bond_count = mol_entries[product_0_index].aux_data['bond_count']
-    else:
-        product_0_bond_count = {}
-
-    if product_1_index != -1:
-        product_1_bond_count = mol_entries[product_1_index].aux_data['bond_count']
-    else:
-        product_1_bond_count = {}
-
-
-    tags = set().union(*[
-        set(reactant_0_bond_count.keys()),
-        set(reactant_1_bond_count.keys()),
-        set(product_0_bond_count.keys()),
-        set(product_1_bond_count.keys())])
 
     count = 0
 
     for tag in tags:
-        count += abs(reactant_0_bond_count.get(tag, 0) +
-                     reactant_1_bond_count.get(tag, 0) -
-                     product_0_bond_count.get(tag, 0) -
-                     product_1_bond_count.get(tag, 0))
+        inter_count = 0
+        for i in range(reaction['number_of_reactants']):
+            reactant_index = reaction['reactants'][i]
+            mol = mol_entries[reactant_index]
+            inter_count+= mol.aux_data['bond_count'].get(tag, 0)
+
+        for j in range(reaction['number_of_products']):
+            product_index = reaction['products'][j]
+            mol = mol_entries[product_index]
+            inter_count-= mol.aux_data['bond_count'].get(tag, 0)
+
+        count += abs(inter_count)
 
     if count > threshold:
         return True
@@ -187,50 +176,41 @@ def star_count_diff_above_threshold(
         reaction,
         mol_entries,
         params):
-    reactant_0_index = reaction['reactants'][0]
-    reactant_1_index = reaction['reactants'][1]
-    product_0_index = reaction['products'][0]
-    product_1_index = reaction['products'][1]
 
-    if reactant_0_index != -1:
-        reactant_0_stars = mol_entries[reactant_0_index].aux_data['stars']
-    else:
-        reactant_0_stars = {}
+    stars = set()
 
-    if reactant_1_index != -1:
-        reactant_1_stars = mol_entries[reactant_1_index].aux_data['stars']
-    else:
-        reactant_1_stars = {}
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        mol = mol_entries[reactant_index]
+        stars.union(mol.aux_data['stars'].keys())
 
-    if product_0_index != -1:
-        product_0_stars = mol_entries[product_0_index].aux_data['stars']
-    else:
-        product_0_stars = {}
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        mol = mol_entries[product_index]
+        stars.union(mol.aux_data['stars'].keys())
 
-    if product_1_index != -1:
-        product_1_stars = mol_entries[product_1_index].aux_data['stars']
-    else:
-        product_1_stars = {}
-
-
-    stars = set().union(*[
-        set(reactant_0_stars.keys()),
-        set(reactant_1_stars.keys()),
-        set(product_0_stars.keys()),
-        set(product_1_stars.keys())])
 
     count = 0
 
     for star in stars:
-        count += abs(reactant_0_stars.get(star, 0) +
-                     reactant_1_stars.get(star, 0) -
-                     product_0_stars.get(star, 0) -
-                     product_1_stars.get(star, 0))
+        inter_count = 0
+        for i in range(reaction['number_of_reactants']):
+            reactant_index = reaction['reactants'][i]
+            mol = mol_entries[reactant_index]
+            inter_count+= mol.aux_data['stars'].get(star, 0)
+
+        for j in range(reaction['number_of_products']):
+            product_index = reaction['products'][j]
+            mol = mol_entries[product_index]
+            inter_count-= mol.aux_data['stars'].get(star, 0)
+
+        count += abs(inter_count)
 
     if count > threshold:
         return True
     else:
         return False
+
 
 
 
