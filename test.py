@@ -45,7 +45,7 @@ def test_reaction_gen(mol_entries):
         './scratch/buckets.sqlite',
         './scratch/rn.sqlite',
         './scratch/generation_report.tex',
-        logging_decision_tree=Terminal.KEEP
+        logging_decision_tree=standard_reaction_decision_tree
     )
     # TODO: write some test logic
 
