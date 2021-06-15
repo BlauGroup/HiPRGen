@@ -250,7 +250,7 @@ def too_many_reactants_or_products(reaction, mols, params):
     else:
         return False
 
-def dcharge_too_large(reaction, mols, params):
+def dcharge_too_large(reaction, mol_entries, params):
     dCharge = 0.0
 
     for i in range(reaction['number_of_reactants']):
@@ -269,7 +269,12 @@ def dcharge_too_large(reaction, mols, params):
         return False
 
 def reactant_and_product_not_isomorphic(reaction, mols, params):
-    pass
+    reactant = mols[reaction['reactants'][0]]
+    product = mols[reaction['products'][0]]
+    if reactant.mol_graph.isomorphic_to(product.mol_graph):
+        return False
+    else:
+        return True
 
 def default_true(reaction, mols, params):
     return True
