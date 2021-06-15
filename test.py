@@ -33,17 +33,19 @@ def test_bucketing(mol_entries):
     b = Bucket(mol_entries, './scratch/buckets.sqlite')
     # TODO: write some test logic
 
+# [ (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+#   (partial(bond_count_diff_above_threshold, 2), Terminal.KEEP),
+#   (default_true, Terminal.DISCARD)]
+
+
+
 def test_reaction_gen(mol_entries):
     d = dispatcher(
         mol_entries,
         './scratch/buckets.sqlite',
         './scratch/rn.sqlite',
         './scratch/generation_report.tex',
-        logging_decision_tree=[
-            (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
-            (partial(bond_count_diff_above_threshold, 2), Terminal.KEEP),
-            (default_true, Terminal.DISCARD)
-        ]
+        logging_decision_tree=Terminal.KEEP
     )
     # TODO: write some test logic
 

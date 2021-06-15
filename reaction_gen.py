@@ -120,13 +120,24 @@ def default_rate(dG, params):
 def dG_above_threshold(threshold, reaction, mol_entries, params):
     dG = 0.0
 
-    for index in reaction['reactants']:
-        if index != -1:
-            dG -= mol_entries[index].get_free_energy()
+    # positive dCharge means electrons are lost
+    dCharge = 0.0
 
-    for index in reaction['products']:
-        if index != -1:
-            dG += mol_entries[index].get_free_energy()
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        mol = mol_entries[reactant_index]
+        dG -= mol.get_free_energy()
+        dCharge -= mol.charge
+
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        mol = mol_entries[product_index]
+        dG += mol.get_free_energy()
+        dCharge += mol.charge
+
+    # TODO: ask sam if this is right
+    dG += dCharge * params['electron_free_energy']
+
 
     if dG > threshold:
         return True
@@ -134,6 +145,27 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
         reaction['dG'] = dG
         reaction['rate'] = default_rate(dG, params)
         return False
+
+def is_redox_reaction(reaction, mol_entries, params):
+    # positive dCharge means electrons are lost
+    dCharge = 0.0
+
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        mol = mol_entries[reactant_index]
+        dCharge -= mol.charge
+
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        mol = mol_entries[product_index]
+        dCharge += mol.charge
+
+    if dCharge == 0:
+        return False
+    else:
+        return True
+
+
 
 def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
 
@@ -211,6 +243,32 @@ def star_count_diff_above_threshold(
         return False
 
 
+def too_many_reactants_or_products(reaction, mols, params):
+    if (reaction['number_of_reactants'] != 1 or
+        reaction['number_of_products'] != 1):
+        return True
+    elif reaction['reactants'][0] != reaction['products'][0]:
+        return True
+    else:
+        return False
+
+def dcharge_too_large(reaction, mols, params):
+    dCharge = 0.0
+
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        mol = mol_entries[reactant_index]
+        dCharge -= mol.charge
+
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        mol = mol_entries[product_index]
+        dCharge += mol.charge
+
+    if abs(dCharge) > 1:
+        return True
+    else:
+        return False
 
 
 def default_true(reaction, mols, params):
@@ -219,6 +277,15 @@ def default_true(reaction, mols, params):
 
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+
+    # redox branch
+    (is_redox_reaction, [
+
+        # this question also checks if reactants = products
+        (too_many_reactants_or_products, Terminal.DISCARD),
+
+        (dcharge_too_large, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)]),
 
     (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
 
