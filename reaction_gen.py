@@ -247,8 +247,6 @@ def too_many_reactants_or_products(reaction, mols, params):
     if (reaction['number_of_reactants'] != 1 or
         reaction['number_of_products'] != 1):
         return True
-    elif reaction['reactants'][0] != reaction['products'][0]:
-        return True
     else:
         return False
 
@@ -270,6 +268,8 @@ def dcharge_too_large(reaction, mols, params):
     else:
         return False
 
+def reactant_and_product_not_isomorphic(reaction, mols, params):
+    pass
 
 def default_true(reaction, mols, params):
     return True
@@ -281,10 +281,9 @@ standard_reaction_decision_tree = [
     # redox branch
     (is_redox_reaction, [
 
-        # this question also checks if reactants = products
         (too_many_reactants_or_products, Terminal.DISCARD),
-
         (dcharge_too_large, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)]),
 
     (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
