@@ -107,7 +107,11 @@ def run_decision_tree(
             return False
     else:
         print(node)
-        raise Exception("unexpected node type reached")
+        raise Exception(
+            """
+            unexpected node type reached.
+            this is usually caused because none of the questions in some node returned True.
+            """)
 
 def default_rate(dG, params):
     kT = KB * params['temperature']
