@@ -281,6 +281,28 @@ def reactant_and_product_not_isomorphic(reaction, mols, params):
 def default_true(reaction, mols, params):
     return True
 
+def is_A_B_to_A_C_where_A_not_metal_atom(reaction, mols, params):
+    reactants_set = set([])
+    products_set = set([])
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        reactants_set.add(reactant_index)
+
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        products_set.add(product_index)
+
+    common_species = reactants_set.intersection(products_set)
+    if len(common_species) == 0:
+        return False
+    else:
+        mol = list(common_species)[0]
+        if mol.species == ['Li']:
+            return False
+        else:
+            return True
+
+
 
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
@@ -290,14 +312,24 @@ standard_reaction_decision_tree = [
 
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
+
+        # we may want to allow redox reactions between non
+        # isomorphic species at some point
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)]),
 
+
+    # as far as I have seen, every reaction discarded by this
+    # filter is also discarded by the star filter. Removing the
+    # bound count filter would make sense for improving perf.
     (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
 
     # when two covalent bonds change, the star count diff must be <= 3
     # assuming that both bonds share an atom
     (partial(star_count_diff_above_threshold, 3), Terminal.DISCARD),
+
+    (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
+
     (default_true, Terminal.KEEP)
     ]
 
