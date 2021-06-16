@@ -61,7 +61,7 @@ description: the worker processes from phase 3 are sending their reactions to th
 
 logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
 
-warning to contributors: be very careful when modifying the dispatcher or reaction_filter functions. They run in parallel (with one dispatcher and many reaction_filters) and it is easy to introduce subtle concurrency bugs by accident. For example, the python queues are not completely mutex locked, so the empty method can return while another processes is modifying the queue. If that doesn't make you violently shudder, then please don't tinker with the control flow of those functions.
+warning to contributors: be very careful when modifying the dispatcher or reaction_filter functions. They run in parallel (with one dispatcher and many reaction_filters) and it is easy to introduce subtle concurrency bugs by accident. For example, the python queues are not completely mutex locked, so the empty method can return while another processes is modifying the queue. If that doesn't make you violently shudder, then please don't tinker with the control flow of those functions. Python is not a good place to learn about parallel programming.
 """
 
 
