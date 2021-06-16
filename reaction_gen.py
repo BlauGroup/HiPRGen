@@ -312,12 +312,15 @@ def list_or(a_list):
 create_metadata_table = """
     CREATE TABLE metadata (
             number_of_species   INTEGER NOT NULL,
-            number_of_reactions INTEGER NOT NULL
+            number_of_reactions INTEGER NOT NULL,
+            factor_zero         REAL NOT NULL,
+            factor_two          REAL NOT NULL,
+            factor_duplicate    REAL NOT NULL
     );
 """
 
 insert_metadata = """
-    INSERT INTO metadata VALUES (?, ?)
+    INSERT INTO metadata VALUES (?, ?, ?, ?, ?)
 """
 
 create_reactions_table = """
@@ -349,7 +352,10 @@ def dispatcher(mol_entries,
                    'electron_free_energy' : -1.4
                    },
                commit_freq=1000,
-               number_of_processes=8
+               number_of_processes=8,
+               factor_zero=1.0,
+               factor_two=1.0,
+               factor_duplicate=1.0
                ):
     reaction_queue = Queue()
     table_queue = Queue()
@@ -435,7 +441,11 @@ def dispatcher(mol_entries,
     rn_cur.execute(
         insert_metadata,
         (len(mol_entries) + 1,
-         reaction_index + 1))
+         reaction_index + 1,
+        factor_zero,
+        factor_two,
+        factor_duplicate)
+    )
 
 
     report_generator.finished()
