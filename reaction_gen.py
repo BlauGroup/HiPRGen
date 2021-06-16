@@ -333,6 +333,7 @@ standard_reaction_decision_tree = [
     # assuming that both bonds share an atom
     (partial(star_count_diff_above_threshold, 3), Terminal.DISCARD),
 
+    # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
 
     (default_true, Terminal.KEEP)
