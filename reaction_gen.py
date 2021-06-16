@@ -54,11 +54,13 @@ for non terminal nodes, it is an error if every question returns False. i.e gett
 
 Once a Terminal node is reached, it tells us whether to keep or discard the reaction.
 
-
 Phase 4: collating and indexing
 input: all the outputs of phase 3 as they are generated
 output: reaction network database
 description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3 which means we don't need extra index tables on the db.
+
+logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
+
 """
 
 
