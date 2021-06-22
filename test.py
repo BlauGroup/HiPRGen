@@ -21,7 +21,7 @@ os.system('mkdir scratch')
 def test_species_filter(ronald_LIBE):
     ronald_mol_entries = species_filter(
         ronald_LIBE,
-        "./scratch/ronald_mol_entries.json",
+        "./scratch/ronald_mol_entries.pickle",
         verbose=False)
 
     ronald_mol_entries_from_disk = loadfn("./data/ronald_mol_entries.json")

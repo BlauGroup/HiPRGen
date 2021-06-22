@@ -4,6 +4,7 @@ from multiprocessing import Pool
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
+import pickle
 
 """
 Phase 1: species filtering
@@ -170,7 +171,7 @@ standard_mol_decision_tree = [
     ]
 
 def species_filter(dataset_entries,
-                   mol_entries_json,
+                   mol_entries_pickle_location,
                    species_decision_tree=standard_mol_decision_tree,
                    number_of_processes=8,
                    verbose=True):
@@ -211,5 +212,12 @@ def species_filter(dataset_entries,
     for i, e in enumerate(mol_entries):
         e.parameters["ind"] = i
 
-    dumpfn(mol_entries, mol_entries_json)
+    # ideally we would serialize mol_entries to a json
+    # some of the auxilary_data we compute
+    # has frozen set keys, so doesn't seralize well into json format.
+    # pickles work better in this setting
+    with open(mol_entries_pickle_location, 'wb') as f:
+        pickle.dump(mol_entries, f)
+
+
     return mol_entries
