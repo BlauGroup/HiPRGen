@@ -4,6 +4,7 @@ from bucketing import *
 from reaction_gen import *
 from functools import partial
 import os
+import sqlite3
 
 class bcolors:
     PASS = '\u001b[32;1m'
@@ -35,11 +36,19 @@ def test_species_filter(ronald_LIBE):
 
 def test_bucketing(mol_entries):
     b = Bucket(mol_entries, './scratch/buckets.sqlite')
-    # TODO: write some test logic
+    con = sqlite3.connect('./scratch/buckets.sqlite')
+    cur = con.cursor()
+    number_of_buckets = list(cur.execute(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table'"))[0][0]
 
-# [ (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
-#   (partial(bond_count_diff_above_threshold, 2), Terminal.KEEP),
-#   (default_true, Terminal.DISCARD)]
+
+    if number_of_buckets == 178:
+        print(bcolors.PASS + "passed: test_bucketing" + bcolors.ENDC)
+        return
+    else:
+        print(bcolors.FAIL + "failed: test_bucketing" + bcolors.ENDC)
+        quit()
+
 
 
 
@@ -48,10 +57,21 @@ def test_reaction_gen(mol_entries):
         mol_entries,
         './scratch/buckets.sqlite',
         './scratch/rn.sqlite',
-        './scratch/generation_report.tex',
-        logging_decision_tree=standard_reaction_decision_tree
+        './scratch/generation_report.tex'
     )
-    # TODO: write some test logic
+
+    con = sqlite3.connect('./scratch/rn.sqlite')
+    cur = con.cursor()
+    metadata = list(cur.execute("SELECT * FROM metadata"))
+
+    if metadata == [(38, 156, 1.0, 1.0, 1.0)]:
+        print(bcolors.PASS + "passed: test_reaction_gen" + bcolors.ENDC)
+        return
+    else:
+        print(bcolors.FAIL + "failed: test_reaction_gen" + bcolors.ENDC)
+        quit()
+
+
 
 ronald_LIBE = loadfn("./data/ronald_LIBE.json")
 
