@@ -485,7 +485,11 @@ def dispatcher(mol_entries,
                 rn_con.commit()
 
                 if verbose:
-                    print(table_queue.qsize(), "buckets remaining")
+                    print(
+                        reaction_index,
+                        "reactions inserted;",
+                        table_queue.qsize(),
+                        "buckets remaining")
 
         if not logging_queue.empty():
             reaction, decision_path = logging_queue.get()
