@@ -393,7 +393,8 @@ def dispatcher(mol_entries,
                number_of_processes=8,
                factor_zero=1.0,
                factor_two=1.0,
-               factor_duplicate=1.0
+               factor_duplicate=1.0,
+               logging=True
                ):
     reaction_queue = Queue()
     table_queue = Queue()
@@ -468,6 +469,9 @@ def dispatcher(mol_entries,
             reaction_index += 1
             if reaction_index % commit_freq == 0:
                 rn_con.commit()
+
+                if logging:
+                    print(table_queue.qsize(), "buckets remaining")
 
         if not logging_queue.empty():
             reaction, decision_path = logging_queue.get()
