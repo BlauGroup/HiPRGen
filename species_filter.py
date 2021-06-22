@@ -3,7 +3,7 @@ from enum import Enum
 from multiprocessing import Pool
 from functools import partial
 from itertools import chain
-
+from monty.serialization import dumpfn
 
 """
 Phase 1: species filtering
@@ -170,26 +170,46 @@ standard_mol_decision_tree = [
     ]
 
 def species_filter(dataset_entries,
+                   mol_entries_json,
                    species_decision_tree=standard_mol_decision_tree,
-                   number_of_processes=8):
+                   number_of_processes=8,
+                   logging=True):
+
+    if logging:
+        print("starting species filter")
+        print("loading molecule entries from json")
 
     mol_entries_unfiltered = [
         MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
 
+
     # currently, take lowest energy mol in each iso class
+    # if we want to add more non local species filtering it would go here
+
+    if logging:
+        print("applying non local filters")
+
     def collapse_isomorphism_class(g):
         return min(g,key=lambda x: x.get_free_energy())
+
 
     mol_entries_no_iso = [
         collapse_isomorphism_class(g)
         for g in groupby_isomorphism(mol_entries_unfiltered, number_of_processes)]
+
+    if logging:
+        print("applying local filters")
 
     mol_entries = [
         m for m in mol_entries_no_iso
         if run_decision_tree(m, species_decision_tree)]
 
 
+    if logging:
+        print("assigning indices")
+
     for i, e in enumerate(mol_entries):
         e.parameters["ind"] = i
 
+    dumpfn(mol_entries, mol_entries_json)
     return mol_entries
