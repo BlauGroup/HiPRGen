@@ -490,7 +490,7 @@ def dispatcher(mol_entries,
                     print(
                         '[' + strftime('%H:%M', localtime()) + ']',
                         reaction_index,
-                        "reactions inserted;",
+                        "reactions;",
                         table_queue.qsize(),
                         "buckets remaining")
 
