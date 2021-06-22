@@ -7,6 +7,8 @@ from enum import Enum
 from constants import *
 import sqlite3
 import math
+from time import localtime, strftime
+
 
 """
 Phases 3 & 4 run in paralell.
@@ -486,6 +488,7 @@ def dispatcher(mol_entries,
 
                 if verbose:
                     print(
+                        '[' + strftime('%H:%M', localtime()) + ']',
                         reaction_index,
                         "reactions inserted;",
                         table_queue.qsize(),
