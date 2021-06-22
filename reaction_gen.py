@@ -394,12 +394,20 @@ def dispatcher(mol_entries,
                factor_zero=1.0,
                factor_two=1.0,
                factor_duplicate=1.0,
-               logging=True
+               verbose=True
                ):
+
+    if verbose:
+        print("starting reaction filtering")
+
     reaction_queue = Queue()
     table_queue = Queue()
     logging_queue = Queue()
     processes = {}
+
+
+    if verbose:
+        print("initializing report generator")
 
     report_generator = ReportGenerator(
         mol_entries,

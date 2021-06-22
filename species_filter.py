@@ -173,9 +173,9 @@ def species_filter(dataset_entries,
                    mol_entries_json,
                    species_decision_tree=standard_mol_decision_tree,
                    number_of_processes=8,
-                   logging=True):
+                   verbose=True):
 
-    if logging:
+    if verbose:
         print("starting species filter")
         print("loading molecule entries from json")
 
@@ -186,7 +186,7 @@ def species_filter(dataset_entries,
     # currently, take lowest energy mol in each iso class
     # if we want to add more non local species filtering it would go here
 
-    if logging:
+    if verbose:
         print("applying non local filters")
 
     def collapse_isomorphism_class(g):
@@ -197,7 +197,7 @@ def species_filter(dataset_entries,
         collapse_isomorphism_class(g)
         for g in groupby_isomorphism(mol_entries_unfiltered, number_of_processes)]
 
-    if logging:
+    if verbose:
         print("applying local filters")
 
     mol_entries = [
@@ -205,7 +205,7 @@ def species_filter(dataset_entries,
         if run_decision_tree(m, species_decision_tree)]
 
 
-    if logging:
+    if verbose:
         print("assigning indices")
 
     for i, e in enumerate(mol_entries):

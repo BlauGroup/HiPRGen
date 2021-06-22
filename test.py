@@ -22,7 +22,7 @@ def test_species_filter(ronald_LIBE):
     ronald_mol_entries = species_filter(
         ronald_LIBE,
         "./scratch/ronald_mol_entries.json",
-        logging=False)
+        verbose=False)
 
     ronald_mol_entries_from_disk = loadfn("./data/ronald_mol_entries.json")
 
@@ -57,7 +57,8 @@ def test_reaction_gen(mol_entries):
         mol_entries,
         './scratch/buckets.sqlite',
         './scratch/rn.sqlite',
-        './scratch/generation_report.tex'
+        './scratch/generation_report.tex',
+        verbose=False
     )
 
     con = sqlite3.connect('./scratch/rn.sqlite')
