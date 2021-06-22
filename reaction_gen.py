@@ -302,7 +302,7 @@ def is_A_B_to_A_C_where_A_not_metal_atom(reaction, mols, params):
         return False
     else:
         mol = list(common_species)[0]
-        if mol.species == ['Li']:
+        if mols[mol].species == ['Li']:
             return False
         else:
             return True
