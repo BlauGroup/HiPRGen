@@ -423,6 +423,9 @@ def dispatcher(mol_entries,
         table = name[0]
         table_queue.put(table)
 
+    if verbose:
+        print("starting worker processes")
+
     for pid in range(number_of_processes):
 
         p = Process(
@@ -451,6 +454,9 @@ def dispatcher(mol_entries,
     living_children = True
     reaction_index = 0
 
+    if verbose:
+        print("starting inner loop")
+
     while ( living_children or
             not reaction_queue.empty() or
             not logging_queue.empty()):
@@ -478,7 +484,7 @@ def dispatcher(mol_entries,
             if reaction_index % commit_freq == 0:
                 rn_con.commit()
 
-                if logging:
+                if verbose:
                     print(table_queue.qsize(), "buckets remaining")
 
         if not logging_queue.empty():

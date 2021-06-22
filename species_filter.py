@@ -212,6 +212,9 @@ def species_filter(dataset_entries,
     for i, e in enumerate(mol_entries):
         e.parameters["ind"] = i
 
+
+    if verbose:
+        print("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
     # has frozen set keys, so doesn't seralize well into json format.
