@@ -108,7 +108,10 @@ def run_decision_tree(mol_entry, decision_tree):
         print(node)
         raise Exception("unexpected node type reached")
 
-#TODO: make this more general in terms of metals
+metals = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
+m_formulas = [m + "1" for m in metals]
+
+
 def add_covalent_bond_count(mol_entry):
     mol_bond_count = {}
     species = mol_entry.species
@@ -117,7 +120,7 @@ def add_covalent_bond_count(mol_entry):
         species_0 = species[bond[0]]
         species_1 = species[bond[1]]
         tag = frozenset([species_0, species_1])
-        if 'Li' not in tag:
+        if len(frozenset(metals).intersection(tag)) == 0:
             if tag in mol_bond_count:
                 mol_bond_count[tag] += 1
             else:
@@ -132,7 +135,7 @@ def add_covalent_stars(mol_entry):
     stars = {}
 
     for i in range(mol_entry.num_atoms):
-        if species[i] != 'Li':
+        if species[i] not in metals:
             end_counts = {}
 
             for bond in bonds:
@@ -159,10 +162,6 @@ def add_covalent_stars(mol_entry):
 
 def mol_not_connected(mol):
     return not nx.is_weakly_connected(mol.graph)
-
-
-metals = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
-m_formulas = [m + "1" for m in metals]
 
 
 def metal_complex(mol):
