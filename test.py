@@ -50,9 +50,9 @@ def test_bucketing(mol_entries):
         quit()
 
 
+############ OLD CODE ############
 
-
-def test_reaction_gen(mol_entries):
+def test_reaction_gen_old(mol_entries):
     d = dispatcher(
         mol_entries,
         './scratch/buckets.sqlite',
@@ -78,6 +78,5 @@ ronald_LIBE = loadfn("./data/ronald_LIBE.json")
 
 ronald_mol_entries = test_species_filter(ronald_LIBE)
 test_bucketing(ronald_mol_entries)
-test_reaction_gen(ronald_mol_entries)
 
 

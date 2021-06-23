@@ -1,3 +1,4 @@
+from mpi4py import MPI
 from itertools import combinations
 from report_generator import ReportGenerator
 import sqlite3
@@ -18,9 +19,9 @@ input: all the outputs of phase 3 as they are generated
 output: reaction network database
 description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3 which means we don't need extra index tables on the db.
 
-the code in this file is designed to run on a compute cluster using MPI. The process topology is as follows:
+the code in this file is designed to run on a compute cluster using MPI. The workers are as follows:
 
-rank 0: dispatcher. This worker maintains a list of table names and sends them out to the reaction filter processes.
+rank 0: dispatcher. This worker maintains a list of table names and sends them out to the reaction filter processes. It also recives logging messages to print to stdout.
 
 rank 1: reaction network writer. This worker recives reactions to write into the reaction network database.
 
@@ -66,26 +67,113 @@ insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
+# ranks for special processes
+DISPATCHER_RANK = 0
+NETWORK_WRITER_RANK = 1
+LOGGING_WRITER_RANK = 2
+
+# message tags
+INITIALIZATION_COMPLETE = 0
+
+
+def dispatcher(
+        bucket_db,
+        verbose=True
+):
+
+    comm = MPI.COMM_WORLD
+    table_list = []
+    bucket_con = sqlite3.connect(bucket_db)
+    bucket_cur = bucket_con.cursor()
+
+    res = bucket_cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    for name in res:
+        table = name[0]
+        table_list.append(table)
+
+    print("dispatcher success!")
+
+
+def reaction_network_writer(
+        rn_db,
+        commit_freq=1000,
+        factor_zero=1.0,
+        factor_two=1.0,
+        factor_duplicate=1.0
+):
+
+    comm = MPI.COMM_WORLD
+    rn_con = sqlite3.connect(rn_db)
+    rn_cur = rn_con.cursor()
+    rn_cur.execute(create_metadata_table)
+    rn_cur.execute(create_reactions_table)
+    rn_con.commit()
+
+    print("reaction_network_writer success!")
+
+
+def reaction_logging_writer(
+        mol_entries,
+        generation_report_path
+):
+
+    comm = MPI.COMM_WORLD
+    report_generator = ReportGenerator(
+        mol_entries,
+        generation_report_path)
+
+    print("reaction_logging_writer success!")
+
+
+def reaction_filter(
+        mol_entries,
+        bucket_db,
+        reaction_decision_tree=standard_reaction_decision_tree,
+        logging_decision_tree=standard_logging_decision_tree,
+        params={
+            'temperature' : ROOM_TEMP,
+            'electron_free_energy' : -1.4
+            }
+):
+
+    comm = MPI.COMM_WORLD
+    con = sqlite3.connect(bucket_db)
+    cur = con.cursor()
+
+    print("reaction_filter success!")
 
 
 
-def dispatcher(mol_entries,
-               bucket_db,
-               rn_db,
-               generation_report_path,
-               reaction_decision_tree=standard_reaction_decision_tree,
-               logging_decision_tree=standard_logging_decision_tree,
-               params={
-                   'temperature' : ROOM_TEMP,
-                   'electron_free_energy' : -1.4
-                   },
-               commit_freq=1000,
-               number_of_processes=8,
-               factor_zero=1.0,
-               factor_two=1.0,
-               factor_duplicate=1.0,
-               verbose=True
-               ):
+
+
+
+
+
+
+
+
+
+########### OLD CODE #############
+
+
+def dispatcher_old(
+        mol_entries,
+        bucket_db,
+        rn_db,
+        generation_report_path,
+        reaction_decision_tree=standard_reaction_decision_tree,
+        logging_decision_tree=standard_logging_decision_tree,
+        params={
+            'temperature' : ROOM_TEMP,
+            'electron_free_energy' : -1.4
+            },
+        commit_freq=1000,
+        number_of_processes=8,
+        factor_zero=1.0,
+        factor_two=1.0,
+        factor_duplicate=1.0,
+        verbose=True
+):
 
     if verbose:
         print("starting reaction filtering")
@@ -208,7 +296,7 @@ def dispatcher(mol_entries,
 
 ### filter worker
 
-def reaction_filter(mol_entries,
+def reaction_filter_old(mol_entries,
                     bucket_db,
                     table_queue,
                     reaction_queue,
