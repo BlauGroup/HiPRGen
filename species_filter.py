@@ -3,7 +3,7 @@ from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
-from species_questions import standard_mol_decision_tree, Terminal
+from species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
 
 """
 Phase 1: species filtering
@@ -15,30 +15,6 @@ species isomorphism filtering:
 
 The input dataset entries will often contain isomorphic molecules. Identifying such isomorphisms doesn't fit into the species decision tree, so we have it as a preprocessing phase.
 """
-
-def run_decision_tree(mol_entry, decision_tree):
-    node = decision_tree
-
-    while type(node) == list:
-        next_node = None
-        for (question, new_node) in node:
-            if question(mol_entry):
-                next_node = new_node
-                break
-
-        node = next_node
-
-
-    if type(node) == Terminal:
-        if node == Terminal.KEEP:
-            return True
-        else:
-            return False
-    else:
-        print(node)
-        raise Exception("unexpected node type reached")
-
-
 
 def isomorphic_mols(m1, m2):
     return m1.mol_graph.isomorphic_to(m2.mol_graph)
@@ -82,8 +58,8 @@ def groupby_isomorphism(mol_entries, number_of_processes):
     return chain.from_iterable(l)
 
 # python multiprocessing doesn't have consistent semantics across platforms
-# since we expect this code to run on linux and macos, it is easiest to just
-# have it run with a single thread of execution
+# since we expect the code in this file to run on linux and macos,
+# it is easiest to just have it run with a single thread of execution
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
                    species_decision_tree=standard_mol_decision_tree,

@@ -29,6 +29,30 @@ class Terminal(Enum):
     KEEP = 1
     DISCARD = -1
 
+def run_decision_tree(mol_entry, decision_tree):
+    node = decision_tree
+
+    while type(node) == list:
+        next_node = None
+        for (question, new_node) in node:
+            if question(mol_entry):
+                next_node = new_node
+                break
+
+        node = next_node
+
+
+    if type(node) == Terminal:
+        if node == Terminal.KEEP:
+            return True
+        else:
+            return False
+    else:
+        print(node)
+        raise Exception("unexpected node type reached")
+
+
+
 metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
 m_formulas = frozenset([m + "1" for m in metals])
 

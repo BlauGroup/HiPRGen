@@ -1,13 +1,13 @@
 from itertools import combinations
-from multiprocessing import Process, Queue
 from report_generator import ReportGenerator
+from multiprocessing import Process, Queue
 import sqlite3
 from time import localtime, strftime
-from reaction_questions import Terminal, standard_reaction_decision_tree, standard_logging_decision_tree
+from reaction_questions import Terminal, standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
 from constants import *
 
 """
-Phases 3 & 4 run in paralell.
+Phases 3 & 4 run in paralell using MPI
 
 Phase 3: reaction gen and filtering
 input: a bucket labeled by atom count
@@ -19,49 +19,8 @@ input: all the outputs of phase 3 as they are generated
 output: reaction network database
 description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3 which means we don't need extra index tables on the db.
 
-warning to contributors: be very careful when modifying the dispatcher or reaction_filter functions. They run in parallel (with one dispatcher and many reaction_filters) and it is easy to introduce subtle concurrency bugs by accident. For example, the python queues are not completely mutex locked, so the empty method can return while another processes is modifying the queue. If that doesn't make you violently shudder, then please don't tinker with the control flow of those functions. Python is not a good place to learn about parallel programming.
+the code in this file is designed to run on a compute cluster using MPI.
 """
-
-def run_decision_tree(
-        reaction,
-        mol_entries,
-        params,
-        decision_tree,
-        decision_pathway=None):
-    node = decision_tree
-
-    while type(node) == list:
-        next_node = None
-        for (question, new_node) in node:
-            if question(reaction, mol_entries, params):
-
-                # if decision_pathway is a list,
-                # append the question which
-                # answered true i.e the edge we follow
-                if decision_pathway is not None:
-                    decision_pathway.append(question)
-
-                next_node = new_node
-                break
-
-        node = next_node
-
-
-    if type(node) == Terminal:
-        if decision_pathway is not None:
-            decision_pathway.append(node)
-
-        if node == Terminal.KEEP:
-            return True
-        else:
-            return False
-    else:
-        print(node)
-        raise Exception(
-            """
-            unexpected node type reached.
-            this is usually caused because none of the questions in some node returned True.
-            """)
 
 
 def list_or(a_list):
@@ -254,8 +213,7 @@ def reaction_filter(mol_entries,
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
 
-    # empty is non blocking so it can return non empty while another processes is taking the last element, and get with a timeout can return empty even when the queue is not empty (if a bunch of other processes are reading from the queue and also probably other reasons)
-    # To overcome this, we get the next table with a timeout and if we run out of time, then explicitly check whether the queue is empty again.
+
     while not table_queue.empty():
 
         try:
