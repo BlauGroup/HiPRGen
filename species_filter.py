@@ -1,5 +1,4 @@
 from mol_entry import MoleculeEntry
-from multiprocessing import Pool
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
@@ -78,13 +77,13 @@ def groupby_isomorphism(mol_entries, number_of_processes):
     """
 
     chunks = groupby(equal_tags, mol_entries)
-    with Pool(number_of_processes) as p:
-        l = p.map(partial(groupby, isomorphic_mols), chunks)
+    l = map(partial(groupby, isomorphic_mols), chunks)
 
     return chain.from_iterable(l)
 
-
-# parallelized using python multiprocessing
+# python multiprocessing doesn't have consistent semantics across platforms
+# since we expect this code to run on linux and macos, it is easiest to just
+# have it run with a single thread of execution
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
                    species_decision_tree=standard_mol_decision_tree,
