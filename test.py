@@ -1,7 +1,7 @@
 from monty.serialization import loadfn, dumpfn
 from species_filter import *
+from reaction_filter import *
 from bucketing import *
-from reaction_gen import *
 from functools import partial
 import os
 import sqlite3

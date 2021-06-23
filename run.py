@@ -1,8 +1,8 @@
 import sys
 from monty.serialization import loadfn, dumpfn
 from species_filter import *
+from reaction_filter import *
 from bucketing import *
-from reaction_gen import *
 import pickle
 
 if len(sys.argv) != 6:
