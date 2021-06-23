@@ -1,6 +1,5 @@
 from itertools import combinations
 from report_generator import ReportGenerator
-from multiprocessing import Process, Queue
 import sqlite3
 from time import localtime, strftime
 from reaction_questions import Terminal, standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
