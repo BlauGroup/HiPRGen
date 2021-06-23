@@ -108,8 +108,8 @@ def run_decision_tree(mol_entry, decision_tree):
         print(node)
         raise Exception("unexpected node type reached")
 
-metals = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
-m_formulas = [m + "1" for m in metals]
+metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
+m_formulas = frozenset([m + "1" for m in metals])
 
 
 def add_covalent_bond_count(mol_entry):
@@ -120,7 +120,7 @@ def add_covalent_bond_count(mol_entry):
         species_0 = species[bond[0]]
         species_1 = species[bond[1]]
         tag = frozenset([species_0, species_1])
-        if len(frozenset(metals).intersection(tag)) == 0:
+        if len(metals.intersection(tag)) == 0:
             if tag in mol_bond_count:
                 mol_bond_count[tag] += 1
             else:
