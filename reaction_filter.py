@@ -18,7 +18,15 @@ input: all the outputs of phase 3 as they are generated
 output: reaction network database
 description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3 which means we don't need extra index tables on the db.
 
-the code in this file is designed to run on a compute cluster using MPI.
+the code in this file is designed to run on a compute cluster using MPI. The process topology is as follows:
+
+rank 0: dispatcher. This worker maintains a list of table names and sends them out to the reaction filter processes.
+
+rank 1: reaction network writer. This worker recives reactions to write into the reaction network database.
+
+rank 2: reaction logging writer. This worker recives reactions to write into the logging tex file
+
+rank > 2: reaction filter processes. They recieve a table name, generate all reactions from that table and run them through the reaction decision tree and logging decision tree and send the suvivors through to the reaction network writer.
 """
 
 
