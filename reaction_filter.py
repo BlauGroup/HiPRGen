@@ -5,6 +5,7 @@ import sqlite3
 from time import localtime, strftime
 from reaction_questions import Terminal, standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
 from constants import *
+from enum import Enum
 
 """
 Phases 3 & 4 run in paralell using MPI
@@ -19,15 +20,7 @@ input: all the outputs of phase 3 as they are generated
 output: reaction network database
 description: the worker processes from phase 3 are sending their reactions to this phase and it is writing them to DB as it gets them. We can ensure that duplicates don't get generated in phase 3 which means we don't need extra index tables on the db.
 
-the code in this file is designed to run on a compute cluster using MPI. The workers are as follows:
-
-rank 0: dispatcher. This worker maintains a list of table names and sends them out to the reaction filter processes. It also recives logging messages to print to stdout.
-
-rank 1: reaction network writer. This worker recives reactions to write into the reaction network database.
-
-rank 2: reaction logging writer. This worker recives reactions to write into the logging tex file
-
-rank > 2: reaction filter processes. They recieve a table name, generate all reactions from that table and run them through the reaction decision tree and logging decision tree and send the suvivors through to the reaction network writer.
+the code in this file is designed to run on a compute cluster using MPI.
 """
 
 
@@ -67,17 +60,42 @@ insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
-# ranks for special processes
 DISPATCHER_RANK = 0
-NETWORK_WRITER_RANK = 1
-LOGGING_WRITER_RANK = 2
 
+# we don't use enums for these because they need to be ints
 # message tags
-INITIALIZATION_COMPLETE = 0
 
+# sent by workers to the dispatcher once they have finished initializing
+INITIALIZATION_FINISHED_MSG = 0
+
+# sent by workers to the dispatcher if they have something to log on stdout
+STDOUT_LOGGING_MSG = 1
+
+# sent by workers to the dispatcher to request a new table
+REQUESTING_TABLE_MSG = 2
+
+class WorkerState(Enum):
+    INITIALIZING = 0
+    RUNNING = 1
+    FINISHED = 2
+
+
+def log_message(rank_string, verbose):
+    if verbose:
+        print(
+            rank_string[0],
+            '[' + strftime('%H:%M:%S', localtime()) + ']',
+            rank_string[1])
 
 def dispatcher(
+        mol_entries,
         bucket_db,
+        rn_db,
+        generation_report_path,
+        commit_freq=1000,
+        factor_zero=1.0,
+        factor_two=1.0,
+        factor_duplicate=1.0,
         verbose=True
 ):
 
@@ -91,38 +109,28 @@ def dispatcher(
         table = name[0]
         table_list.append(table)
 
-    print("dispatcher success!")
-
-
-def reaction_network_writer(
-        rn_db,
-        commit_freq=1000,
-        factor_zero=1.0,
-        factor_two=1.0,
-        factor_duplicate=1.0
-):
-
-    comm = MPI.COMM_WORLD
     rn_con = sqlite3.connect(rn_db)
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
     rn_con.commit()
 
-    print("reaction_network_writer success!")
-
-
-def reaction_logging_writer(
-        mol_entries,
-        generation_report_path
-):
-
-    comm = MPI.COMM_WORLD
     report_generator = ReportGenerator(
         mol_entries,
         generation_report_path)
 
-    print("reaction_logging_writer success!")
+    worker_states = {}
+
+    for i in range(1, comm.Get_size()):
+        worker_states[i] = WorkerState.INITIALIZING
+
+    for i in worker_states:
+        # block, waiting for workers to initialize
+        comm.recv(source=i, tag=INITIALIZATION_FINISHED_MSG)
+        log_message((i, "running"), verbose)
+        worker_states[i] = WorkerState.RUNNING
+
+    log_message((DISPATCHER_RANK, "all workers running"), verbose)
 
 
 def reaction_filter(
@@ -140,7 +148,8 @@ def reaction_filter(
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
 
-    print("reaction_filter success!")
+
+    comm.send(None, dest=DISPATCHER_RANK, tag=INITIALIZATION_FINISHED_MSG)
 
 
 

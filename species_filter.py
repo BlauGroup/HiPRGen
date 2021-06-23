@@ -57,9 +57,7 @@ def groupby_isomorphism(mol_entries, number_of_processes):
 
     return chain.from_iterable(l)
 
-# python multiprocessing doesn't have consistent semantics across platforms
-# since we expect the code in this file to run on linux and macos,
-# it is easiest to just have it run with a single thread of execution
+
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
                    species_decision_tree=standard_mol_decision_tree,
