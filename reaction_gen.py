@@ -144,7 +144,6 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
         dG += mol.get_free_energy()
         dCharge += mol.charge
 
-    # TODO: ask sam if this is right
     dG += dCharge * params['electron_free_energy']
 
 
