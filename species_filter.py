@@ -166,7 +166,8 @@ def default_true(mol):
     return True
 
 standard_mol_decision_tree = [
-    # add_covalent_bond_count always returns False
+    # add_covalent_bond_count and add_covalent_stars always returns False
+    # the associated Terminal nodes are never reached.
     (add_covalent_bond_count,Terminal.KEEP),
     (add_covalent_stars, Terminal.KEEP),
     (mol_not_connected, Terminal.DISCARD),
