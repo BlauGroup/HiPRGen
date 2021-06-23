@@ -6,6 +6,7 @@ from itertools import chain
 from monty.serialization import dumpfn
 import pickle
 import networkx as nx
+import copy
 
 """
 Phase 1: species filtering
@@ -160,7 +161,27 @@ def mol_not_connected(mol):
     return not nx.is_weakly_connected(mol.graph)
 
 
-    return False
+metals = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
+m_formulas = [m + "1" for m in metals]
+
+
+def metal_complex(mol):
+    # if mol is a metal, it isn't a metal complex
+    if mol.formula in m_formulas:
+        return False
+
+    # if mol has a metal, check if removing that metal disconnects.
+    elif any([x in mol.formula for x in metals]):
+        m_inds = [
+            i for i, x in enumerate(mol.species) if x in metals
+        ]
+        g = copy.deepcopy(mol.mol_graph)
+        g.remove_nodes(m_inds)
+        return not nx.is_weakly_connected(g.graph)
+
+    # no metal atoms
+    else:
+        return False
 
 def default_true(mol):
     return True
@@ -171,6 +192,7 @@ standard_mol_decision_tree = [
     (add_covalent_bond_count,Terminal.KEEP),
     (add_covalent_stars, Terminal.KEEP),
     (mol_not_connected, Terminal.DISCARD),
+    (metal_complex, Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
 
