@@ -5,6 +5,7 @@ from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
+import networkx as nx
 
 """
 Phase 1: species filtering
@@ -38,7 +39,6 @@ Once a Terminal node is reached, it tells us whether to keep or discard the spec
 
 def isomorphic_mols(m1, m2):
     return m1.mol_graph.isomorphic_to(m2.mol_graph)
-
 
 
 def equal_tags(m1, m2):
@@ -156,17 +156,20 @@ def add_covalent_stars(mol_entry):
     return False
 
 
+def mol_not_connected(mol):
+    return not nx.is_weakly_connected(mol.graph)
 
 
     return False
 
-def default_true(mols):
+def default_true(mol):
     return True
 
 standard_mol_decision_tree = [
     # add_covalent_bond_count always returns False
     (add_covalent_bond_count,Terminal.KEEP),
     (add_covalent_stars, Terminal.KEEP),
+    (mol_not_connected, Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
 
