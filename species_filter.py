@@ -84,6 +84,7 @@ def groupby_isomorphism(mol_entries, number_of_processes):
     return chain.from_iterable(l)
 
 
+# parallelized using python multiprocessing
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
                    species_decision_tree=standard_mol_decision_tree,
@@ -115,6 +116,7 @@ def species_filter(dataset_entries,
     if verbose:
         print("applying local filters")
 
+    # TODO: parallelize this
     mol_entries = [
         m for m in mol_entries_no_iso
         if run_decision_tree(m, species_decision_tree)]
