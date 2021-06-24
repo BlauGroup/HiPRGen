@@ -22,4 +22,4 @@ if rank == DISPATCHER_RANK:
                rn_db_file,
                report_file)
 else:
-    reaction_filter(mol_entries, bucket_db_file)
+    worker(mol_entries, bucket_db_file)

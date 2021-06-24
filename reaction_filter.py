@@ -3,7 +3,7 @@ from itertools import combinations
 from report_generator import ReportGenerator
 import sqlite3
 from time import localtime, strftime
-from reaction_questions import Terminal, standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
+from reaction_questions import standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
 from constants import *
 from enum import Enum
 
@@ -22,10 +22,6 @@ description: the worker processes from phase 3 are sending their reactions to th
 
 the code in this file is designed to run on a compute cluster using MPI.
 """
-
-
-def list_or(a_list):
-    return True in a_list
 
 
 create_metadata_table = """
@@ -60,14 +56,34 @@ insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
+
+# TODO: structure these global variables better
 DISPATCHER_RANK = 0
 
-# we don't use enums for these because they need to be ints
 # message tags
 
 # sent by workers to the dispatcher once they have finished initializing
-INITIALIZATION_FINISHED_MSG = 0
+# only sent once
+INITIALIZATION_FINISHED = 0
 
+# sent by workers to the dispatcher to request a new table
+SEND_ME_A_TABLE = 1
+
+# sent by dispatcher to workers when delivering a new table
+HERE_IS_A_TABLE = 2
+
+# sent by workers to the dispatcher when reaction passes db decision tree
+NEW_REACTION_DB = 3
+
+# sent by workers to the dispatcher when reaction passes logging decision tree
+NEW_REACTION_LOGGING = 4
+
+# requests which are handled by the dispatcher
+requests_to_handle = [
+    SEND_ME_A_TABLE,
+    NEW_REACTION_DB,
+    NEW_REACTION_LOGGING
+    ]
 
 class WorkerState(Enum):
     INITIALIZING = 0
@@ -75,12 +91,12 @@ class WorkerState(Enum):
     FINISHED = 2
 
 
-def log_message(rank_string, verbose):
+def log_message(string, verbose):
     if verbose:
         print(
-            rank_string[0],
             '[' + strftime('%H:%M:%S', localtime()) + ']',
-            rank_string[1])
+            string)
+
 
 def dispatcher(
         mol_entries,
@@ -104,151 +120,58 @@ def dispatcher(
         table = name[0]
         table_list.append(table)
 
+    log_message("creating reaction network db", verbose)
     rn_con = sqlite3.connect(rn_db)
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
     rn_con.commit()
 
+    log_message("initializing report generator", verbose)
     report_generator = ReportGenerator(
         mol_entries,
         generation_report_path)
 
     worker_states = {}
 
-    for i in range(1, comm.Get_size()):
+    worker_ranks = [i for i in range(comm.Get_size()) if i != DISPATCHER_RANK]
+
+    for i in worker_ranks:
         worker_states[i] = WorkerState.INITIALIZING
 
     for i in worker_states:
         # block, waiting for workers to initialize
-        comm.recv(source=i, tag=INITIALIZATION_FINISHED_MSG)
-        log_message((i, "running"), verbose)
+        comm.recv(source=i, tag=INITIALIZATION_FINISHED)
         worker_states[i] = WorkerState.RUNNING
 
-    log_message((DISPATCHER_RANK, "all workers running"), verbose)
+    log_message("all workers running", verbose)
 
-
-def reaction_filter(
-        mol_entries,
-        bucket_db,
-        reaction_decision_tree=standard_reaction_decision_tree,
-        logging_decision_tree=standard_logging_decision_tree,
-        params={
-            'temperature' : ROOM_TEMP,
-            'electron_free_energy' : -1.4
-            }
-):
-
-    comm = MPI.COMM_WORLD
-    con = sqlite3.connect(bucket_db)
-    cur = con.cursor()
-
-
-    comm.send(None, dest=DISPATCHER_RANK, tag=INITIALIZATION_FINISHED_MSG)
-
-
-
-
-
-
-
-
-
-
-
-
-########### OLD CODE #############
-
-
-def dispatcher_old(
-        mol_entries,
-        bucket_db,
-        rn_db,
-        generation_report_path,
-        reaction_decision_tree=standard_reaction_decision_tree,
-        logging_decision_tree=standard_logging_decision_tree,
-        params={
-            'temperature' : ROOM_TEMP,
-            'electron_free_energy' : -1.4
-            },
-        commit_freq=1000,
-        number_of_processes=8,
-        factor_zero=1.0,
-        factor_two=1.0,
-        factor_duplicate=1.0,
-        verbose=True
-):
-
-    if verbose:
-        print("starting reaction filtering")
-
-    reaction_queue = Queue()
-    table_queue = Queue()
-    logging_queue = Queue()
-    processes = {}
-
-
-    if verbose:
-        print("initializing report generator")
-
-    report_generator = ReportGenerator(
-        mol_entries,
-        generation_report_path)
-
-
-
-    bucket_con = sqlite3.connect(bucket_db)
-    bucket_cur = bucket_con.cursor()
-
-    res = bucket_cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    for name in res:
-        table = name[0]
-        table_queue.put(table)
-
-    if verbose:
-        print("starting worker processes")
-
-    for pid in range(number_of_processes):
-
-        p = Process(
-            target=reaction_filter,
-            args=(
-                mol_entries,
-                bucket_db,
-                table_queue,
-                reaction_queue,
-                logging_queue,
-                params,
-                reaction_decision_tree,
-                logging_decision_tree))
-
-        processes[pid] = p
-
-    rn_con = sqlite3.connect(rn_db)
-    rn_cur = rn_con.cursor()
-    rn_cur.execute(create_metadata_table)
-    rn_cur.execute(create_reactions_table)
-    rn_con.commit()
-
-    for pid in processes:
-        processes[pid].start()
-
-    living_children = True
     reaction_index = 0
 
-    if verbose:
-        print("starting inner loop")
+    log_message("handling requests", verbose)
 
-    while ( living_children or
-            not reaction_queue.empty() or
-            not logging_queue.empty()):
-        # if reaction queue and table queue are empty, enter a spin lock to
-        # wait for spawned children to exit.
-        living_bools = [processes[pid].is_alive() for pid in processes]
-        living_children = list_or(living_bools)
 
-        if not reaction_queue.empty():
-            reaction = reaction_queue.get()
+    while True:
+        if WorkerState.RUNNING not in worker_states.values():
+            break
+
+        status = MPI.Status()
+        data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+        tag = status.Get_tag()
+        rank = status.Get_source()
+
+        if tag == SEND_ME_A_TABLE:
+            if len(table_list) == 0:
+                comm.send(None, dest=rank, tag=HERE_IS_A_TABLE)
+                worker_states[rank] = WorkerState.FINISHED
+            else:
+                next_table = table_list.pop()
+                comm.send(next_table, dest=rank, tag=HERE_IS_A_TABLE)
+                log_message("dispatched " + next_table, verbose)
+
+
+        elif tag == NEW_REACTION_DB:
+            reaction = data
             rn_cur.execute(
                 insert_reaction,
                 (reaction_index,
@@ -266,21 +189,20 @@ def dispatcher_old(
             if reaction_index % commit_freq == 0:
                 rn_con.commit()
 
-                if verbose:
-                    print(
-                        '[' + strftime('%H:%M', localtime()) + ']',
-                        reaction_index,
-                        "reactions;",
-                        table_queue.qsize(),
-                        "buckets remaining")
 
-        if not logging_queue.empty():
-            reaction, decision_path = logging_queue.get()
+        elif tag == NEW_REACTION_LOGGING:
+
+            reaction = data[0]
+            decision_path = data[1]
+
             report_generator.emit_verbatim(
                 '\n'.join([str(f) for f in decision_path]))
             report_generator.emit_reaction(reaction)
             report_generator.emit_newline()
 
+
+
+    log_message("finalzing database and generation report", verbose)
     rn_cur.execute(
         insert_metadata,
         (len(mol_entries) + 1,
@@ -297,29 +219,30 @@ def dispatcher_old(
     rn_con.close()
 
 
+def worker(
+        mol_entries,
+        bucket_db,
+        reaction_decision_tree=standard_reaction_decision_tree,
+        logging_decision_tree=standard_logging_decision_tree,
+        params={
+            'temperature' : ROOM_TEMP,
+            'electron_free_energy' : -1.4
+            }
+):
 
-### filter worker
-
-def reaction_filter_old(mol_entries,
-                    bucket_db,
-                    table_queue,
-                    reaction_queue,
-                    logging_queue,
-                    params,
-                    decision_tree,
-                    logging_decision_tree):
-
+    comm = MPI.COMM_WORLD
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()
 
 
-    while not table_queue.empty():
+    comm.send(None, dest=DISPATCHER_RANK, tag=INITIALIZATION_FINISHED)
 
-        try:
-            # timeout is 1 centisecond
-            table = table_queue.get(timeout=0.01)
-        except:
-            continue
+    while True:
+        comm.send(None, dest=DISPATCHER_RANK, tag=SEND_ME_A_TABLE)
+        table = comm.recv(source=DISPATCHER_RANK, tag=HERE_IS_A_TABLE)
+
+        if table is None:
+            break
 
 
         bucket = []
@@ -358,29 +281,47 @@ def reaction_filter_old(mol_entries,
             if run_decision_tree(reaction,
                                  mol_entries,
                                  params,
-                                 decision_tree,
+                                 reaction_decision_tree,
                                  decision_pathway_forward
                                  ):
-                reaction_queue.put(reaction)
+
+                comm.send(
+                    reaction,
+                    dest=DISPATCHER_RANK,
+                    tag=NEW_REACTION_DB)
+
 
             if run_decision_tree(reverse_reaction,
                                  mol_entries,
                                  params,
-                                 decision_tree,
+                                 reaction_decision_tree,
                                  decision_pathway_reverse
                                  ):
-                reaction_queue.put(reverse_reaction)
+
+                comm.send(
+                    reverse_reaction,
+                    dest=DISPATCHER_RANK,
+                    tag=NEW_REACTION_DB)
 
             if run_decision_tree(reaction,
                                  mol_entries,
                                  params,
                                  logging_decision_tree):
-                logging_queue.put(
-                    (reaction, decision_pathway_forward))
+
+                comm.send(
+                    (reaction, decision_pathway_forward),
+                    dest=DISPATCHER_RANK,
+                    tag=NEW_REACTION_LOGGING)
+
+
+
 
             if run_decision_tree(reverse_reaction,
                                  mol_entries,
                                  params,
                                  logging_decision_tree):
-                logging_queue.put(
-                    (reverse_reaction, decision_pathway_reverse))
+
+                comm.send(
+                    (reverse_reaction, decision_pathway_reverse),
+                    dest=DISPATCHER_RANK,
+                    tag=NEW_REACTION_LOGGING)
