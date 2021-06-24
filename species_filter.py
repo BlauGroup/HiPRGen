@@ -4,6 +4,7 @@ from itertools import chain
 from monty.serialization import dumpfn
 import pickle
 from species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
+from time import localtime, strftime
 
 """
 Phase 1: species filtering
@@ -47,7 +48,7 @@ def groupby(equivalence_relation, xs):
 
     return groups
 
-def groupby_isomorphism(mol_entries, number_of_processes):
+def groupby_isomorphism(mol_entries):
     """
     first group by tag to reduce the number of graph isos we need to compute
     """
@@ -57,16 +58,18 @@ def groupby_isomorphism(mol_entries, number_of_processes):
 
     return chain.from_iterable(l)
 
+def log_message(string):
+    print(
+        '[' + strftime('%H:%M:%S', localtime()) + ']',
+        string)
 
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
-                   species_decision_tree=standard_mol_decision_tree,
-                   number_of_processes=8,
-                   verbose=True):
+                   species_decision_tree=standard_mol_decision_tree
+                   ):
 
-    if verbose:
-        print("starting species filter")
-        print("loading molecule entries from json")
+    log_message("starting species filter")
+    log_message("loading molecule entries from json")
 
     mol_entries_unfiltered = [
         MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
@@ -75,8 +78,7 @@ def species_filter(dataset_entries,
     # currently, take lowest energy mol in each iso class
     # if we want to add more non local species filtering it would go here
 
-    if verbose:
-        print("applying non local filters")
+    log_message("applying non local filters")
 
     def collapse_isomorphism_class(g):
         return min(g,key=lambda x: x.get_free_energy())
@@ -84,10 +86,9 @@ def species_filter(dataset_entries,
 
     mol_entries_no_iso = [
         collapse_isomorphism_class(g)
-        for g in groupby_isomorphism(mol_entries_unfiltered, number_of_processes)]
+        for g in groupby_isomorphism(mol_entries_unfiltered)]
 
-    if verbose:
-        print("applying local filters")
+    log_message("applying local filters")
 
     # TODO: parallelize this
     mol_entries = [
@@ -95,15 +96,13 @@ def species_filter(dataset_entries,
         if run_decision_tree(m, species_decision_tree)]
 
 
-    if verbose:
-        print("assigning indices")
+    log_message("assigning indices")
 
     for i, e in enumerate(mol_entries):
         e.parameters["ind"] = i
 
 
-    if verbose:
-        print("creating molecule entry pickle")
+    log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
     # has frozen set keys, so doesn't seralize well into json format.

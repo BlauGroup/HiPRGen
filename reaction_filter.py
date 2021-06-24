@@ -91,11 +91,10 @@ class WorkerState(Enum):
     FINISHED = 2
 
 
-def log_message(string, verbose):
-    if verbose:
-        print(
-            '[' + strftime('%H:%M:%S', localtime()) + ']',
-            string)
+def log_message(string):
+    print(
+        '[' + strftime('%H:%M:%S', localtime()) + ']',
+        string)
 
 
 def dispatcher(
@@ -107,7 +106,6 @@ def dispatcher(
         factor_zero=1.0,
         factor_two=1.0,
         factor_duplicate=1.0,
-        verbose=True
 ):
 
     comm = MPI.COMM_WORLD
@@ -120,14 +118,14 @@ def dispatcher(
         table = name[0]
         table_list.append(table)
 
-    log_message("creating reaction network db", verbose)
+    log_message("creating reaction network db")
     rn_con = sqlite3.connect(rn_db)
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
     rn_con.commit()
 
-    log_message("initializing report generator", verbose)
+    log_message("initializing report generator")
     report_generator = ReportGenerator(
         mol_entries,
         generation_report_path)
@@ -144,11 +142,11 @@ def dispatcher(
         comm.recv(source=i, tag=INITIALIZATION_FINISHED)
         worker_states[i] = WorkerState.RUNNING
 
-    log_message("all workers running", verbose)
+    log_message("all workers running")
 
     reaction_index = 0
 
-    log_message("handling requests", verbose)
+    log_message("handling requests")
 
 
     while True:
@@ -167,7 +165,7 @@ def dispatcher(
             else:
                 next_table = table_list.pop()
                 comm.send(next_table, dest=rank, tag=HERE_IS_A_TABLE)
-                log_message("dispatched " + next_table, verbose)
+                log_message("dispatched " + next_table)
 
 
         elif tag == NEW_REACTION_DB:
@@ -202,7 +200,7 @@ def dispatcher(
 
 
 
-    log_message("finalzing database and generation report", verbose)
+    log_message("finalzing database and generation report")
     rn_cur.execute(
         insert_metadata,
         (len(mol_entries) + 1,
