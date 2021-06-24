@@ -128,7 +128,9 @@ def dispatcher(
     log_message("initializing report generator")
     report_generator = ReportGenerator(
         mol_entries,
-        generation_report_path)
+        generation_report_path,
+        rebuild_mol_pictures=False
+    )
 
     worker_states = {}
 
