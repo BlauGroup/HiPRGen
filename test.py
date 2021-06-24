@@ -1,41 +1,30 @@
-from monty.serialization import loadfn, dumpfn
-from species_filter import *
-from reaction_filter import *
-from bucketing import *
-from functools import partial
 import os
 import sqlite3
+import pickle
 
 class bcolors:
     PASS = '\u001b[32;1m'
     FAIL = '\u001b[31;1m'
     ENDC = '\u001b[0m'
 
-if os.path.isdir('./scratch'):
-    os.system('rm -r ./scratch')
 
-os.system('mkdir scratch')
+def test_species_filter():
+    with open('./scratch/ronald_mol_entries.pickle', 'rb') as f:
+        mol_entries_scratch = pickle.load(f)
 
-
-
-def test_species_filter(ronald_LIBE):
-    ronald_mol_entries = species_filter(
-        ronald_LIBE,
-        "./scratch/ronald_mol_entries.pickle",
-        verbose=False)
-
-    ronald_mol_entries_from_disk = loadfn("./data/ronald_mol_entries.json")
+    with open('./data/ronald_mol_entries.pickle', 'rb') as f:
+        mol_entries_data = pickle.load(f)
 
 
-    if ronald_mol_entries == ronald_mol_entries_from_disk:
+
+    if mol_entries_scratch == mol_entries_data:
         print(bcolors.PASS + "passed: test_species_filter" + bcolors.ENDC)
-        return ronald_mol_entries
+        return
     else:
         print(bcolors.FAIL + "failed: test_species_filter" + bcolors.ENDC)
         quit()
 
-def test_bucketing(mol_entries):
-    b = Bucket(mol_entries, './scratch/buckets.sqlite')
+def test_bucketing():
     con = sqlite3.connect('./scratch/buckets.sqlite')
     cur = con.cursor()
     number_of_buckets = list(cur.execute(
@@ -49,18 +38,7 @@ def test_bucketing(mol_entries):
         print(bcolors.FAIL + "failed: test_bucketing" + bcolors.ENDC)
         quit()
 
-
-############ OLD CODE ############
-
-def test_reaction_gen_old(mol_entries):
-    d = dispatcher(
-        mol_entries,
-        './scratch/buckets.sqlite',
-        './scratch/rn.sqlite',
-        './scratch/generation_report.tex',
-        verbose=False
-    )
-
+def test_reaction_gen():
     con = sqlite3.connect('./scratch/rn.sqlite')
     cur = con.cursor()
     metadata = list(cur.execute("SELECT * FROM metadata"))
@@ -73,10 +51,6 @@ def test_reaction_gen_old(mol_entries):
         quit()
 
 
-
-ronald_LIBE = loadfn("./data/ronald_LIBE.json")
-
-ronald_mol_entries = test_species_filter(ronald_LIBE)
-test_bucketing(ronald_mol_entries)
-
-
+test_species_filter()
+test_bucketing()
+test_reaction_gen()
