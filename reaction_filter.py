@@ -68,11 +68,6 @@ DISPATCHER_RANK = 0
 # sent by workers to the dispatcher once they have finished initializing
 INITIALIZATION_FINISHED_MSG = 0
 
-# sent by workers to the dispatcher if they have something to log on stdout
-STDOUT_LOGGING_MSG = 1
-
-# sent by workers to the dispatcher to request a new table
-REQUESTING_TABLE_MSG = 2
 
 class WorkerState(Enum):
     INITIALIZING = 0
