@@ -5,7 +5,6 @@ from monty.serialization import dumpfn
 import pickle
 from species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
 from time import localtime, strftime
-from report_generator import ReportGenerator
 
 
 """
@@ -67,7 +66,6 @@ def log_message(string):
 
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
-                   generation_report_path,
                    species_decision_tree=standard_mol_decision_tree
                    ):
 
@@ -112,12 +110,5 @@ def species_filter(dataset_entries,
     # pickles work better in this setting
     with open(mol_entries_pickle_location, 'wb') as f:
         pickle.dump(mol_entries, f)
-
-
-    # we generate a dummy report here just to get the mol pictures
-    report_generator = ReportGenerator(
-        mol_entries,
-        generation_report_path
-    )
 
     return mol_entries
