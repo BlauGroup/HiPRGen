@@ -4,7 +4,7 @@ import pickle
 from mpi4py import MPI
 
 
-# python run_network_generation.py mol_entries_pickle_location bucket_db_location rn_db_location generation_report_location
+# python run_network_generation.py mol_entries_pickle_file bucket_db_file rn_db_location generation_report_location
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 

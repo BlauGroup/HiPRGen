@@ -4,7 +4,7 @@ from species_filter import *
 from bucketing import *
 
 if len(sys.argv) != 4:
-    print("usage: python run_bucketing.py database_json_file mol_entries_pickle_location bucket_db_location ")
+    print("usage: python run_bucketing.py database_json_file mol_entries_pickle_file bucket_db_file")
     quit()
 
 database_json_file = sys.argv[1]
