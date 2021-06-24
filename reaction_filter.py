@@ -126,6 +126,9 @@ def dispatcher(
     rn_con.commit()
 
     log_message("initializing report generator")
+
+    # since MPI processes spin lock, we don't want to have the dispathcer
+    # spend a bunch of time generating molecule pictures
     report_generator = ReportGenerator(
         mol_entries,
         generation_report_path,

@@ -114,7 +114,7 @@ def species_filter(dataset_entries,
         pickle.dump(mol_entries, f)
 
 
-    # we generate a dummy report here just go get the mol pictures
+    # we generate a dummy report here just to get the mol pictures
     report_generator = ReportGenerator(
         mol_entries,
         generation_report_path
