@@ -208,8 +208,8 @@ def dispatcher(
     log_message("finalzing database and generation report")
     rn_cur.execute(
         insert_metadata,
-        (len(mol_entries) + 1,
-         reaction_index + 1,
+        (len(mol_entries),
+         reaction_index,
         factor_zero,
         factor_two,
         factor_duplicate)

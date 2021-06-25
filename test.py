@@ -45,7 +45,7 @@ def test_reaction_gen():
     cur = con.cursor()
     metadata = list(cur.execute("SELECT * FROM metadata"))
 
-    if metadata == [(38, 156, 1.0, 1.0, 1.0)]:
+    if metadata == [(37, 155, 1.0, 1.0, 1.0)]:
         print(bcolors.PASS + "passed: test_reaction_gen" + bcolors.ENDC)
         return
     else:
