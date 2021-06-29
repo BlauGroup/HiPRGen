@@ -1,7 +1,6 @@
 import os
 import sqlite3
 import pickle
-from initial_state import *
 from mc_analysis import *
 from network_loader import *
 
@@ -14,6 +13,7 @@ network_loader = NetworkLoader(
     './scratch/rn.sqlite',
     './scratch/ronald_mol_entries.pickle'
     )
+
 
 def test_species_filter(network_loader):
     with open('./data/ronald_mol_entries.pickle', 'rb') as f:
@@ -38,28 +38,6 @@ def test_reaction_gen(network_loader):
         quit()
 
 
-def test_initial_state(mol_entries):
-    Li_plus_id = find_mol_entry_from_xyz_and_charge(
-        mol_entries,
-        './xyz_files/Li.xyz',
-        1)
-
-    EC_id = find_mol_entry_from_xyz_and_charge(
-        mol_entries,
-        './xyz_files/EC.xyz',
-        0)
-
-    initial_state = {
-        Li_plus_id : 30,
-        EC_id : 30
-    }
-
-    insert_initial_state(initial_state, mol_entries, './scratch/rn.sqlite')
-
-    # there isn't really anything to test here. Just making sure the code runs
-    print(bcolors.PASS + "passed: test_initial_state" + bcolors.ENDC)
-
-
 def test_mc_pathfinding(network_loader):
 
     LEDC_id = find_mol_entry_from_xyz_and_charge(
@@ -72,7 +50,7 @@ def test_mc_pathfinding(network_loader):
 
 
 
-mol_entries = test_species_filter(network_loader)
+test_species_filter(network_loader)
 test_reaction_gen(network_loader)
 test_mc_pathfinding(network_loader)
 

@@ -1,5 +1,6 @@
 import sys
 from reaction_filter import *
+from initial_state import *
 import pickle
 from mpi4py import MPI
 
@@ -22,6 +23,8 @@ if rank == DISPATCHER_RANK:
                rn_db_file,
                report_file)
 
+    # insert initial state
+    # TODO: put this into a seperate file
     Li_plus_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,
         './xyz_files/Li.xyz',
@@ -40,10 +43,14 @@ if rank == DISPATCHER_RANK:
     insert_initial_state(initial_state, mol_entries, rn_db_file)
 
 
+
 else:
     worker(mol_entries,
            bucket_db_file,
            logging_decision_tree=standard_reaction_decision_tree
            )
+
+
+
 
 
