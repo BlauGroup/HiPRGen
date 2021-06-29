@@ -1,8 +1,8 @@
 import math
-from mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry
 from enum import Enum
 from functools import partial
-from constants import *
+from HiPRGen.constants import *
 
 """
 The reaction decision tree:

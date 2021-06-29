@@ -1,5 +1,5 @@
 import sys
-from reaction_filter import *
+from HiPRGen.reaction_filter import *
 import pickle
 from mpi4py import MPI
 

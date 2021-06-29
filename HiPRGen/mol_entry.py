@@ -12,7 +12,7 @@ from pymatgen.analysis.graphs import MoleculeGraph, MolGraphSplitError
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Molecule
 
-from constants import ROOM_TEMP
+from HiPRGen.constants import ROOM_TEMP
 
 __author__ = "Sam Blau, Mingjian Wen"
 __copyright__ = "Copyright 2019, The Materials Project"

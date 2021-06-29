@@ -1,4 +1,4 @@
-from mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry
 from itertools import combinations_with_replacement
 import sqlite3
 

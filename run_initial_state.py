@@ -1,5 +1,5 @@
 import sys
-from initial_state import *
+from HiPRGen.initial_state import *
 import pickle
 
 if len(sys.argv) != 3:

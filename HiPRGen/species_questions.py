@@ -1,4 +1,4 @@
-from mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry
 from enum import Enum
 import networkx as nx
 import copy

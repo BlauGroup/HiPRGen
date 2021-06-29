@@ -1,10 +1,10 @@
 from mpi4py import MPI
 from itertools import combinations
-from report_generator import ReportGenerator
+from HiPRGen.report_generator import ReportGenerator
 import sqlite3
 from time import localtime, strftime
-from reaction_questions import standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
-from constants import *
+from HiPRGen.reaction_questions import standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
+from HiPRGen.constants import *
 from enum import Enum
 
 """

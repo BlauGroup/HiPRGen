@@ -1,9 +1,9 @@
-from mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
-from species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
+from HiPRGen.species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
 from time import localtime, strftime
 
 

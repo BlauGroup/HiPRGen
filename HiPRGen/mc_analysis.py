@@ -1,6 +1,6 @@
-from report_generator import *
-from network_loader import *
-from constants import *
+from HiPRGen.report_generator import *
+from HiPRGen.network_loader import *
+from HiPRGen.constants import *
 import math
 
 

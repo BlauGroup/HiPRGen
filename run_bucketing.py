@@ -1,8 +1,8 @@
 import sys
 from monty.serialization import loadfn
-from species_filter import *
-from bucketing import *
-from report_generator import ReportGenerator
+from HiPRGen.species_filter import *
+from HiPRGen.bucketing import *
+from HiPRGen.report_generator import ReportGenerator
 
 
 if len(sys.argv) != 5:
