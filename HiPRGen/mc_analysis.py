@@ -4,7 +4,6 @@ from HiPRGen.constants import *
 import math
 
 
-
 def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
 

@@ -239,7 +239,7 @@ def worker(
         logging_decision_tree=standard_logging_decision_tree,
         params={
             'temperature' : ROOM_TEMP,
-            'electron_free_energy' : -1.4
+            'electron_free_energy' : -1.8
             }
 ):
 

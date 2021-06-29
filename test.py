@@ -25,19 +25,15 @@ def test_species_filter(network_loader):
 
     if network_loader.mol_entries == mol_entries_data:
         print(bcolors.PASS + "passed: test_species_filter" + bcolors.ENDC)
-        return
     else:
         print(bcolors.FAIL + "failed: test_species_filter" + bcolors.ENDC)
-        quit()
 
 def test_reaction_gen(network_loader):
 
-    if network_loader.number_of_reactions == 112060:
+    if network_loader.number_of_reactions == 110371:
         print(bcolors.PASS + "passed: test_reaction_gen" + bcolors.ENDC)
-        return
     else:
         print(bcolors.FAIL + "failed: test_reaction_gen" + bcolors.ENDC)
-        quit()
 
 
 def test_mc_pathfinding(network_loader):
@@ -48,6 +44,8 @@ def test_mc_pathfinding(network_loader):
         0)
 
     reaction_tally_report(network_loader, './scratch/reaction_tally.tex')
+    pathfinding = Pathfinding(network_loader)
+    pathfinding.generate_pathway_report(LEDC_id, './scratch/LEDC_pathways.tex')
 
 
 test_species_filter(network_loader)

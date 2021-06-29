@@ -56,6 +56,12 @@ def run_decision_tree(mol_entry, decision_tree):
 metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
 m_formulas = frozenset([m + "1" for m in metals])
 
+def metal_ion_filter(mol_entry):
+    "only allow positively charged metal ions"
+    if mol_entry.formula in m_formulas and mol_entry.charge <= 0:
+        return True
+    else:
+        return False
 
 def add_covalent_bond_count(mol_entry):
     mol_bond_count = {}
@@ -136,6 +142,7 @@ standard_mol_decision_tree = [
     (add_covalent_bond_count,Terminal.KEEP),
     (add_covalent_stars, Terminal.KEEP),
     (mol_not_connected, Terminal.DISCARD),
+    (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
