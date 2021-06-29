@@ -3,6 +3,7 @@ import sqlite3
 import pickle
 from mc_analysis import *
 from network_loader import *
+from initial_state import find_mol_entry_from_xyz_and_charge
 
 class bcolors:
     PASS = '\u001b[32;1m'
