@@ -28,6 +28,8 @@ class NetworkLoader:
 
         self.con = sqlite3.connect(network_database)
         self.mol_entries = mol_entries
+        self.load_trajectories()
+        self.load_initial_state()
 
         self.reactions = {}
 

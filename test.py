@@ -3,6 +3,7 @@ import sqlite3
 import pickle
 from initial_state import *
 from mc_analysis import *
+from network_loader import *
 
 class bcolors:
     PASS = '\u001b[32;1m'
@@ -77,18 +78,15 @@ def test_initial_state(mol_entries):
 
 def test_mc_pathfinding(mol_entries):
 
+    network_loader = NetworkLoader('./scratch/rn.sqlite', mol_entries)
+
     LEDC_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,
         './xyz_files/LEDC.xyz',
         0)
 
-    pathfinding = Pathfinding(
-        './scratch/rn.sqlite',
-        mol_entries,
-        './scratch/LEDC_pathways.tex'
-    )
-
-    pathfinding.generate_pathway_report(LEDC_id)
+    pathfinding = Pathfinding(network_loader)
+    pathfinding.generate_pathway_report(121, './scratch/LEDC_pathways.tex')
 
 
 
