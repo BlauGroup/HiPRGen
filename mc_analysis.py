@@ -51,10 +51,7 @@ class Pathfinding:
 
     def compute_pathways(self, species_id):
 
-        if species_id in self.pathways:
-            return self.pathways[species_id]
-
-        else:
+        if species_id not in self.pathways:
             reaction_pathway_list = []
             for seed in self.network_loader.trajectories:
                 pathway = self.compute_pathway(
@@ -68,7 +65,7 @@ class Pathfinding:
             self.pathways[species_id] = self.collect_duplicate_pathways(
                 reaction_pathway_list)
 
-            return self.pathways[species_id]
+        return self.pathways[species_id]
 
 
     def collect_duplicate_pathways(
