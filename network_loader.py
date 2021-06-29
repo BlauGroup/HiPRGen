@@ -14,23 +14,30 @@ sql_get_trajectory = """
     SELECT * FROM trajectories;
 """
 
+sql_get_initial_state = """
+    SELECT * FROM initial_state;
+"""
+
 class NetworkLoader:
 
     def __init__(
+            self,
             network_database,
-            mol_entries_pickle):
+            mol_entries):
 
 
         self.con = sqlite3.connect(network_database)
-
-        with open(mol_entries_pickle, 'rb') as f:
-            self.mol_entries = pickle.load(f)
-
+        self.mol_entries = mol_entries
 
         self.reactions = {}
 
 
-    def index_to_reactions(self, reaction_index):
+    def index_to_reaction(self, reaction_index):
+
+        """
+        this method gets called a lot, so we cache the reactions to
+        minimize database interaction
+        """
 
         if reaction_index in self.reactions:
             return self.reactions[reaction_index]
@@ -71,4 +78,12 @@ class NetworkLoader:
         self.trajectories = trajectories
 
 
+    def load_initial_state(self):
 
+        cur = self.con.cursor()
+        initial_state = {}
+
+        for row in cur.execute(sql_get_initial_state):
+            initial_state[row[0]] = row[1]
+
+        self.initial_state = initial_state

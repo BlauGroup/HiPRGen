@@ -2,7 +2,7 @@ import os
 import sqlite3
 import pickle
 from initial_state import *
-
+from mc_analysis import *
 
 class bcolors:
     PASS = '\u001b[32;1m'
@@ -75,10 +75,26 @@ def test_initial_state(mol_entries):
     print(bcolors.PASS + "passed: test_initial_state" + bcolors.ENDC)
 
 
+def test_mc_pathfinding(mol_entries):
+
+    LEDC_id = find_mol_entry_from_xyz_and_charge(
+        mol_entries,
+        './xyz_files/LEDC.xyz',
+        0)
+
+    pathfinding = Pathfinding(
+        './scratch/rn.sqlite',
+        mol_entries,
+        './scratch/LEDC_pathways.tex'
+    )
+
+    pathfinding.generate_pathway_report(LEDC_id)
+
+
 
 mol_entries = test_species_filter()
 test_bucketing()
 test_reaction_gen()
-test_initial_state(mol_entries)
-
+# test_initial_state(mol_entries)
+test_mc_pathfinding(mol_entries)
 

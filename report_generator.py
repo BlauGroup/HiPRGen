@@ -98,11 +98,26 @@ class ReportGenerator:
         self.f.write(
             "\n\\vspace{1cm}\n")
 
+    def emit_newpage(self):
+        self.f.write("\\newpage\n\n\n")
+
     def emit_verbatim(self, s):
         self.f.write('\\begin{verbatim}\n')
         self.f.write(s)
         self.f.write('\n')
         self.f.write('\\end{verbatim}\n')
+
+    def emit_text(self,s):
+        self.f.write('\n\n' + s + '\n\n')
+
+    def emit_initial_state(self, initial_state):
+        self.emit_text("initial state:")
+        for species_id in initial_state:
+            num = initial_state[species_id]
+            if num > 0:
+                self.emit_text(str(num) + " molecules of")
+                self.emit_molecule(species_id)
+                self.emit_newline()
 
 
     def emit_reaction(self, reaction):
