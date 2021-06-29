@@ -23,13 +23,22 @@ class NetworkLoader:
     def __init__(
             self,
             network_database,
-            mol_entries):
+            mol_entries_pickle):
 
 
         self.con = sqlite3.connect(network_database)
-        self.mol_entries = mol_entries
+
+        with open(mol_entries_pickle, 'rb') as f:
+            self.mol_entries = pickle.load(f)
+
+        cur = self.con.cursor()
+        metadata = list(cur.execute("SELECT * FROM metadata"))[0]
+        self.number_of_species = metadata[0]
+        self.number_of_reactions = metadata[1]
+
+
         self.load_trajectories()
-        self.load_initial_state()
+        self.load_initial_state( )
 
         self.reactions = {}
 
