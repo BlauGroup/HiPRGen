@@ -9,6 +9,39 @@ def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
 
 
+def reaction_tally_report(network_loader, reaction_tally_report_path, cutoff=10):
+
+    reaction_tally = {}
+    for seed in network_loader.trajectories:
+        for step in network_loader.trajectories[seed]:
+            reaction_id = network_loader.trajectories[seed][step][0]
+
+            if reaction_id in reaction_tally:
+                reaction_tally[reaction_id] += 1
+            else:
+                reaction_tally[reaction_id] = 1
+
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        reaction_tally_report_path,
+        rebuild_mol_pictures=False)
+
+    report_generator.emit_text("reaction tally report")
+
+    for (reaction_index, number) in sorted(
+            reaction_tally.items(), key=lambda pair: -pair[1]):
+        if number > cutoff:
+            report_generator.emit_text(str(number) + " occourances of:")
+            report_generator.emit_reaction(
+                network_loader.index_to_reaction(reaction_index))
+            report_generator.emit_newline()
+
+    report_generator.finished()
+
+
+
+
 class Pathfinding:
 
     def __init__(

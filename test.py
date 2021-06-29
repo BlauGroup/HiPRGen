@@ -47,9 +47,7 @@ def test_mc_pathfinding(network_loader):
         './xyz_files/LEDC.xyz',
         0)
 
-    pathfinding = Pathfinding(network_loader)
-    pathfinding.generate_pathway_report(121, './scratch/LEDC_pathways.tex')
-
+    reaction_tally_report(network_loader, './scratch/reaction_tally.tex')
 
 
 test_species_filter(network_loader)

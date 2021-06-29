@@ -38,7 +38,7 @@ class NetworkLoader:
 
 
         self.load_trajectories()
-        self.load_initial_state( )
+        self.load_initial_state()
 
         self.reactions = {}
 
