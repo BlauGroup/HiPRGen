@@ -100,10 +100,10 @@ class WorkerState(Enum):
     FINISHED = 2
 
 
-def log_message(string):
+def log_message(*args, **kwargs):
     print(
         '[' + strftime('%H:%M:%S', localtime()) + ']',
-        string)
+        *args, **kwargs)
 
 
 def dispatcher(
@@ -121,11 +121,16 @@ def dispatcher(
     table_list = []
     bucket_con = sqlite3.connect(bucket_db)
     bucket_cur = bucket_con.cursor()
+    size_cur = bucket_con.cursor()
 
     res = bucket_cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
     for name in res:
         table = name[0]
-        table_list.append(table)
+        table_size = list(size_cur.execute("SELECT COUNT(*) FROM " + table))[0][0]
+        table_list.append((table, table_size))
+
+    # we want the biggest buckets to be processed first
+    table_list.sort(key=lambda pair: pair[1])
 
     log_message("creating reaction network db")
     rn_con = sqlite3.connect(rn_db)
@@ -178,9 +183,14 @@ def dispatcher(
                 comm.send(None, dest=rank, tag=HERE_IS_A_TABLE)
                 worker_states[rank] = WorkerState.FINISHED
             else:
-                next_table = table_list.pop()
+                # pop removes and returns the last item in the list
+                next_table, table_size = table_list.pop()
                 comm.send(next_table, dest=rank, tag=HERE_IS_A_TABLE)
-                log_message("dispatched " + next_table)
+                log_message(
+                    "dispatched",
+                    next_table,
+                    str(table_size),
+                    "rows")
 
 
         elif tag == NEW_REACTION_DB:
