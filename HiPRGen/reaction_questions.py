@@ -265,6 +265,7 @@ def reactant_and_product_not_isomorphic(reaction, mols, params):
 def default_true(reaction, mols, params):
     return True
 
+
 def is_A_B_to_A_C_where_A_not_metal_atom(reaction, mols, params):
     reactants_set = set([])
     products_set = set([])
@@ -286,6 +287,28 @@ def is_A_B_to_A_C_where_A_not_metal_atom(reaction, mols, params):
         else:
             return True
 
+def reaction_is_decomposable(reaction, mols, params):
+    if reaction['number_of_reactants'] < 2 or reaction['number_of_products'] < 2:
+        return False
+    else:
+        reactant_formulas = []
+        product_formulas = []
+        for i in range(reaction['number_of_reactants']):
+            reactant = mols[reaction['reactants'][i]]
+            reactant_formulas.append(reactant.formula)
+
+        for i in range(reaction['number_of_products']):
+            product = mols[reaction['products'][i]]
+            product_formulas.append(product.formula)
+
+        reactant_formulas_set = set(reactant_formulas)
+        product_formulas_set = set(product_formulas)
+
+        if len(reactant_formulas_set.intersection(product_formulas_set)) > 0:
+            return True
+        else:
+            return False
+
 
 
 standard_reaction_decision_tree = [
@@ -302,6 +325,7 @@ standard_reaction_decision_tree = [
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)]),
 
+    (reaction_is_decomposable, Terminal.DISCARD),
 
     (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
 

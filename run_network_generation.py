@@ -24,8 +24,7 @@ if rank == DISPATCHER_RANK:
 
 else:
     worker(mol_entries,
-           bucket_db_file,
-           logging_decision_tree=standard_reaction_decision_tree
+           bucket_db_file
            )
 
 
