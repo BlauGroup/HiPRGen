@@ -87,13 +87,6 @@ NEW_REACTION_DB = 3
 # sent by workers to the dispatcher when reaction passes logging decision tree
 NEW_REACTION_LOGGING = 4
 
-# requests which are handled by the dispatcher
-requests_to_handle = [
-    SEND_ME_A_TABLE,
-    NEW_REACTION_DB,
-    NEW_REACTION_LOGGING
-    ]
-
 class WorkerState(Enum):
     INITIALIZING = 0
     RUNNING = 1
@@ -286,18 +279,7 @@ def worker(
                 'products' : reaction['reactants'],
                 'number_of_reactants' : reaction['number_of_products'],
                 'number_of_products' : reaction['number_of_reactants'],
-                'reverse' : reaction
             }
-
-            # reaction atom mapping is one of the most expensive operations we do
-            # it takes ~0.02 seconds. If we compute the atom mapping for a reaction
-            # we don't need to also compute if for the reverse reaction, so we couple
-            # reaction / reverse pairs to facilitate that.
-
-            # this attribute is only here for performance reasons. Question functions
-            # should absolutely not be touching it unless they are about to compute
-            # an atom mapping
-            reaction['reverse'] = reverse_reaction
 
             decision_pathway_forward = []
             decision_pathway_reverse = []
