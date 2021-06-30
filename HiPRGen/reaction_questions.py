@@ -337,4 +337,11 @@ standard_reaction_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
+
+# useful for testing file system performance
+minimal_reaction_decision_tree = [
+    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+    (default_true, Terminal.KEEP)
+    ]
+
 standard_logging_decision_tree = Terminal.DISCARD
