@@ -96,7 +96,7 @@ def add_covalent_stars(mol_entry):
                     if bond[1] == i:
                         end = species[bond[0]]
 
-                    if end in end_counts:
+                    if end in end_counts and end not in metals:
                         end_counts[end] += 1
                     else:
                         end_counts[end] = 1

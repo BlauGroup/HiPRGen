@@ -306,11 +306,11 @@ standard_reaction_decision_tree = [
     # as far as I have seen, every reaction discarded by this
     # filter is also discarded by the star filter. Removing the
     # bound count filter would make sense for improving perf.
-    (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
+    (partial(bond_count_diff_above_threshold, 4), Terminal.DISCARD),
 
-    # when two covalent bonds change, the star count diff must be <= 3
+    # when two covalent bonds change, the star count diff must be <= 5
     # assuming that both bonds share an atom
-    (partial(star_count_diff_above_threshold, 3), Terminal.DISCARD),
+    (partial(star_count_diff_above_threshold, 5), Terminal.DISCARD),
 
     # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
