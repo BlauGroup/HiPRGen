@@ -44,6 +44,7 @@ def test_mc_pathfinding(network_loader):
         0)
 
     reaction_tally_report(network_loader, './scratch/reaction_tally.tex')
+    species_report(network_loader, './scratch/species_report.tex')
     pathfinding = Pathfinding(network_loader)
     pathfinding.generate_pathway_report(LEDC_id, './scratch/LEDC_pathways.tex')
 

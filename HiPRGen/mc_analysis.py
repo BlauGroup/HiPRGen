@@ -38,6 +38,19 @@ def reaction_tally_report(network_loader, reaction_tally_report_path, cutoff=10)
 
     report_generator.finished()
 
+def species_report(network_loader, species_report_path):
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        species_report_path,
+        rebuild_mol_pictures=False)
+
+    report_generator.emit_text("species report")
+    for i in range(network_loader.number_of_species):
+        report_generator.emit_molecule(i)
+        report_generator.emit_newline()
+
+    report_generator.finished()
+
 
 
 
