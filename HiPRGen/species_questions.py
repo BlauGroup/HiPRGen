@@ -63,56 +63,33 @@ def metal_ion_filter(mol_entry):
     else:
         return False
 
-def add_covalent_bond_count(mol_entry):
-    mol_bond_count = {}
-    species = mol_entry.species
-    bonds = mol_entry.bonds
-    for bond in bonds:
-        species_0 = species[bond[0]]
-        species_1 = species[bond[1]]
-        tag = frozenset([species_0, species_1])
-        if len(metals.intersection(tag)) == 0:
-            if tag in mol_bond_count:
-                mol_bond_count[tag] += 1
-            else:
-                mol_bond_count[tag] = 1
-
-    mol_entry.aux_data['bond_count'] = mol_bond_count
-    return False
-
-def add_covalent_stars(mol_entry):
-    species = mol_entry.species
-    bonds = mol_entry.bonds
-    stars = {}
-
-    for i in range(mol_entry.num_atoms):
-        if species[i] not in metals:
-            end_counts = {}
-
-            for bond in bonds:
-                if i in bond:
-                    if bond[0] == i:
-                        end = species[bond[1]]
-                    if bond[1] == i:
-                        end = species[bond[0]]
-
-                    if end in end_counts and end not in metals:
-                        end_counts[end] += 1
-                    else:
-                        end_counts[end] = 1
-
-            star = (species[i], frozenset(end_counts.items()))
-            if star in stars:
-                stars[star] += 1
-            else:
-                stars[star] = 1
-
-    mol_entry.aux_data['stars'] = stars
-    return False
-
 
 def mol_not_connected(mol):
     return not nx.is_weakly_connected(mol.graph)
+
+def add_stars(mol):
+    species = mol.species
+    bonds = mol.bonds
+
+    for i in range(mol.num_atoms):
+        center = species[i]
+        boundary = {}
+
+        for bond in bonds:
+            if i in bond:
+                if bond[0] == i:
+                    end = species[bond[1]]
+                if bond[1] == i:
+                    end = species[bond[0]]
+
+                if end in boundary:
+                    boundary[end] += 1
+                else:
+                    boundary[end] = 1
+
+        mol.stars[i] = (center, boundary)
+
+    return False
 
 
 def metal_complex(mol):
@@ -139,10 +116,9 @@ def default_true(mol):
 standard_mol_decision_tree = [
     # add_covalent_bond_count and add_covalent_stars always returns False
     # the associated Terminal nodes are never reached.
-    (add_covalent_bond_count,Terminal.KEEP),
-    (add_covalent_stars, Terminal.KEEP),
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
+    (add_stars, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
