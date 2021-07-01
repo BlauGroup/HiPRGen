@@ -11,6 +11,7 @@ let
             ps.openbabel-bindings
             ps.pygraphviz
             ps.mpi4py
+            ps.cffi
             (mip ps)
           ]);
 in mkShell rec {

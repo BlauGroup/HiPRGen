@@ -3,6 +3,7 @@ from HiPRGen.mol_entry import MoleculeEntry
 from enum import Enum
 from functools import partial
 from HiPRGen.constants import *
+from HiPRGen.atom_mapping import get_reaction_atom_mapping
 
 """
 The reaction decision tree:
@@ -309,6 +310,15 @@ def reaction_is_decomposable(reaction, mols, params):
         else:
             return False
 
+
+def atom_mapping_branch(reaction, mols, params):
+    reactant_mols_list = [mols[i] for i in reaction['reactants'] if i != -1]
+    product_mols_list = [mols[i] for i in reaction['products'] if i != -1]
+
+    l, r, i = get_reaction_atom_mapping(
+        reactant_mols_list,
+        product_mols_list)
+    breakpoint()
 
 
 standard_reaction_decision_tree = [

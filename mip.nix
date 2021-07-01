@@ -14,6 +14,7 @@ buildPythonPackage rec {
     sha256 = "0ynczcabpxqwg797wscw1gck4wg574wc2zyp77qsas8jv7xb6b5j";
   };
 
+  propogatedBuildInputs = [ cffi ];
   buildInputs = [ setuptools_scm cffi ];
   doCheck = false;
 
