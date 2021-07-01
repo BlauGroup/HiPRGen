@@ -235,14 +235,16 @@ def reaction_is_decomposable(reaction, mols, params):
             return False
 
 def star_diff(star1, star2):
-    count = 0
+    count = 0.0
 
     if star1[0] != star2[0]:
         count += 10.0
 
-    species = star1[1].keys().union(star2[1].keys)
+    species = set(star1[1].keys()).union(set(star2[1].keys()))
     for x in species:
-        count += abs(star1[1][x] - star2[1][x])
+        count += abs(star1[1].get(x,0) - star2[1].get(x,0))
+
+    return count
 
 
 
@@ -259,7 +261,7 @@ def compute_atom_mapping(reaction, mols, params):
 
     for i in range(reaction['number_of_products']):
         for j in range(mols[reaction['products'][i]].num_atoms):
-            reactant_mapping.append((i,j))
+            product_mapping.append((i,j))
 
 
     total_num_atoms = len(reactant_mapping)
