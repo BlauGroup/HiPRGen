@@ -311,15 +311,23 @@ def reaction_is_decomposable(reaction, mols, params):
             return False
 
 
-def atom_mapping_branch(reaction, mols, params):
+def atom_mapping_branch(threshold, reaction, mols, params):
     reactant_mols_list = [mols[i] for i in reaction['reactants'] if i != -1]
     product_mols_list = [mols[i] for i in reaction['products'] if i != -1]
 
-    l, r, i = get_reaction_atom_mapping(
-        reactant_mols_list,
-        product_mols_list)
+    try:
+        reactants_map, products_map, bond_change = get_reaction_atom_mapping(
+            reactant_mols_list,
+            product_mols_list)
+    except:
+        return False
 
-    return l, r, i
+    if bond_change > threshold:
+        return False
+    else:
+        reaction['reactants_map'] = reactants_map
+        reaction['products_map'] = products_map
+        return True
 
 
 standard_reaction_decision_tree = [
@@ -345,7 +353,9 @@ standard_reaction_decision_tree = [
     # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
 
-    (default_true, Terminal.KEEP)
+    (partial(atom_mapping_branch, 2), Terminal.KEEP),
+
+    (default_true, Terminal.DISCARD)
     ]
 
 
