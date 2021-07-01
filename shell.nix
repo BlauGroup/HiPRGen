@@ -14,6 +14,7 @@ in mkShell rec {
                   sqlitebrowser
                   texlive.combined.scheme-small
                   mpi
+                  cbc
                   (import ./RNMC.nix)
                 ];
 }
