@@ -82,31 +82,34 @@ def get_reaction_atom_mapping(
     # preliminary check
 
     # check 1: reactants and products have the same atom counts
-    rct_species = defaultdict(int)  # type: Dict[str, int]
-    prdt_species = defaultdict(int)  # type: Dict[str, int]
-    for m in reactants:
-        for s in m.species:
-            rct_species[s] += 1
-    for m in products:
-        for s in m.species:
-            prdt_species[s] += 1
-    if rct_species != prdt_species:
-        raise ReactionMappingError(
-            "Expect reactants and products to have the same atom count, "
-            f"but got {dict(rct_species)} and {dict(prdt_species)}."
-        )
+
+    # only balanced reactions are passed to this function
+    # rct_species = defaultdict(int)  # type: Dict[str, int]
+    # prdt_species = defaultdict(int)  # type: Dict[str, int]
+    # for m in reactants:
+    #     for s in m.species:
+    #         rct_species[s] += 1
+    # for m in products:
+    #     for s in m.species:
+    #         prdt_species[s] += 1
+    # if rct_species != prdt_species:
+    #     raise ReactionMappingError(
+    #         "Expect reactants and products to have the same atom count, "
+    #         f"but got {dict(rct_species)} and {dict(prdt_species)}."
+    #     )
 
     # check 2: number of bond change smaller than allowed maximum
     # This only checks the number of bonds and thus actual num changes could be larger,
     # which will be checked later.
-    num_bond_change = abs(
-        sum(len(m.bonds) for m in reactants) - sum(len(m.bonds) for m in products)
-    )
-    if num_bond_change > max_bond_change:
-        raise ReactionMappingError(
-            f"Number of changed bond is at least {num_bond_change}, larger than allowed "
-            f"maximum {max_bond_change}"
-        )
+
+    # num_bond_change = abs(
+    #     sum(len(m.bonds) for m in reactants) - sum(len(m.bonds) for m in products)
+    # )
+    # if num_bond_change > max_bond_change:
+    #     raise ReactionMappingError(
+    #         f"Number of changed bond is at least {num_bond_change}, larger than allowed "
+    #         f"maximum {max_bond_change}"
+    #     )
 
     # local and global atom index mapping
     (
@@ -140,11 +143,11 @@ def get_reaction_atom_mapping(
         num_bond_change, r2p_mapping, p2r_mapping = out  # type: ignore
 
     # final check
-    if num_bond_change > max_bond_change:
-        raise ReactionMappingError(
-            f"Number of bond change {num_bond_change} larger than allowed maximum number "
-            f"of bond change {max_bond_change}."
-        )
+    # if num_bond_change > max_bond_change:
+    #     raise ReactionMappingError(
+    #         f"Number of bond change {num_bond_change} larger than allowed maximum number "
+    #         f"of bond change {max_bond_change}."
+    #     )
 
     if None in r2p_mapping:
         global_idx = r2p_mapping.index(None)
