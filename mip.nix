@@ -15,7 +15,7 @@ buildPythonPackage rec {
   };
 
   propogatedBuildInputs = [ cffi ];
-  buildInputs = [ setuptools_scm cffi ];
+  buildInputs = [ setuptools_scm ];
   doCheck = false;
 
   meta = with lib; {

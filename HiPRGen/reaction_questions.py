@@ -318,7 +318,8 @@ def atom_mapping_branch(reaction, mols, params):
     l, r, i = get_reaction_atom_mapping(
         reactant_mols_list,
         product_mols_list)
-    breakpoint()
+
+    return l, r, i
 
 
 standard_reaction_decision_tree = [
