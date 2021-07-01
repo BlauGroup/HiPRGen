@@ -5,6 +5,8 @@ let
   pythonEnv = python38.withPackages (
       ps: [ ps.pymatgen
             ps.monty
+            ps.numpy
+            ps.scipy
             ps.openbabel-bindings
             ps.pygraphviz
             ps.mpi4py

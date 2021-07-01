@@ -1,8 +1,10 @@
 import math
+import numpy as np
 from HiPRGen.mol_entry import MoleculeEntry
 from enum import Enum
 from functools import partial
 from HiPRGen.constants import *
+from scipy.optimize import linear_sum_assignment
 
 """
 The reaction decision tree:
@@ -152,83 +154,6 @@ def is_redox_reaction(reaction, mol_entries, params):
         return True
 
 
-
-def bond_count_diff_above_threshold(threshold, reaction, mol_entries, params):
-
-    tags = set()
-
-    for i in range(reaction['number_of_reactants']):
-        reactant_index = reaction['reactants'][i]
-        mol = mol_entries[reactant_index]
-        tags.update(mol.aux_data['bond_count'].keys())
-
-    for j in range(reaction['number_of_products']):
-        product_index = reaction['products'][j]
-        mol = mol_entries[product_index]
-        tags.update(mol.aux_data['bond_count'].keys())
-
-    count = 0
-
-    for tag in tags:
-        inter_count = 0
-        for i in range(reaction['number_of_reactants']):
-            reactant_index = reaction['reactants'][i]
-            mol = mol_entries[reactant_index]
-            inter_count += mol.aux_data['bond_count'].get(tag, 0)
-
-        for j in range(reaction['number_of_products']):
-            product_index = reaction['products'][j]
-            mol = mol_entries[product_index]
-            inter_count -= mol.aux_data['bond_count'].get(tag, 0)
-
-        count += abs(inter_count)
-
-    if count > threshold:
-        return True
-    else:
-        return False
-
-def star_count_diff_above_threshold(
-        threshold,
-        reaction,
-        mol_entries,
-        params):
-
-    stars = set()
-
-    for i in range(reaction['number_of_reactants']):
-        reactant_index = reaction['reactants'][i]
-        mol = mol_entries[reactant_index]
-        stars.update(mol.aux_data['stars'].keys())
-
-    for j in range(reaction['number_of_products']):
-        product_index = reaction['products'][j]
-        mol = mol_entries[product_index]
-        stars.update(mol.aux_data['stars'].keys())
-
-
-    count = 0
-
-    for star in stars:
-        inter_count = 0
-        for i in range(reaction['number_of_reactants']):
-            reactant_index = reaction['reactants'][i]
-            mol = mol_entries[reactant_index]
-            inter_count += mol.aux_data['stars'].get(star, 0)
-
-        for j in range(reaction['number_of_products']):
-            product_index = reaction['products'][j]
-            mol = mol_entries[product_index]
-            inter_count -= mol.aux_data['stars'].get(star, 0)
-
-        count += abs(inter_count)
-
-    if count > threshold:
-        return True
-    else:
-        return False
-
-
 def too_many_reactants_or_products(reaction, mols, params):
     if (reaction['number_of_reactants'] != 1 or
         reaction['number_of_products'] != 1):
@@ -309,6 +234,53 @@ def reaction_is_decomposable(reaction, mols, params):
         else:
             return False
 
+def star_diff(star1, star2):
+    count = 0
+
+    if star1[0] != star2[0]:
+        count += 10.0
+
+    species = star1[1].keys().union(star2[1].keys)
+    for x in species:
+        count += abs(star1[1][x] - star2[1][x])
+
+
+
+
+def compute_atom_mapping(reaction, mols, params):
+
+    reactant_mapping = []
+    product_mapping = []
+
+    for i in range(reaction['number_of_reactants']):
+        for j in range(mols[reaction['reactants'][i]].num_atoms):
+            reactant_mapping.append((i,j))
+
+
+    for i in range(reaction['number_of_products']):
+        for j in range(mols[reaction['products'][i]].num_atoms):
+            reactant_mapping.append((i,j))
+
+
+    total_num_atoms = len(reactant_mapping)
+    cost = np.zeros((total_num_atoms, total_num_atoms))
+
+    for i in range(total_num_atoms):
+        for j in range(total_num_atoms):
+            reactant_num, reactant_atom_num = reactant_mapping[i]
+            star1 = mols[reaction['reactants'][reactant_num]].stars[reactant_atom_num]
+
+            product_num, product_atom_num = product_mapping[j]
+            star2 = mols[reaction['products'][product_num]].stars[product_atom_num]
+
+            cost[i,j] = star_diff(star1, star2)
+
+    row_ind, col_ind = linear_sum_assignment(cost)
+
+    return False
+
+
+
 
 
 standard_reaction_decision_tree = [
@@ -327,12 +299,11 @@ standard_reaction_decision_tree = [
 
     (reaction_is_decomposable, Terminal.DISCARD),
 
-    (partial(bond_count_diff_above_threshold, 2), Terminal.DISCARD),
-
-    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
-
     # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
+
+
+    (compute_atom_mapping, Terminal.KEEP),
 
     (default_true, Terminal.KEEP)
     ]
