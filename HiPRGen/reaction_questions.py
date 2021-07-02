@@ -382,7 +382,7 @@ standard_reaction_decision_tree = [
     # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
 
-    (partial(covalent_bond_count_diff_above_threshold,2), Terminal.DISCARD),
+    (partial(covalent_bond_count_diff_above_threshold, 2), Terminal.DISCARD),
 
     (partial(covalent_star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
