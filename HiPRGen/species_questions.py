@@ -64,7 +64,6 @@ def metal_ion_filter(mol_entry):
         return False
 
 def add_covalent_bond_count(mol_entry):
-    mol_bond_count = {}
     species = mol_entry.species
     bonds = mol_entry.bonds
     for bond in bonds:
@@ -72,12 +71,11 @@ def add_covalent_bond_count(mol_entry):
         species_1 = species[bond[1]]
         tag = frozenset([species_0, species_1])
         if len(metals.intersection(tag)) == 0:
-            if tag in mol_bond_count:
-                mol_bond_count[tag] += 1
+            if tag in mol_entry.covalent_bond_counts:
+                mol_entry.covalent_bond_counts[tag] += 1
             else:
-                mol_bond_count[tag] = 1
+                mol_entry.covalent_bond_counts[tag] = 1
 
-    mol_entry.covalent_bond_counts = mol_bond_count
     return False
 
 
@@ -158,5 +156,6 @@ standard_mol_decision_tree = [
     (metal_complex, Terminal.DISCARD),
     (add_stars, Terminal.KEEP),
     (add_covalent_star_counts, Terminal.KEEP),
+    (add_covalent_bond_count, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]

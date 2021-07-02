@@ -283,12 +283,12 @@ def covalent_bond_count_diff_above_threshold(
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mol_entries[reactant_index]
-        tags.update(mol.covalent_star_counts.keys())
+        tags.update(mol.covalent_bond_counts.keys())
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mol_entries[product_index]
-        tags.update(mol.covalent_star_counts.keys())
+        tags.update(mol.covalent_bond_counts.keys())
 
     count = 0
 
@@ -297,12 +297,12 @@ def covalent_bond_count_diff_above_threshold(
         for i in range(reaction['number_of_reactants']):
             reactant_index = reaction['reactants'][i]
             mol = mol_entries[reactant_index]
-            inter_count += mol.covalent_star_counts.get(tag, 0)
+            inter_count += mol.covalent_bond_counts.get(tag, 0)
 
         for j in range(reaction['number_of_products']):
             product_index = reaction['products'][j]
             mol = mol_entries[product_index]
-            inter_count -= mol.covalent_star_counts.get(tag, 0)
+            inter_count -= mol.covalent_bond_counts.get(tag, 0)
 
         count += abs(inter_count)
 
@@ -310,8 +310,6 @@ def covalent_bond_count_diff_above_threshold(
         return True
     else:
         return False
-
-
 
 
 def star_diff(star1, star2):
