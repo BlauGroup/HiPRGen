@@ -62,7 +62,12 @@ class MoleculeEntry(MSONable):
         self.enthalpy = enthalpy
         self.entropy = entropy
         self.parameters = parameters if parameters else {}
+
+        # aux_data
         self.stars = {}
+        self.covalent_star_counts = {}
+
+
         self.entry_id = entry_id
         self.attribute = attribute
 

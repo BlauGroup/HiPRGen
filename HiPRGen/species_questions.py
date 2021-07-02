@@ -92,6 +92,25 @@ def add_stars(mol):
     return False
 
 
+def add_covalent_star_counts(mol):
+
+    for i in mol.stars:
+        center, boundary = mol.stars[i]
+
+        if center not in metals:
+            boundary_set = frozenset(
+                [pair for pair in boundary.items() if pair[0] not in metals])
+
+            tag = (center, boundary_set)
+
+            if tag in mol.covalent_star_counts:
+                mol.covalent_star_counts[tag] += 1
+            else:
+                mol.covalent_star_counts[tag] = 1
+
+    return False
+
+
 def metal_complex(mol):
     # if mol is a metal, it isn't a metal complex
     if mol.formula in m_formulas:
@@ -113,6 +132,7 @@ def metal_complex(mol):
 def default_true(mol):
     return True
 
+
 standard_mol_decision_tree = [
     # add_covalent_bond_count and add_covalent_stars always returns False
     # the associated Terminal nodes are never reached.
@@ -120,5 +140,6 @@ standard_mol_decision_tree = [
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
     (add_stars, Terminal.KEEP),
+    (add_covalent_star_counts, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
