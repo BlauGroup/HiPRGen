@@ -63,24 +63,10 @@ def metal_ion_filter(mol_entry):
     else:
         return False
 
-def add_covalent_bond_counts(mol_entry):
-    species = mol_entry.species
-    bonds = mol_entry.bonds
-    for bond in bonds:
-        species_0 = species[bond[0]]
-        species_1 = species[bond[1]]
-        tag = frozenset([species_0, species_1])
-        if len(metals.intersection(tag)) == 0:
-            if tag in mol_entry.covalent_bond_counts:
-                mol_entry.covalent_bond_counts[tag] += 1
-            else:
-                mol_entry.covalent_bond_counts[tag] = 1
-
-    return False
-
 
 def mol_not_connected(mol):
     return not nx.is_weakly_connected(mol.graph)
+
 
 def add_stars(mol):
     species = mol.species
@@ -122,6 +108,22 @@ def add_covalent_star_counts(mol):
                 mol.covalent_star_counts[tag] += 1
             else:
                 mol.covalent_star_counts[tag] = 1
+
+    return False
+
+
+def add_covalent_bond_counts(mol_entry):
+    species = mol_entry.species
+    bonds = mol_entry.bonds
+    for bond in bonds:
+        species_0 = species[bond[0]]
+        species_1 = species[bond[1]]
+        tag = frozenset([species_0, species_1])
+        if len(metals.intersection(tag)) == 0:
+            if tag in mol_entry.covalent_bond_counts:
+                mol_entry.covalent_bond_counts[tag] += 1
+            else:
+                mol_entry.covalent_bond_counts[tag] = 1
 
     return False
 

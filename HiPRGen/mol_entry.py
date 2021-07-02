@@ -67,6 +67,7 @@ class MoleculeEntry(MSONable):
         self.stars = {}
         self.covalent_star_counts = {}
         self.covalent_bond_counts = {}
+        self.neighbourhood_hashes = {}
 
 
         self.entry_id = entry_id
