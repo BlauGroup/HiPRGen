@@ -234,6 +234,50 @@ def reaction_is_decomposable(reaction, mols, params):
         else:
             return False
 
+
+def covalent_star_count_diff_above_threshold(
+        threshold,
+        reaction,
+        mol_entries,
+        params):
+
+    tags = set()
+
+    for i in range(reaction['number_of_reactants']):
+        reactant_index = reaction['reactants'][i]
+        mol = mol_entries[reactant_index]
+        tags.update(mol.covalent_star_counts.keys())
+
+    for j in range(reaction['number_of_products']):
+        product_index = reaction['products'][j]
+        mol = mol_entries[product_index]
+        tags.update(mol.covalent_star_counts.keys())
+
+
+    count = 0
+
+    for tag in tags:
+        inter_count = 0
+        for i in range(reaction['number_of_reactants']):
+            reactant_index = reaction['reactants'][i]
+            mol = mol_entries[reactant_index]
+            inter_count += mol.covalent_star_counts.get(tag, 0)
+
+        for j in range(reaction['number_of_products']):
+            product_index = reaction['products'][j]
+            mol = mol_entries[product_index]
+            inter_count -= mol.covalent_star_counts.get(tag, 0)
+
+        count += abs(inter_count)
+
+    if count > threshold:
+        return True
+    else:
+        return False
+
+
+
+
 def star_diff(star1, star2):
     count = 0.0
 
@@ -245,8 +289,6 @@ def star_diff(star1, star2):
         count += abs(star1[1].get(x,0) - star2[1].get(x,0))
 
     return count
-
-
 
 
 def compute_atom_mapping(reaction, mols, params):
@@ -304,6 +346,7 @@ standard_reaction_decision_tree = [
     # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
 
+    (partial(covalent_star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
     (compute_atom_mapping, Terminal.KEEP),
 
