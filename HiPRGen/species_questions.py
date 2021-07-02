@@ -75,18 +75,13 @@ def add_stars(mol):
     for i in range(mol.num_atoms):
         center = species[i]
         boundary = {}
+        neighbors = [mol.species[j] for j in mol.graph.neighbors(i)]
 
-        for bond in bonds:
-            if i in bond:
-                if bond[0] == i:
-                    end = species[bond[1]]
-                if bond[1] == i:
-                    end = species[bond[0]]
-
-                if end in boundary:
-                    boundary[end] += 1
-                else:
-                    boundary[end] = 1
+        for x in neighbors:
+            if x in boundary:
+                boundary[x] += 1
+            else:
+                boundary[x] = 1
 
         mol.stars[i] = (center, boundary)
 
@@ -126,7 +121,6 @@ def add_covalent_bond_counts(mol_entry):
                 mol_entry.covalent_bond_counts[tag] = 1
 
     return False
-
 
 def metal_complex(mol):
     # if mol is a metal, it isn't a metal complex
