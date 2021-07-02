@@ -75,7 +75,7 @@ def add_stars(mol):
     for i in range(mol.num_atoms):
         center = species[i]
         boundary = {}
-        neighbors = [mol.species[j] for j in mol.graph.neighbors(i)]
+        neighbors = [mol.species[j] for j in mol.graph.to_undirected().neighbors(i)]
 
         for x in neighbors:
             if x in boundary:
