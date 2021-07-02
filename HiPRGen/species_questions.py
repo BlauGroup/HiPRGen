@@ -1,6 +1,7 @@
 from HiPRGen.mol_entry import MoleculeEntry
 from enum import Enum
 import networkx as nx
+from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import copy
 
 
@@ -87,6 +88,19 @@ def add_stars(mol):
 
     return False
 
+def add_neighborhoods(mol):
+    for i in range(mol.num_atoms):
+        mol.neighborhoods[i] = nx.generators.ego.ego_graph(
+            mol.graph.to_undirected(),
+            i,
+            2,
+            undirected=True)
+
+        mol.neighborhood_hashes[i] = weisfeiler_lehman_graph_hash(
+            mol.neighborhoods[i],
+            node_attr='specie')
+
+    return False
 
 def add_covalent_star_counts(mol):
 
@@ -153,5 +167,6 @@ standard_mol_decision_tree = [
     (add_stars, Terminal.KEEP),
     (add_covalent_star_counts, Terminal.KEEP),
     (add_covalent_bond_counts, Terminal.KEEP),
+    (add_neighborhoods, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
