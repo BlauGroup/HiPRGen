@@ -3,7 +3,7 @@ from enum import Enum
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import copy
-
+from functools import partial
 
 
 """
@@ -69,70 +69,22 @@ def mol_not_connected(mol):
     return not nx.is_weakly_connected(mol.graph)
 
 
-def add_stars(mol):
-    species = mol.species
-    bonds = mol.bonds
+def add_neighborhood_hashes(radius_bound, mol):
+    for r in range(radius_bound):
 
-    for i in range(mol.num_atoms):
-        center = species[i]
-        boundary = {}
-        neighbors = [mol.species[j] for j in mol.graph.to_undirected().neighbors(i)]
+        mol.neighborhood_hashes[r] = {}
 
-        for x in neighbors:
-            if x in boundary:
-                boundary[x] += 1
-            else:
-                boundary[x] = 1
+        for i in range(mol.num_atoms):
 
-        mol.stars[i] = (center, boundary)
+            neighborhood = nx.generators.ego.ego_graph(
+                mol.graph.to_undirected(),
+                i,
+                r,
+                undirected=True)
 
-    return False
-
-def add_neighborhoods(mol):
-    for i in range(mol.num_atoms):
-        mol.neighborhoods[i] = nx.generators.ego.ego_graph(
-            mol.graph.to_undirected(),
-            i,
-            2,
-            undirected=True)
-
-        mol.neighborhood_hashes[i] = weisfeiler_lehman_graph_hash(
-            mol.neighborhoods[i],
-            node_attr='specie')
-
-    return False
-
-def add_covalent_star_counts(mol):
-
-    for i in mol.stars:
-        center, boundary = mol.stars[i]
-
-        if center not in metals:
-            boundary_set = frozenset(
-                [pair for pair in boundary.items() if pair[0] not in metals])
-
-            tag = (center, boundary_set)
-
-            if tag in mol.covalent_star_counts:
-                mol.covalent_star_counts[tag] += 1
-            else:
-                mol.covalent_star_counts[tag] = 1
-
-    return False
-
-
-def add_covalent_bond_counts(mol_entry):
-    species = mol_entry.species
-    bonds = mol_entry.bonds
-    for bond in bonds:
-        species_0 = species[bond[0]]
-        species_1 = species[bond[1]]
-        tag = frozenset([species_0, species_1])
-        if len(metals.intersection(tag)) == 0:
-            if tag in mol_entry.covalent_bond_counts:
-                mol_entry.covalent_bond_counts[tag] += 1
-            else:
-                mol_entry.covalent_bond_counts[tag] = 1
+            mol.neighborhood_hashes[r][i] = weisfeiler_lehman_graph_hash(
+                neighborhood,
+                node_attr='specie')
 
     return False
 
@@ -159,14 +111,9 @@ def default_true(mol):
 
 
 standard_mol_decision_tree = [
-    # add_covalent_bond_count and add_covalent_stars always returns False
-    # the associated Terminal nodes are never reached.
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-    (add_stars, Terminal.KEEP),
-    (add_covalent_star_counts, Terminal.KEEP),
-    (add_covalent_bond_counts, Terminal.KEEP),
-    (add_neighborhoods, Terminal.KEEP),
+    (partial(add_neighborhood_hashes, 3) , Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]

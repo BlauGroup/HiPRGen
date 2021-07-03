@@ -63,11 +63,7 @@ class MoleculeEntry(MSONable):
         self.entropy = entropy
         self.parameters = parameters if parameters else {}
 
-        # aux_data
-        self.stars = {}
-        self.covalent_star_counts = {}
-        self.covalent_bond_counts = {}
-        self.neighborhoods = {}
+        # self.neighborhood_hashes[radius][atom_num]
         self.neighborhood_hashes = {}
 
 

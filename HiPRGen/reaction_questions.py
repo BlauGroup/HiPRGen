@@ -234,77 +234,35 @@ def reaction_is_decomposable(reaction, mols, params):
         else:
             return False
 
-
-def covalent_star_count_diff_above_threshold(
-        threshold,
-        reaction,
-        mol_entries,
-        params):
-
+def star_count_diff_above_threshold(threshold, reaction, mols, params):
+    reactant_stars = {}
+    product_stars = {}
     tags = set()
 
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
-        mol = mol_entries[reactant_index]
-        tags.update(mol.covalent_star_counts.keys())
+        mol = mols[reactant_index]
+        for h in mol.neighborhood_hashes[1].values():
+            tags.add(h)
+            if h in reactant_stars:
+                reactant_stars[h] += 1
+            else:
+                reactant_stars[h] = 1
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
-        mol = mol_entries[product_index]
-        tags.update(mol.covalent_star_counts.keys())
-
+        mol = mols[product_index]
+        for h in mol.neighborhood_hashes[1].values():
+            tags.add(h)
+            if h in product_stars:
+                product_stars[h] += 1
+            else:
+                product_stars[h] = 1
 
     count = 0
 
     for tag in tags:
-        inter_count = 0
-        for i in range(reaction['number_of_reactants']):
-            reactant_index = reaction['reactants'][i]
-            mol = mol_entries[reactant_index]
-            inter_count += mol.covalent_star_counts.get(tag, 0)
-
-        for j in range(reaction['number_of_products']):
-            product_index = reaction['products'][j]
-            mol = mol_entries[product_index]
-            inter_count -= mol.covalent_star_counts.get(tag, 0)
-
-        count += abs(inter_count)
-
-    if count > threshold:
-        return True
-    else:
-        return False
-
-def covalent_bond_count_diff_above_threshold(
-        threshold, reaction, mol_entries, params):
-
-    tags = set()
-
-    for i in range(reaction['number_of_reactants']):
-        reactant_index = reaction['reactants'][i]
-        mol = mol_entries[reactant_index]
-        tags.update(mol.covalent_bond_counts.keys())
-
-    for j in range(reaction['number_of_products']):
-        product_index = reaction['products'][j]
-        mol = mol_entries[product_index]
-        tags.update(mol.covalent_bond_counts.keys())
-
-    count = 0
-
-    for tag in tags:
-        inter_count = 0
-        for i in range(reaction['number_of_reactants']):
-            reactant_index = reaction['reactants'][i]
-            mol = mol_entries[reactant_index]
-            inter_count += mol.covalent_bond_counts.get(tag, 0)
-
-        for j in range(reaction['number_of_products']):
-            product_index = reaction['products'][j]
-            mol = mol_entries[product_index]
-            inter_count -= mol.covalent_bond_counts.get(tag, 0)
-
-        count += abs(inter_count)
+        count += abs(reactant_stars.get(tag,0) - product_stars.get(tag,0))
 
     if count > threshold:
         return True
@@ -312,20 +270,8 @@ def covalent_bond_count_diff_above_threshold(
         return False
 
 
-def star_diff(star1, star2):
-    count = 0.0
 
-    if star1[0] != star2[0]:
-        count += 10.0
-
-    species = set(star1[1].keys()).union(set(star2[1].keys()))
-    for x in species:
-        count += abs(star1[1].get(x,0) - star2[1].get(x,0))
-
-    return count
-
-
-def compute_atom_mapping(reaction, mols, params):
+def compute_atom_mapping(radius_bound, reaction, mols, params):
 
     reactant_mapping = []
     product_mapping = []
@@ -346,14 +292,23 @@ def compute_atom_mapping(reaction, mols, params):
     for i in range(total_num_atoms):
         for j in range(total_num_atoms):
             reactant_num, reactant_atom_num = reactant_mapping[i]
-            star1 = mols[reaction['reactants'][reactant_num]].stars[reactant_atom_num]
+            reactant_id = reaction['reactants'][reactant_num]
+            reactant = mols[reactant_id]
+
 
             product_num, product_atom_num = product_mapping[j]
-            star2 = mols[reaction['products'][product_num]].stars[product_atom_num]
+            product_id = reaction['products'][product_num]
+            product = mols[product_id]
 
-            cost[i,j] = star_diff(star1, star2)
+            bool_array = [
+                reactant.neighborhood_hashes[r][reactant_atom_num] ==
+                product.neighborhood_hashes[r][product_atom_num] for
+                r in range(radius_bound) ]
 
-    row_ind, col_ind = linear_sum_assignment(cost)
+
+            cost[i,j] = len([b for b in bool_array if b])
+
+    row_ind, col_ind = linear_sum_assignment(cost, maximize=True)
 
     return False
 
@@ -380,11 +335,9 @@ standard_reaction_decision_tree = [
     # discard reactions of the form A+B->A+C unless A is a Li atom
     (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
 
-    (partial(covalent_bond_count_diff_above_threshold, 2), Terminal.DISCARD),
+    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
-    (partial(covalent_star_count_diff_above_threshold, 4), Terminal.DISCARD),
-
-    (compute_atom_mapping, Terminal.KEEP),
+    (partial(compute_atom_mapping, 3), Terminal.KEEP),
 
     (default_true, Terminal.KEEP)
     ]
