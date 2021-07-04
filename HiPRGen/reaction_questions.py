@@ -46,6 +46,10 @@ for non terminal nodes, it is an error if every question returns False. i.e gett
 Once a Terminal node is reached, it tells us whether to keep or discard the reaction.
 
 logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
+
+
+reaction atom mappings: compute_atom_mapping sets reaction['atom_mapping'] which is a dictionary sending (reactant_num, atom_num) to (product_num, atom_num).
+
 """
 
 class Terminal(Enum):
@@ -272,6 +276,12 @@ def star_count_diff_above_threshold(threshold, reaction, mols, params):
 
 
 def compute_atom_mapping(radius_bound, reaction, mols, params):
+
+    """
+    atom mapping is in NP. It can be translated into a mixed integer programming problem, but this is too slow for HiPRGen. Instead, we use a combination of the heuristics described in "comparing heuristics gor graph edit distance computation, D.Blumenthal", to transform the atom mapping problem into a linear sum assignment problem that is solvable in linear time.
+
+    the string mol.neighborhood_hashes[radius][atom_num] is an isomorphism preserving hash of the neighborhood arount atom_num with given radius. We want to map atoms in the reactants to atoms in the products with as much overlapping neighborhood as possible.
+    """
 
     reactant_mapping = []
     product_mapping = []

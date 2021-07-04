@@ -16,17 +16,13 @@ def visualize_molecule_entry(molecule_entry, path):
 
     graph = deepcopy(molecule_entry.graph).to_undirected()
 
-    nx.set_node_attributes(
-        graph,
-        dict([(i,str(i)) for i in range(molecule_entry.num_atoms)]),
-        "label")
-
 
     nx.set_node_attributes(graph, "filled", "style")
     nx.set_node_attributes(graph, "circle", "shape")
     nx.set_node_attributes(graph, "0.2", "width")
-    nx.set_node_attributes(graph, "8.0", "fontsize")
+    nx.set_node_attributes(graph, "6.0", "fontsize")
     nx.set_node_attributes(graph, "white", "fontcolor")
+    nx.set_node_attributes(graph, "true", "fixedsize")
 
 
     nx.set_node_attributes(
