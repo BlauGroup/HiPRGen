@@ -311,6 +311,12 @@ def compute_atom_mapping(radius_bound, reaction, mols, params):
 
     row_ind, col_ind = linear_sum_assignment(cost, maximize=True)
 
+    atom_mapping = dict(
+        [ (reactant_mapping[row_ind[i]], product_mapping[col_ind[i]]) for
+          i in range(total_num_atoms) ])
+
+    reaction['atom_mapping'] = atom_mapping
+
     return False
 
 
