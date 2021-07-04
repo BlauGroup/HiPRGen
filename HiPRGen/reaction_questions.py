@@ -286,6 +286,7 @@ def compute_atom_mapping(radius_bound, reaction, mols, params):
             product_mapping.append((i,j))
 
 
+
     total_num_atoms = len(reactant_mapping)
     cost = np.zeros((total_num_atoms, total_num_atoms))
 
