@@ -354,7 +354,7 @@ standard_reaction_decision_tree = [
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
-    (partial(compute_atom_mapping, 3), Terminal.KEEP),
+    (partial(compute_atom_mapping, 4), Terminal.KEEP),
 
     (default_true, Terminal.KEEP)
     ]

@@ -20,7 +20,7 @@ def visualize_molecule_entry(molecule_entry, path):
     nx.set_node_attributes(graph, "filled", "style")
     nx.set_node_attributes(graph, "circle", "shape")
     nx.set_node_attributes(graph, "0.2", "width")
-    nx.set_node_attributes(graph, "6.0", "fontsize")
+    nx.set_node_attributes(graph, "8.0", "fontsize")
     nx.set_node_attributes(graph, "white", "fontcolor")
     nx.set_node_attributes(graph, "true", "fixedsize")
 

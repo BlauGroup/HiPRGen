@@ -114,6 +114,6 @@ standard_mol_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-    (partial(add_neighborhood_hashes, 3) , Terminal.KEEP),
+    (partial(add_neighborhood_hashes, 4) , Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
