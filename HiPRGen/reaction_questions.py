@@ -327,7 +327,37 @@ def compute_atom_mapping(radius_bound, reaction, mols, params):
 
     reaction['atom_mapping'] = atom_mapping
 
-    return False
+    return True
+
+
+def bond_diff_above_threshold(threshold, reaction, mols, params):
+
+    count = 0
+
+    atom_mapping = reaction['atom_mapping']
+
+    for i in range(reaction['number_of_reactants']):
+        reactant_id = reaction['reactants'][i]
+        reactant = mols[reactant_id]
+        for bond in reactant.bonds:
+
+            target_atom_0 = atom_mapping[(i, bond[0])]
+            target_atom_1 = atom_mapping[(i, bond[1])]
+
+            if target_atom_0[0] != target_atom_1[0]:
+                break
+
+            product_id = reaction['products'][target_atom_0[0]]
+            product = mols[product_id]
+            if ((target_atom_0[1], target_atom_1[1]) or
+                (target_atom_1[1], target_atom_0[1])) in product.bonds:
+                count += 1
+
+
+    if count > threshold:
+        return True
+    else:
+        return False
 
 
 
@@ -354,9 +384,13 @@ standard_reaction_decision_tree = [
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
-    (partial(compute_atom_mapping, 4), Terminal.KEEP),
+    (partial(compute_atom_mapping, 4),
 
-    (default_true, Terminal.KEEP)
+     [
+         (partial(bond_diff_above_threshold, 3), Terminal.DISCARD),
+         (default_true, Terminal.KEEP)
+     ])
+
     ]
 
 
@@ -367,3 +401,15 @@ minimal_reaction_decision_tree = [
     ]
 
 standard_logging_decision_tree = Terminal.DISCARD
+
+def no_atom_mapping(reaction, mols, params):
+    if 'atom_mapping' in reaction:
+        return False
+    else:
+        return True
+
+atom_mapping_loging_decision_tree = [
+    (no_atom_mapping, Terminal.DISCARD),
+    (partial(bond_diff_above_threshold, 3), Terminal.KEEP),
+    (default_true, Terminal.DISCARD)
+]
