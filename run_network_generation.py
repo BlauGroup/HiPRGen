@@ -2,7 +2,6 @@ import sys
 from HiPRGen.reaction_filter import *
 import pickle
 from mpi4py import MPI
-from HiPRGen.reaction_questions import atom_mapping_loging_decision_tree
 
 
 # python run_network_generation.py mol_entries_pickle_file bucket_db_file rn_db_location generation_report_location
@@ -26,7 +25,6 @@ if rank == DISPATCHER_RANK:
 else:
     worker(mol_entries,
            bucket_db_file,
-           logging_decision_tree=atom_mapping_loging_decision_tree
            )
 
 

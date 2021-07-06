@@ -322,44 +322,22 @@ def compute_atom_mapping(radius_bound, reaction, mols, params):
     row_ind, col_ind = linear_sum_assignment(cost, maximize=True)
 
     atom_mapping = dict(
-        [ (reactant_mapping[row_ind[i]], product_mapping[col_ind[i]]) for
-          i in range(total_num_atoms) ])
+        [ (reactant_mapping[row_ind[i]], (product_mapping[col_ind[i]], cost[i,j]))
+          for i in range(total_num_atoms) ])
 
     reaction['atom_mapping'] = atom_mapping
 
     return True
 
 
-def bond_diff_above_threshold(threshold, reaction, mols, params):
+def atom_mapping_cost_above_threshold(threshold, reaction, mols, params):
 
-    count = 0
-
+    total_cost = 0.0
     atom_mapping = reaction['atom_mapping']
+    for reactant_atom in atom_mapping:
+        total_cost += atom_mapping[reactant_atom][1]
 
-    for i in range(reaction['number_of_reactants']):
-        reactant_id = reaction['reactants'][i]
-        reactant = mols[reactant_id]
-        for bond in reactant.bonds:
-
-            target_atom_0 = atom_mapping[(i, bond[0])]
-            target_atom_1 = atom_mapping[(i, bond[1])]
-
-            if target_atom_0[0] != target_atom_1[0]:
-                break
-
-            product_id = reaction['products'][target_atom_0[0]]
-            product = mols[product_id]
-            if ((target_atom_0[1], target_atom_1[1]) or
-                (target_atom_1[1], target_atom_0[1])) in product.bonds:
-                count += 1
-
-
-    if count > threshold:
-        return True
-    else:
-        return False
-
-
+    return total_cost
 
 
 
@@ -387,7 +365,6 @@ standard_reaction_decision_tree = [
     (partial(compute_atom_mapping, 4),
 
      [
-         (partial(bond_diff_above_threshold, 4), Terminal.DISCARD),
          (default_true, Terminal.KEEP)
      ])
 
@@ -408,8 +385,3 @@ def no_atom_mapping(reaction, mols, params):
     else:
         return True
 
-atom_mapping_loging_decision_tree = [
-    (no_atom_mapping, Terminal.DISCARD),
-    (partial(bond_diff_above_threshold, 3), Terminal.KEEP),
-    (default_true, Terminal.DISCARD)
-]
