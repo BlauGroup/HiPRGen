@@ -108,6 +108,31 @@ def add_total_hashes(mol):
     return False
 
 
+def add_fragment_hashes(mol):
+    m_inds = [
+        i for i, x in enumerate(mol.species) if x in metals
+    ]
+
+    g = copy.deepcopy(mol.graph.to_undirected())
+    g.remove_nodes_from(m_inds)
+
+    for edge in g.edges:
+        h = copy.deepcopy(g)
+        h.remove_edge(*edge)
+        connected_components = nx.algorithms.components.connected_components(h)
+        fragment_hashes = [
+            weisfeiler_lehman_graph_hash(
+                h.subgraph(c),
+                node_attr='specie')
+
+            for c in connected_components
+            ]
+
+        mol.fragment_hashes.append(fragment_hashes)
+
+    return False
+
+
 
 def metal_complex(mol):
     # if mol is a metal, it isn't a metal complex
@@ -137,5 +162,6 @@ standard_mol_decision_tree = [
     (metal_complex, Terminal.DISCARD),
     (partial(add_neighborhood_hashes, 4) , Terminal.KEEP),
     (add_total_hashes, Terminal.KEEP),
+    (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]

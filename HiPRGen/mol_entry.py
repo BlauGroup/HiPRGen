@@ -66,6 +66,8 @@ class MoleculeEntry(MSONable):
         # self.neighborhood_hashes[radius][atom_num]
         self.neighborhood_hashes = {}
 
+        self.fragment_hashes = []
+
 
 
         self.entry_id = entry_id

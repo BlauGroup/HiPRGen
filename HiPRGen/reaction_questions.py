@@ -186,57 +186,14 @@ def dcharge_too_large(reaction, mol_entries, params):
 def reactant_and_product_not_isomorphic(reaction, mols, params):
     reactant = mols[reaction['reactants'][0]]
     product = mols[reaction['products'][0]]
-    if reactant.mol_graph.isomorphic_to(product.mol_graph):
-        return False
-    else:
+    if reactant.total_hash != product.total_hash:
         return True
+    else:
+        return False
 
 def default_true(reaction, mols, params):
     return True
 
-
-def is_A_B_to_A_C_where_A_not_metal_atom(reaction, mols, params):
-    reactants_set = set([])
-    products_set = set([])
-    for i in range(reaction['number_of_reactants']):
-        reactant_index = reaction['reactants'][i]
-        reactants_set.add(reactant_index)
-
-    for j in range(reaction['number_of_products']):
-        product_index = reaction['products'][j]
-        products_set.add(product_index)
-
-    common_species = reactants_set.intersection(products_set)
-    if len(common_species) == 0:
-        return False
-    else:
-        mol = list(common_species)[0]
-        if mols[mol].species == ['Li']:
-            return False
-        else:
-            return True
-
-def reaction_is_decomposable(reaction, mols, params):
-    if reaction['number_of_reactants'] < 2 or reaction['number_of_products'] < 2:
-        return False
-    else:
-        reactant_formulas = []
-        product_formulas = []
-        for i in range(reaction['number_of_reactants']):
-            reactant = mols[reaction['reactants'][i]]
-            reactant_formulas.append(reactant.formula)
-
-        for i in range(reaction['number_of_products']):
-            product = mols[reaction['products'][i]]
-            product_formulas.append(product.formula)
-
-        reactant_formulas_set = set(reactant_formulas)
-        product_formulas_set = set(product_formulas)
-
-        if len(reactant_formulas_set.intersection(product_formulas_set)) > 0:
-            return True
-        else:
-            return False
 
 def star_count_diff_above_threshold(threshold, reaction, mols, params):
     reactant_stars = {}
@@ -333,17 +290,6 @@ def compute_atom_mapping(radius_bound, reaction, mols, params):
     return True
 
 
-def atom_mapping_cost_above_threshold(threshold, reaction, mols, params):
-
-    total_cost = 0.0
-    atom_mapping = reaction['atom_mapping']
-    for reactant_atom in atom_mapping:
-        total_cost += atom_mapping[reactant_atom][1]
-
-    return total_cost
-
-
-
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
@@ -358,10 +304,7 @@ standard_reaction_decision_tree = [
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)]),
 
-    (reaction_is_decomposable, Terminal.DISCARD),
 
-    # discard reactions of the form A+B->A+C unless A is a Li atom
-    (is_A_B_to_A_C_where_A_not_metal_atom, Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
