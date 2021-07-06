@@ -1,10 +1,8 @@
 import math
-import numpy as np
 from HiPRGen.mol_entry import MoleculeEntry
 from enum import Enum
 from functools import partial
 from HiPRGen.constants import *
-from scipy.optimize import linear_sum_assignment
 
 """
 The reaction decision tree:
@@ -261,10 +259,12 @@ def no_fragment_matching_found(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
         reaction['number_of_products'] == 2):
 
-        reactant_fragments = set()
-
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
+
+        reactant_fragments = set(
+            frozenset([reactant_0.covalent_hash, reactant_1.covalent_hash])
+        )
 
         for fragments in reactant_0.fragment_hashes:
             reactant_fragments.add(
@@ -274,11 +274,12 @@ def no_fragment_matching_found(reaction, mols, params):
             reactant_fragments.add(
                 frozenset(fragments + [reactant_0.covalent_hash]))
 
-
-        product_fragments = set()
-
         product_0 = mols[reaction['products'][0]]
         product_1 = mols[reaction['products'][1]]
+
+        product_fragments = set(
+            frozenset([product_0.covalent_hash, product_1.covalent_hash])
+        )
 
         for fragments in product_0.fragment_hashes:
             product_fragments.add(
@@ -293,69 +294,26 @@ def no_fragment_matching_found(reaction, mols, params):
         else:
             return False
 
-    else:
-        return False
+    elif (reaction['number_of_reactants'] == 1 and
+          reaction['number_of_products'] == 1):
 
+        reactant = mols[reaction['reactants'][0]]
+        product = mols[reaction['reactants'][0]]
+        reactant_fragments = set(frozenset([reactant.covalent_hash]))
+        product_fragments = set(frozenset([product.covalent_hash]))
 
+        for fragments in reactant.fragment_hashes:
+            reactant_fragments.add(
+                frozenset(fragments))
 
+        for fragments in product.fragment_hashes:
+            product_fragments.add(
+                frozenset(fragments))
 
-
-def compute_atom_mapping(radius_bound, reaction, mols, params):
-
-    """
-    atom mapping is in NP. It can be translated into a mixed integer programming problem, but this is too slow for HiPRGen. Instead, we use a combination of the heuristics described in "comparing heuristics gor graph edit distance computation, D.Blumenthal", to transform the atom mapping problem into a linear sum assignment problem that is solvable in linear time.
-
-    the string mol.neighborhood_hashes[radius][atom_num] is an isomorphism preserving hash of the neighborhood arount atom_num with given radius. We want to map atoms in the reactants to atoms in the products with as much overlapping neighborhood as possible.
-    """
-
-    reactant_mapping = []
-    product_mapping = []
-
-    for i in range(reaction['number_of_reactants']):
-        for j in range(mols[reaction['reactants'][i]].num_atoms):
-            reactant_mapping.append((i,j))
-
-
-    for i in range(reaction['number_of_products']):
-        for j in range(mols[reaction['products'][i]].num_atoms):
-            product_mapping.append((i,j))
-
-
-
-    total_num_atoms = len(reactant_mapping)
-    cost = np.zeros((total_num_atoms, total_num_atoms))
-
-    for i in range(total_num_atoms):
-        for j in range(total_num_atoms):
-            reactant_num, reactant_atom_num = reactant_mapping[i]
-            reactant_id = reaction['reactants'][reactant_num]
-            reactant = mols[reactant_id]
-
-
-            product_num, product_atom_num = product_mapping[j]
-            product_id = reaction['products'][product_num]
-            product = mols[product_id]
-
-            bool_array = [
-                reactant.neighborhood_hashes[r][reactant_atom_num] ==
-                product.neighborhood_hashes[r][product_atom_num] for
-                r in range(radius_bound) ]
-
-
-
-            cost[i,j] = len([b for b in bool_array if b])
-
-
-    row_ind, col_ind = linear_sum_assignment(cost, maximize=True)
-
-    atom_mapping = dict(
-        [ (reactant_mapping[row_ind[i]],
-           (product_mapping[col_ind[i]], cost[row_ind[i], col_ind[i]]))
-          for i in range(total_num_atoms) ])
-
-    reaction['atom_mapping'] = atom_mapping
-
-    return True
+        if len(reactant_fragments.intersection(product_fragments)) == 0:
+            return True
+        else:
+            return False
 
 
 standard_reaction_decision_tree = [
@@ -376,11 +334,7 @@ standard_reaction_decision_tree = [
 
     (no_fragment_matching_found, Terminal.DISCARD),
 
-    (partial(compute_atom_mapping, 4),
-
-     [
-         (default_true, Terminal.KEEP)
-     ])
+    (default_true, Terminal.KEEP)
     ]
 
 
