@@ -230,6 +230,68 @@ def star_count_diff_above_threshold(threshold, reaction, mols, params):
     else:
         return False
 
+def reaction_is_decomposable(reaction, mols, params):
+
+    reactant_total_hashes = set()
+    for i in range(reaction['number_of_reactants']):
+        reactant_id = reaction['reactants'][i]
+        reactant = mols[reactant_id]
+        reactant_total_hashes.add(reactant.total_hash)
+
+    product_total_hashes = set()
+    for i in range(reaction['number_of_products']):
+        product_id = reaction['products'][i]
+        product = mols[product_id]
+        product_total_hashes.add(product.total_hash)
+
+    if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
+        return True
+    else:
+        return False
+
+
+
+def no_fragment_matching_found(reaction, mols, params):
+    if (reaction['number_of_reactants'] == 2 and
+        reaction['number_of_products'] == 2):
+
+        reactant_fragments = set()
+
+        reactant_0 = mols[reaction['reactants'][0]]
+        reactant_1 = mols[reaction['reactants'][1]]
+
+        for fragments in reactant_0.fragment_hashes:
+            reactant_fragments.add(
+                frozenset(fragments + [reactant_1.covalent_hash]))
+
+        for fragments in reactant_1.fragment_hashes:
+            reactant_fragments.add(
+                frozenset(fragments + [reactant_0.covalent_hash]))
+
+
+        product_fragments = set()
+
+        product_0 = mols[reaction['products'][0]]
+        product_1 = mols[reaction['products'][1]]
+
+        for fragments in product_0.fragment_hashes:
+            product_fragments.add(
+                frozenset(fragments + [product_1.covalent_hash]))
+
+        for fragments in product_1.fragment_hashes:
+            product_fragments.add(
+                frozenset(fragments + [product_0.covalent_hash]))
+
+        if len(reactant_fragments.intersection(product_fragments)) == 0:
+            return True
+        else:
+            return False
+
+    else:
+        return False
+
+
+
 
 
 def compute_atom_mapping(radius_bound, reaction, mols, params):
@@ -298,15 +360,15 @@ standard_reaction_decision_tree = [
 
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
-
-        # we may want to allow redox reactions between non
-        # isomorphic species at some point
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
-        (default_true, Terminal.KEEP)]),
-
-
+        (default_true, Terminal.KEEP)
+    ]),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
+
+    (reaction_is_decomposable, Terminal.DISCARD),
+
+    (no_fragment_matching_found, Terminal.DISCARD),
 
     (partial(compute_atom_mapping, 4),
 

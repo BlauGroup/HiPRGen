@@ -268,6 +268,7 @@ class MoleculeEntry(MSONable):
         Get the free energy at the give temperature.
         """
         if self.enthalpy is not None and self.entropy is not None:
+            # TODO: fix these hard coded vals
             return (
                 self.energy * 27.21139
                 + 0.0433641 * self.enthalpy
@@ -276,113 +277,6 @@ class MoleculeEntry(MSONable):
         else:
             return None
 
-    def get_fragments(self) -> Optional[Dict[Tuple[Any, Any], List[MoleculeGraph]]]:
-        """
-        Get the fragments of the molecule by breaking all its bonds.
-
-        Returns:
-            Fragments dict {(atom1, atom2): [fragments]}, where
-                the key `(atom1, atom2)` specifies the broken bond indexed by the two
-                atoms forming the bond, and the value `[fragments]` is a list of
-                fragments obtained by breaking the bond. This list can have either one
-                element (ring-opening A->B) or two elements (not ring-opening A->B+C).
-                The dictionary is empty if the molecule has no bonds (e.g. Li+).
-        """
-
-        fragments = {}
-        if self.mol_graph:
-            for edge in self.bonds:
-                try:
-                    frags = self.mol_graph.split_molecule_subgraphs(
-                        [edge], allow_reverse=True, alterations=None
-                    )
-                    fragments[edge] = frags
-
-                except MolGraphSplitError:
-                    # cannot split (ring-opening editing)
-                    frag = copy.deepcopy(self.mol_graph)
-                    idx1, idx2 = edge
-                    frag.break_edge(idx1, idx2, allow_reverse=True)
-                    fragments[edge] = [frag]
-
-            return fragments
-        else:
-            return None
-
-    def get_isomorphic_bonds(
-        self, fragments: Optional[Dict[Tuple[int, int], List[MoleculeGraph]]] = None
-    ) -> Optional[List[List[Tuple[int, int]]]]:
-        """
-        Find isomorphic bonds in the molecule.
-
-        Isomorphic bonds are defined as bonds that when breaking them separately,
-        the same fragments (in terms of graph connectivity) are obtained.
-
-        For example, for molecule:
-
-             b0      b1
-        H(1)----C(0)----H(2)
-            b2 /   | b3
-            O(3)---O(4)
-                b4
-
-        (notation: number after b is bond index, number in `()` is atom index)
-
-        bond 0 is isomorphic to bond 1, and bond 2 is isomorphic to bond 3.
-
-        Args:
-            fragments: a dictionary of fragments obtained by breaking all bonds in the
-                molecule, can be obtained by `self.get_fragments()`. If `None`,
-                will generate the fragments automatically.
-
-        Returns:
-            Isomorphic bonds specified by atom indexes: [[(atom1, atom2)]].
-            Each inner list contains bonds (each bond is specified by the indexes of the
-            atoms forming the bond `(atom1, atom2)`) that are isomorphic to each other.
-            Note, bond not isomorphic to any other bond is included as a group by itself.
-            For example, for the above shown molecule, this function returns:
-            [[(0,1), (0,2)], [(0,3), (0,4)], [(3,4)]]
-        """
-
-        fragments = self.get_fragments() if fragments is None else fragments
-
-        if fragments:
-
-            iso_bonds = []  # type: List[List[Tuple[int, int]]]
-
-            for current_bond, current_frags in fragments.items():
-                for group in iso_bonds:
-
-                    # compare to the first element in a group to determine whether they are
-                    # isomorphic to each other
-                    existing_bond = group[0]
-                    exsiting_frags = fragments[existing_bond]
-
-                    # one fragments (ring-opening like fragments)
-                    if len(current_frags) == len(exsiting_frags) == 1:
-                        if current_frags[0].isomorphic_to(exsiting_frags[0]):
-                            group.append(current_bond)
-                            break
-
-                    # two fragments
-                    elif len(current_frags) == len(exsiting_frags) == 2:
-                        if (
-                            current_frags[0].isomorphic_to(exsiting_frags[0])
-                            and current_frags[1].isomorphic_to(exsiting_frags[1])
-                        ) or (
-                            current_frags[0].isomorphic_to(exsiting_frags[1])
-                            and current_frags[1].isomorphic_to(exsiting_frags[0])
-                        ):
-                            group.append(current_bond)
-                            break
-
-                # current_bond not in any group, create a new group
-                else:
-                    iso_bonds.append([current_bond])
-
-            return iso_bonds
-        else:
-            return None
 
     def __repr__(self):
 
