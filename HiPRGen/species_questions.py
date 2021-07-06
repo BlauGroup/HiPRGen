@@ -88,6 +88,27 @@ def add_neighborhood_hashes(radius_bound, mol):
 
     return False
 
+def add_total_hashes(mol):
+    m_inds = [
+        i for i, x in enumerate(mol.species) if x in metals
+    ]
+
+    g = copy.deepcopy(mol.graph.to_undirected())
+
+    mol.total_hash = weisfeiler_lehman_graph_hash(
+        g,
+        node_attr='specie')
+
+    g.remove_nodes_from(m_inds)
+
+    mol.covalent_hash = weisfeiler_lehman_graph_hash(
+        g,
+        node_attr='specie')
+
+    return False
+
+
+
 def metal_complex(mol):
     # if mol is a metal, it isn't a metal complex
     if mol.formula in m_formulas:
@@ -115,5 +136,6 @@ standard_mol_decision_tree = [
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
     (partial(add_neighborhood_hashes, 4) , Terminal.KEEP),
+    (add_total_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
