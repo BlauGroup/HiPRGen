@@ -230,25 +230,6 @@ def star_count_diff_above_threshold(threshold, reaction, mols, params):
     else:
         return False
 
-def reaction_is_decomposable(reaction, mols, params):
-
-    reactant_total_hashes = set()
-    for i in range(reaction['number_of_reactants']):
-        reactant_id = reaction['reactants'][i]
-        reactant = mols[reactant_id]
-        reactant_total_hashes.add(reactant.total_hash)
-
-    product_total_hashes = set()
-    for i in range(reaction['number_of_products']):
-        product_id = reaction['products'][i]
-        product = mols[product_id]
-        product_total_hashes.add(product.total_hash)
-
-    if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
-        return True
-    else:
-        return False
-
 def reaction_is_covalent_decomposable(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
         reaction['number_of_products'] == 2):
@@ -390,8 +371,6 @@ standard_reaction_decision_tree = [
     ]),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
-
-    (reaction_is_decomposable, Terminal.DISCARD),
 
     (reaction_is_covalent_decomposable, Terminal.DISCARD),
 
