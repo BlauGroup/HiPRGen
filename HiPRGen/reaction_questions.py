@@ -387,7 +387,7 @@ standard_reaction_decision_tree = [
     (partial(compute_atom_mapping, 4),
 
      [
-         (partial(bond_diff_above_threshold, 3), Terminal.DISCARD),
+         (partial(bond_diff_above_threshold, 4), Terminal.DISCARD),
          (default_true, Terminal.KEEP)
      ])
 
