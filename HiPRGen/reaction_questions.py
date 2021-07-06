@@ -317,12 +317,15 @@ def compute_atom_mapping(radius_bound, reaction, mols, params):
                 r in range(radius_bound) ]
 
 
+
             cost[i,j] = len([b for b in bool_array if b])
+
 
     row_ind, col_ind = linear_sum_assignment(cost, maximize=True)
 
     atom_mapping = dict(
-        [ (reactant_mapping[row_ind[i]], (product_mapping[col_ind[i]], cost[i,j]))
+        [ (reactant_mapping[row_ind[i]],
+           (product_mapping[col_ind[i]], cost[row_ind[i], col_ind[i]]))
           for i in range(total_num_atoms) ])
 
     reaction['atom_mapping'] = atom_mapping
