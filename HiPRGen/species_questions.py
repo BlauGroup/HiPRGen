@@ -69,22 +69,20 @@ def mol_not_connected(mol):
     return not nx.is_weakly_connected(mol.graph)
 
 
-def add_neighborhood_hashes(radius_bound, mol):
-    for r in range(radius_bound):
+def add_star_hashes(mol):
 
-        mol.neighborhood_hashes[r] = {}
 
-        for i in range(mol.num_atoms):
+    for i in range(mol.num_atoms):
 
-            neighborhood = nx.generators.ego.ego_graph(
-                mol.graph.to_undirected(),
-                i,
-                r,
-                undirected=True)
+        neighborhood = nx.generators.ego.ego_graph(
+            mol.graph.to_undirected(),
+            i,
+            1,
+            undirected=True)
 
-            mol.neighborhood_hashes[r][i] = weisfeiler_lehman_graph_hash(
-                neighborhood,
-                node_attr='specie')
+        mol.star_hashes[i] = weisfeiler_lehman_graph_hash(
+            neighborhood,
+            node_attr='specie')
 
     return False
 
@@ -160,7 +158,7 @@ standard_mol_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-    (partial(add_neighborhood_hashes, 2) , Terminal.KEEP),
+    (add_star_hashes, Terminal.KEEP),
     (add_total_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)

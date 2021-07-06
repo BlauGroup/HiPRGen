@@ -201,7 +201,7 @@ def star_count_diff_above_threshold(threshold, reaction, mols, params):
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mols[reactant_index]
-        for h in mol.neighborhood_hashes[1].values():
+        for h in mol.star_hashes.values():
             tags.add(h)
             if h in reactant_stars:
                 reactant_stars[h] += 1
@@ -211,7 +211,7 @@ def star_count_diff_above_threshold(threshold, reaction, mols, params):
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mols[product_index]
-        for h in mol.neighborhood_hashes[1].values():
+        for h in mol.star_hashes.values():
             tags.add(h)
             if h in product_stars:
                 product_stars[h] += 1
@@ -314,6 +314,8 @@ def no_fragment_matching_found(reaction, mols, params):
             return True
         else:
             return False
+
+    return False
 
 
 standard_reaction_decision_tree = [
