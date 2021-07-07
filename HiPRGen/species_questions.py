@@ -71,18 +71,24 @@ def mol_not_connected(mol):
 
 def add_star_hashes(mol):
 
+    m_inds = [
+        i for i, x in enumerate(mol.species) if x in metals
+    ]
+
+    g = copy.deepcopy(mol.graph.to_undirected())
+    g.remove_nodes_from(m_inds)
 
     for i in range(mol.num_atoms):
+        if i not in m_inds:
+            neighborhood = nx.generators.ego.ego_graph(
+                g,
+                i,
+                1,
+                undirected=True)
 
-        neighborhood = nx.generators.ego.ego_graph(
-            mol.graph.to_undirected(),
-            i,
-            1,
-            undirected=True)
-
-        mol.star_hashes[i] = weisfeiler_lehman_graph_hash(
-            neighborhood,
-            node_attr='specie')
+            mol.star_hashes[i] = weisfeiler_lehman_graph_hash(
+                neighborhood,
+                node_attr='specie')
 
     return False
 
