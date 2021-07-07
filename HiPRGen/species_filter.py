@@ -91,7 +91,6 @@ def species_filter(dataset_entries,
 
     log_message("applying local filters")
 
-    # TODO: parallelize this
     mol_entries = [
         m for m in mol_entries_no_iso
         if run_decision_tree(m, species_decision_tree)]

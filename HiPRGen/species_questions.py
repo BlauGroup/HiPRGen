@@ -103,10 +103,14 @@ def add_total_hashes(mol):
         g,
         node_attr='specie')
 
+
     return False
 
 
 def add_fragment_hashes(mol):
+    if mol.formula in m_formulas:
+        return False
+
     m_inds = [
         i for i, x in enumerate(mol.species) if x in metals
     ]

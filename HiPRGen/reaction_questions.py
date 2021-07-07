@@ -252,6 +252,23 @@ def reaction_is_covalent_decomposable(reaction, mols, params):
 
 
 def no_fragment_matching_found(reaction, mols, params):
+
+    # is a reactant or a product is a single atom, then this breaks
+    # TODO: fix this
+    for i in range(reaction['number_of_reactants']):
+        reactant_id = reaction['reactants'][i]
+        reactant = mols[reactant_id]
+        if reactant.num_atoms == 1:
+            return False
+
+    for i in range(reaction['number_of_products']):
+        product_id = reaction['products'][i]
+        product = mols[product_id]
+        if reactant.num_atoms == 1:
+            return False
+
+
+
     if reaction['number_of_reactants'] == 1:
         reactant = mols[reaction['reactants'][0]]
         reactant_fragments = set([frozenset([reactant.covalent_hash])])
@@ -302,7 +319,6 @@ def no_fragment_matching_found(reaction, mols, params):
                 frozenset(fragments + [product_0.covalent_hash]))
 
 
-    breakpoint()
     if len(reactant_fragments.intersection(product_fragments)) == 0:
         return True
     else:
