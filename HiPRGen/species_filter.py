@@ -5,7 +5,7 @@ from monty.serialization import dumpfn
 import pickle
 from HiPRGen.species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
 from time import localtime, strftime
-
+from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 
 """
 Phase 1: species filtering
@@ -18,46 +18,22 @@ species isomorphism filtering:
 The input dataset entries will often contain isomorphic molecules. Identifying such isomorphisms doesn't fit into the species decision tree, so we have it as a preprocessing phase.
 """
 
-def isomorphic_mols(m1, m2):
-    return m1.mol_graph.isomorphic_to(m2.mol_graph)
+def groupby_isomorphism(mols):
+    isomorphism_buckets = {}
+    for mol in mols:
+        mol_hash = weisfeiler_lehman_graph_hash(
+            mol.graph.to_undirected(),
+            node_attr='specie'
+        )
 
+        tag = (mol.charge, mol.formula, mol.num_bonds, mol_hash)
 
-def equal_tags(m1, m2):
-    def tag(x):
-        return ( x.formula, x.num_bonds, x.charge )
+        if tag in isomorphism_buckets:
+            isomorphism_buckets[tag].append(mol)
+        else:
+            isomorphism_buckets[tag] = [mol]
 
-    return tag(m1) == tag(m2)
-
-
-def groupby(equivalence_relation, xs):
-    """
-    warning: this has slightly different semantics than
-    itertools groupby which depends on ordering.
-    """
-    groups = []
-
-    for x in xs:
-        group_found = False
-        for group in groups:
-            if equivalence_relation(x, group[0]):
-                group.append(x)
-                group_found = True
-                break
-
-        if not group_found:
-            groups.append([x])
-
-    return groups
-
-def groupby_isomorphism(mol_entries):
-    """
-    first group by tag to reduce the number of graph isos we need to compute
-    """
-
-    chunks = groupby(equal_tags, mol_entries)
-    l = map(partial(groupby, isomorphic_mols), chunks)
-
-    return chain.from_iterable(l)
+    return isomorphism_buckets
 
 def log_message(string):
     print(
@@ -87,7 +63,7 @@ def species_filter(dataset_entries,
 
     mol_entries_no_iso = [
         collapse_isomorphism_class(g)
-        for g in groupby_isomorphism(mol_entries_unfiltered)]
+        for g in groupby_isomorphism(mol_entries_unfiltered).values()]
 
     log_message("applying local filters")
 
