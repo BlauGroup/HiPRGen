@@ -1,4 +1,4 @@
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import *
 from enum import Enum
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
@@ -53,9 +53,6 @@ def run_decision_tree(mol_entry, decision_tree):
         raise Exception("unexpected node type reached")
 
 
-
-metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
-m_formulas = frozenset([m + "1" for m in metals])
 
 def metal_ion_filter(mol_entry):
     "only allow positively charged metal ions"

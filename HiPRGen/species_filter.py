@@ -1,4 +1,4 @@
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import *
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
@@ -21,12 +21,20 @@ The input dataset entries will often contain isomorphic molecules. Identifying s
 def groupby_isomorphism(mols):
     isomorphism_buckets = {}
     for mol in mols:
+
+        m_inds = [
+            i for i, x in enumerate(mol.species) if x in metals
+        ]
+
+        g = copy.deepcopy(mol.graph.to_undirected())
+        g.remove_nodes_from(m_inds)
+
         mol_hash = weisfeiler_lehman_graph_hash(
-            mol.graph.to_undirected(),
+            g,
             node_attr='specie'
         )
 
-        tag = (mol.charge, mol.formula, mol.num_bonds, mol_hash)
+        tag = (mol.charge, mol.formula, mol_hash)
 
         if tag in isomorphism_buckets:
             isomorphism_buckets[tag].append(mol)
@@ -58,7 +66,7 @@ def species_filter(dataset_entries,
     log_message("applying non local filters")
 
     def collapse_isomorphism_class(g):
-        return min(g,key=lambda x: x.get_free_energy())
+        return min(g,key=lambda x: x.get_solvation_free_energy())
 
 
     mol_entries_no_iso = [

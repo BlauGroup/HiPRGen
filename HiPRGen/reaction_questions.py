@@ -1,5 +1,5 @@
 import math
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import *
 from enum import Enum
 from functools import partial
 from HiPRGen.constants import *
@@ -181,7 +181,7 @@ def dcharge_too_large(reaction, mol_entries, params):
 def reactant_and_product_not_isomorphic(reaction, mols, params):
     reactant = mols[reaction['reactants'][0]]
     product = mols[reaction['products'][0]]
-    if reactant.total_hash != product.total_hash:
+    if reactant.covalent_hash != product.covalent_hash:
         return True
     else:
         return False
@@ -325,6 +325,22 @@ def no_fragment_matching_found(reaction, mols, params):
         return False
 
 
+def concerted_metal_coordination(reaction, mols, params):
+    if (reaction['number_of_reactants'] == 2 and
+        reaction['number_of_products'] == 2):
+
+        reactant_0 = mols[reaction['reactants'][0]]
+        reactant_1 = mols[reaction['reactants'][1]]
+
+        if (reactant_0.formula in m_formulas or
+            reactant_1.formula in m_formulas):
+            return True
+        else:
+            return False
+
+    return False
+
+
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
@@ -342,6 +358,8 @@ standard_reaction_decision_tree = [
     (reaction_is_covalent_decomposable, Terminal.DISCARD),
 
     (no_fragment_matching_found, Terminal.DISCARD),
+
+    (concerted_metal_coordination, Terminal.DISCARD),
 
     (default_true, Terminal.KEEP)
     ]

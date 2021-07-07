@@ -22,6 +22,17 @@ __status__ = "Alpha"
 __date__ = "Aug 1, 2019"
 
 
+metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
+m_formulas = frozenset([m + "1" for m in metals])
+
+solvation_correction = {
+    "Li" : -0.746,
+    }
+
+max_number_of_bonds = {
+    "Li" : 4,
+    }
+
 class MoleculeEntry(MSONable):
     """
     A molecule entry class to provide easy access to Molecule properties.
@@ -274,6 +285,24 @@ class MoleculeEntry(MSONable):
             )
         else:
             return None
+
+
+    def get_solvation_free_energy(self):
+        m_inds = [
+            i for i, x in enumerate(self.species) if x in metals
+        ]
+
+        correction = 0.0
+
+        for i in m_inds:
+            number_of_bonds = len([bond for bond in self.bonds if i in bond])
+            species = self.species[i]
+            correction += solvation_correction[species] * (
+                max_number_of_bonds[species] - number_of_bonds)
+
+        return correction + self.get_free_energy()
+
+
 
 
     def __repr__(self):
