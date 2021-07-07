@@ -251,11 +251,15 @@ def reaction_is_covalent_decomposable(reaction, mols, params):
 
 
 
-
 def no_fragment_matching_found(reaction, mols, params):
-    if (reaction['number_of_reactants'] == 2 and
-        reaction['number_of_products'] == 2):
+    if reaction['number_of_reactants'] == 1:
+        reactant = mols[reaction['reactants'][0]]
+        reactant_fragments = set([frozenset([reactant.covalent_hash])])
+        for fragments in reactant.fragment_hashes:
+            reactant_fragments.add(
+                frozenset(fragments))
 
+    elif reaction['number_of_reactants'] == 2:
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
 
@@ -270,6 +274,17 @@ def no_fragment_matching_found(reaction, mols, params):
         for fragments in reactant_1.fragment_hashes:
             reactant_fragments.add(
                 frozenset(fragments + [reactant_0.covalent_hash]))
+
+
+    if reaction['number_of_products'] == 1:
+
+        product = mols[reaction['products'][0]]
+        product_fragments = set([frozenset([product.covalent_hash])])
+        for fragments in product.fragment_hashes:
+            product_fragments.add(
+                frozenset(fragments))
+
+    elif reaction['number_of_products'] == 2:
 
         product_0 = mols[reaction['products'][0]]
         product_1 = mols[reaction['products'][1]]
@@ -286,34 +301,12 @@ def no_fragment_matching_found(reaction, mols, params):
             product_fragments.add(
                 frozenset(fragments + [product_0.covalent_hash]))
 
-        if len(reactant_fragments.intersection(product_fragments)) == 0:
-            return True
-        else:
-            return False
 
-    elif (reaction['number_of_reactants'] == 1 and
-          reaction['number_of_products'] == 1):
-
-        reactant = mols[reaction['reactants'][0]]
-        product = mols[reaction['products'][0]]
-
-        reactant_fragments = set([frozenset([reactant.covalent_hash])])
-        product_fragments = set([frozenset([product.covalent_hash])])
-
-        for fragments in reactant.fragment_hashes:
-            reactant_fragments.add(
-                frozenset(fragments))
-
-        for fragments in product.fragment_hashes:
-            product_fragments.add(
-                frozenset(fragments))
-
-        if len(reactant_fragments.intersection(product_fragments)) == 0:
-            return True
-        else:
-            return False
-
-    return False
+    breakpoint()
+    if len(reactant_fragments.intersection(product_fragments)) == 0:
+        return True
+    else:
+        return False
 
 
 standard_reaction_decision_tree = [
@@ -345,10 +338,4 @@ minimal_reaction_decision_tree = [
     ]
 
 standard_logging_decision_tree = Terminal.DISCARD
-
-def no_atom_mapping(reaction, mols, params):
-    if 'atom_mapping' in reaction:
-        return False
-    else:
-        return True
 
