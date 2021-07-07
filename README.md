@@ -2,7 +2,7 @@
 
 HiPRGen is a python module for constructing reaction networks by running hundreds of billions of reactions through a decision tree. HiPRGen is built intop off [pymatgen](https://pymatgen.org/) and [MPI4py](https://pymatgen.org/) which facilitates multi-node parallelism.
 
-- species filtering: This phase loads a json generated from the database, generates a bunch of mol_entries, filters them by isomorphism and then runs each molecule through a hand crafted decision tree currently called standard_mol_decision_tree in `species_questions.py`. The resulting list is then pickled for loading in other phases. The reason we use pickle here instead of json is that some of the species questions append non trivial data structures to the mol entries which get mangled when serialized to json, but i consider this a bug and would definately prefer to fix this and use json
+- species filtering: This phase loads a json generated from the database, generates a bunch of mol_entries, filters them by isomorphism and then runs each molecule through a hand crafted decision tree currently called `standard_mol_decision_tree` in `species_questions.py`. The resulting list is then pickled for loading in other phases. The reason we use pickle here instead of json is that some of the species questions append non trivial data structures to the mol entries which get mangled when serialized to json, but i consider this a bug and would definately prefer to fix this and use json
 
 - bucketing: Now we loop through pairs (A,B) where A and B are mols in the saved pickle and group them by atom counts. These groups are stored in a bucket database.
 
