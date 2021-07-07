@@ -45,9 +45,6 @@ Once a Terminal node is reached, it tells us whether to keep or discard the reac
 
 logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
 
-
-reaction atom mappings: compute_atom_mapping sets reaction['atom_mapping'] which is a dictionary sending (reactant_num, atom_num) to (product_num, atom_num).
-
 """
 
 class Terminal(Enum):
@@ -262,9 +259,9 @@ def no_fragment_matching_found(reaction, mols, params):
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
 
-        reactant_fragments = set(
+        reactant_fragments = set([
             frozenset([reactant_0.covalent_hash, reactant_1.covalent_hash])
-        )
+        ])
 
         for fragments in reactant_0.fragment_hashes:
             reactant_fragments.add(
@@ -277,9 +274,9 @@ def no_fragment_matching_found(reaction, mols, params):
         product_0 = mols[reaction['products'][0]]
         product_1 = mols[reaction['products'][1]]
 
-        product_fragments = set(
+        product_fragments = set([
             frozenset([product_0.covalent_hash, product_1.covalent_hash])
-        )
+        ])
 
         for fragments in product_0.fragment_hashes:
             product_fragments.add(
@@ -298,9 +295,10 @@ def no_fragment_matching_found(reaction, mols, params):
           reaction['number_of_products'] == 1):
 
         reactant = mols[reaction['reactants'][0]]
-        product = mols[reaction['reactants'][0]]
-        reactant_fragments = set(frozenset([reactant.covalent_hash]))
-        product_fragments = set(frozenset([product.covalent_hash]))
+        product = mols[reaction['products'][0]]
+
+        reactant_fragments = set([frozenset([reactant.covalent_hash])])
+        product_fragments = set([frozenset([product.covalent_hash])])
 
         for fragments in reactant.fragment_hashes:
             reactant_fragments.add(
