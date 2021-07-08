@@ -60,7 +60,6 @@ class MoleculeEntry(MSONable):
 
         self.ind = None
 
-        self.solvation_free_energy = None
         self.star_hashes = {}
         self.fragment_hashes = []
 
@@ -83,6 +82,7 @@ class MoleculeEntry(MSONable):
             i for i, x in enumerate(self.species) if x in metals
         ]
 
+
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
 
@@ -101,6 +101,9 @@ class MoleculeEntry(MSONable):
         self.bonds = [(int(sorted(e)[0]), int(sorted(e)[1])) for e in self.graph.edges()]
         self.num_atoms = len(self.molecule)
         self.num_bonds = len(self.bonds)
+
+        self.free_energy = self.get_free_energy()
+        self.solvation_free_energy = self.get_solvation_free_energy()
 
 
 
@@ -262,21 +265,16 @@ class MoleculeEntry(MSONable):
 
 
     def get_solvation_free_energy(self):
-        if self.solvation_free_energy is None:
 
-            correction = 0.0
+        correction = 0.0
 
-            for i in self.m_inds:
-                number_of_bonds = len([bond for bond in self.bonds if i in bond])
-                species = self.species[i]
-                correction += solvation_correction[species] * (
-                    max_number_of_bonds[species] - number_of_bonds)
+        for i in self.m_inds:
+            number_of_bonds = len([bond for bond in self.bonds if i in bond])
+            species = self.species[i]
+            correction += solvation_correction[species] * (
+                max_number_of_bonds[species] - number_of_bonds)
 
-            self.solvation_free_energy = correction + self.get_free_energy()
-
-        return self.solvation_free_energy
-
-
+        return correction + self.get_free_energy()
 
 
     def __repr__(self):

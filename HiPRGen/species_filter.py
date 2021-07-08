@@ -68,7 +68,7 @@ def species_filter(dataset_entries,
     log_message("applying non local filters")
 
     def collapse_isomorphism_class(g):
-        return min(g,key=lambda x: x.get_solvation_free_energy())
+        return min(g,key=lambda x: x.solvation_free_energy)
 
 
     mol_entries = [
