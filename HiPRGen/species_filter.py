@@ -26,7 +26,7 @@ def groupby_isomorphism(mols):
             i for i, x in enumerate(mol.species) if x in metals
         ]
 
-        g = copy.deepcopy(mol.graph.to_undirected())
+        g = copy.deepcopy(mol.graph)
         g.remove_nodes_from(m_inds)
 
         mol_hash = weisfeiler_lehman_graph_hash(

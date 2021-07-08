@@ -63,7 +63,7 @@ def metal_ion_filter(mol_entry):
 
 
 def mol_not_connected(mol):
-    return not nx.is_weakly_connected(mol.graph)
+    return not nx.is_connected(mol.graph)
 
 
 def add_star_hashes(mol):
@@ -72,7 +72,7 @@ def add_star_hashes(mol):
         i for i, x in enumerate(mol.species) if x in metals
     ]
 
-    g = copy.deepcopy(mol.graph.to_undirected())
+    g = copy.deepcopy(mol.graph)
     g.remove_nodes_from(m_inds)
 
     for i in range(mol.num_atoms):
@@ -94,7 +94,7 @@ def add_total_hashes(mol):
         i for i, x in enumerate(mol.species) if x in metals
     ]
 
-    g = copy.deepcopy(mol.graph.to_undirected())
+    g = copy.deepcopy(mol.graph)
 
     mol.total_hash = weisfeiler_lehman_graph_hash(
         g,
@@ -118,7 +118,7 @@ def add_fragment_hashes(mol):
         i for i, x in enumerate(mol.species) if x in metals
     ]
 
-    g = copy.deepcopy(mol.graph.to_undirected())
+    g = copy.deepcopy(mol.graph)
     g.remove_nodes_from(m_inds)
 
     for edge in g.edges:
@@ -149,9 +149,9 @@ def metal_complex(mol):
         m_inds = [
             i for i, x in enumerate(mol.species) if x in metals
         ]
-        g = copy.deepcopy(mol.mol_graph)
-        g.remove_nodes(m_inds)
-        return not nx.is_weakly_connected(g.graph)
+        g = copy.deepcopy(mol.graph)
+        g.remove_nodes_from(m_inds)
+        return not nx.is_connected(g)
 
     # no metal atoms
     else:

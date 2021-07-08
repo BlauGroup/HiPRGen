@@ -14,7 +14,7 @@ def visualize_molecule_entry(molecule_entry, path):
                    "C": "black",
                    "Li": "purple"}
 
-    graph = deepcopy(molecule_entry.graph).to_undirected()
+    graph = deepcopy(molecule_entry.graph)
 
 
     nx.set_node_attributes(graph, "filled", "style")

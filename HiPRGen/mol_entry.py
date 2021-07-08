@@ -88,10 +88,18 @@ class MoleculeEntry(MSONable):
             self.mol_graph = mol_graph
 
         self.molecule = self.mol_graph.molecule
-        self.graph = self.mol_graph.graph
+        self.graph = self.mol_graph.graph.to_undirected()
+        self.species = [str(s) for s in self.molecule.species]
+
+        self.m_inds = [
+            i for i, x in enumerate(self.species) if x in metals
+        ]
+
+        self.covalent_graph = copy.deepcopy(self.graph)
+        self.covalent_graph.remove_nodes_from(self.m_inds)
+
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
-        self.species = [str(s) for s in self.molecule.species]
         self.bonds = [(int(sorted(e)[0]), int(sorted(e)[1])) for e in self.graph.edges()]
         self.num_atoms = len(self.molecule)
         self.num_bonds = len(self.bonds)
