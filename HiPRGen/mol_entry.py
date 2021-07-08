@@ -32,11 +32,6 @@ class MoleculeEntry(MSONable):
         enthalpy: Enthalpy of the molecule (kcal/mol). Defaults to None.
         entropy: Entropy of the molecule (cal/mol.K). Defaults to None.
         entry_id: An optional id to uniquely identify the entry.
-        attribute: Optional attribute of the entry. This can be used to
-            specify that the entry is a newly found compound, or to specify
-            a particular label for the entry, or else ... Used for further
-            analysis and plotting purposes. An attribute can be anything
-            but must be MSONable.
         mol_graph: MoleculeGraph of the molecule.
     """
 
@@ -47,7 +42,6 @@ class MoleculeEntry(MSONable):
         enthalpy: Optional[float] = None,
         entropy: Optional[float] = None,
         entry_id: Optional[Any] = None,
-        attribute=None,
         mol_graph: Optional[MoleculeGraph] = None,
     ):
         self.energy = energy
@@ -63,7 +57,6 @@ class MoleculeEntry(MSONable):
 
 
         self.entry_id = entry_id
-        self.attribute = attribute
 
         if not mol_graph:
             mol_graph = MoleculeGraph.with_local_env_strategy(molecule, OpenBabelNN())
@@ -108,7 +101,6 @@ class MoleculeEntry(MSONable):
     def from_molecule_document(
         cls,
         mol_doc: Dict,
-        attribute=None,
     ):
         """
         Initialize a MoleculeEntry from a molecule document.
@@ -116,11 +108,6 @@ class MoleculeEntry(MSONable):
         Args:
             mol_doc: MongoDB molecule document (nested dictionary) that contains the
                 molecule information.
-            attribute: Optional attribute of the entry. This can be used to
-                specify that the entry is a newly found compound, or to specify
-                a particular label for the entry, or else ... Used for further
-                analysis and plotting purposes. An attribute can be anything
-                but must be MSONable.
         """
         try:
             if isinstance(mol_doc["molecule"], Molecule):
@@ -151,7 +138,6 @@ class MoleculeEntry(MSONable):
             enthalpy=enthalpy,
             entropy=entropy,
             entry_id=entry_id,
-            attribute=attribute,
             mol_graph=mol_graph,
         )
 
@@ -160,7 +146,6 @@ class MoleculeEntry(MSONable):
         cls,
         doc: Dict,
         use_thermo: str = "raw",
-        attribute=None,
     ):
         """
         Initialize a MoleculeEntry from a document in the LIBE (Lithium-Ion
@@ -176,11 +161,6 @@ class MoleculeEntry(MSONable):
                 "qrrho" (meaning that Grimme's Quasi-Rigid Rotor Harmonic
                 Oscillator - see Grimme, Chem. Eur. J. 2012, 18, 9955-9964) will
                 be used.
-            attribute: Optional attribute of the entry. This can be used to
-                specify that the entry is a newly found compound, or to specify
-                a particular label for the entry, or else ... Used for further
-                analysis and plotting purposes. An attribute can be anything
-                but must be MSONable.
         """
 
         thermo = use_thermo.lower()
@@ -232,7 +212,6 @@ class MoleculeEntry(MSONable):
             enthalpy=enthalpy,
             entropy=entropy,
             entry_id=entry_id,
-            attribute=attribute,
             mol_graph=mol_graph,
         )
 
