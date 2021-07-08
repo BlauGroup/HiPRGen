@@ -114,13 +114,13 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mol_entries[reactant_index]
-        dG -= mol.get_free_energy()
+        dG -= mol.get_solvation_free_energy()
         dCharge -= mol.charge
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mol_entries[product_index]
-        dG += mol.get_free_energy()
+        dG += mol.get_solvation_free_energy()
         dCharge += mol.charge
 
     dG += dCharge * params['electron_free_energy']

@@ -26,7 +26,7 @@ metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
 m_formulas = frozenset([m + "1" for m in metals])
 
 solvation_correction = {
-    "Li" : -0.746,
+    "Li" : -0.68,
     }
 
 max_number_of_bonds = {
@@ -74,6 +74,8 @@ class MoleculeEntry(MSONable):
         self.entropy = entropy
         self.parameters = parameters if parameters else {}
 
+
+        self.solvation_free_energy = None
         self.star_hashes = {}
         self.fragment_hashes = []
 
@@ -288,19 +290,23 @@ class MoleculeEntry(MSONable):
 
 
     def get_solvation_free_energy(self):
-        m_inds = [
-            i for i, x in enumerate(self.species) if x in metals
-        ]
+        if self.solvation_free_energy is None:
 
-        correction = 0.0
+            m_inds = [
+                i for i, x in enumerate(self.species) if x in metals
+            ]
 
-        for i in m_inds:
-            number_of_bonds = len([bond for bond in self.bonds if i in bond])
-            species = self.species[i]
-            correction += solvation_correction[species] * (
-                max_number_of_bonds[species] - number_of_bonds)
+            correction = 0.0
 
-        return correction + self.get_free_energy()
+            for i in m_inds:
+                number_of_bonds = len([bond for bond in self.bonds if i in bond])
+                species = self.species[i]
+                correction += solvation_correction[species] * (
+                    max_number_of_bonds[species] - number_of_bonds)
+
+            self.solvation_free_energy = correction + self.get_free_energy()
+
+        return self.solvation_free_energy
 
 
 
