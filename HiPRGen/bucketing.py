@@ -35,7 +35,7 @@ class Bucket:
         count = 0
         for m in mol_entries:
             tag = '_'.join(sorted(m.species))
-            inds = (m.parameters["ind"], -1)
+            inds = (m.ind, -1)
             self.insert_complex(tag, inds)
 
             count += 1
@@ -44,7 +44,7 @@ class Bucket:
 
         for (m1, m2) in combinations_with_replacement(mol_entries, 2):
             tag = '_'.join(sorted(m1.species + m2.species))
-            inds = (m1.parameters["ind"], m2.parameters["ind"])
+            inds = (m1.ind, m2.ind)
             self.insert_complex(tag, inds)
 
             count += 1

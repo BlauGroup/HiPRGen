@@ -22,15 +22,8 @@ def groupby_isomorphism(mols):
     isomorphism_buckets = {}
     for mol in mols:
 
-        m_inds = [
-            i for i, x in enumerate(mol.species) if x in metals
-        ]
-
-        g = copy.deepcopy(mol.graph)
-        g.remove_nodes_from(m_inds)
-
         mol_hash = weisfeiler_lehman_graph_hash(
-            g,
+            mol.covalent_graph,
             node_attr='specie'
         )
 
@@ -86,7 +79,7 @@ def species_filter(dataset_entries,
     log_message("assigning indices")
 
     for i, e in enumerate(mol_entries):
-        e.parameters["ind"] = i
+        e.ind = i
 
 
     log_message("creating molecule entry pickle")

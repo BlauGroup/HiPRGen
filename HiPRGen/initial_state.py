@@ -28,7 +28,7 @@ def find_mol_entry_from_xyz_and_charge(mol_entries, xyz_file_path, charge):
             match = target_mol_graph.isomorphic_to(species_mol_graph)
 
     if match:
-        return mol_entry.parameters['ind']
+        return mol_entry.ind
     else:
         return None
 

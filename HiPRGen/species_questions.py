@@ -68,17 +68,10 @@ def mol_not_connected(mol):
 
 def add_star_hashes(mol):
 
-    m_inds = [
-        i for i, x in enumerate(mol.species) if x in metals
-    ]
-
-    g = copy.deepcopy(mol.graph)
-    g.remove_nodes_from(m_inds)
-
     for i in range(mol.num_atoms):
-        if i not in m_inds:
+        if i not in mol.m_inds:
             neighborhood = nx.generators.ego.ego_graph(
-                g,
+                mol.covalent_graph,
                 i,
                 1,
                 undirected=True)
@@ -89,40 +82,14 @@ def add_star_hashes(mol):
 
     return False
 
-def add_total_hashes(mol):
-    m_inds = [
-        i for i, x in enumerate(mol.species) if x in metals
-    ]
-
-    g = copy.deepcopy(mol.graph)
-
-    mol.total_hash = weisfeiler_lehman_graph_hash(
-        g,
-        node_attr='specie')
-
-    g.remove_nodes_from(m_inds)
-
-    mol.covalent_hash = weisfeiler_lehman_graph_hash(
-        g,
-        node_attr='specie')
-
-
-    return False
-
 
 def add_fragment_hashes(mol):
     if mol.formula in m_formulas:
         return False
 
-    m_inds = [
-        i for i, x in enumerate(mol.species) if x in metals
-    ]
 
-    g = copy.deepcopy(mol.graph)
-    g.remove_nodes_from(m_inds)
-
-    for edge in g.edges:
-        h = copy.deepcopy(g)
+    for edge in mol.covalent_graph.edges:
+        h = copy.deepcopy(mol.covalent_graph)
         h.remove_edge(*edge)
         connected_components = nx.algorithms.components.connected_components(h)
         fragment_hashes = [
@@ -144,18 +111,8 @@ def metal_complex(mol):
     if mol.formula in m_formulas:
         return False
 
-    # if mol has a metal, check if removing that metal disconnects.
-    elif any([x in mol.formula for x in metals]):
-        m_inds = [
-            i for i, x in enumerate(mol.species) if x in metals
-        ]
-        g = copy.deepcopy(mol.graph)
-        g.remove_nodes_from(m_inds)
-        return not nx.is_connected(g)
+    return not nx.is_connected(mol.covalent_graph)
 
-    # no metal atoms
-    else:
-        return False
 
 def carbon_metal_bond(mol):
     # TODO: make this more general for metals
@@ -175,7 +132,6 @@ standard_mol_decision_tree = [
     (metal_complex, Terminal.DISCARD),
     (carbon_metal_bond, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
-    (add_total_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]

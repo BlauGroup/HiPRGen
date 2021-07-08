@@ -1,7 +1,3 @@
-# coding: utf-8
-# Copyright (c) MR.Net Development Team.
-# Distributed under the terms of the MIT License.
-
 import copy
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -11,15 +7,8 @@ from monty.json import MSONable
 from pymatgen.analysis.graphs import MoleculeGraph, MolGraphSplitError
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Molecule
-
+from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 from HiPRGen.constants import ROOM_TEMP
-
-__author__ = "Sam Blau, Mingjian Wen"
-__copyright__ = "Copyright 2019, The Materials Project"
-__version__ = "0.1"
-__email__ = "samblau1@gmail.com"
-__status__ = "Alpha"
-__date__ = "Aug 1, 2019"
 
 
 metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
@@ -69,8 +58,7 @@ class MoleculeEntry(MSONable):
         self.entropy = entropy
 
 
-        self.parameters = parameters if parameters else {}
-
+        self.ind = None
 
         self.solvation_free_energy = None
         self.star_hashes = {}
@@ -97,6 +85,16 @@ class MoleculeEntry(MSONable):
 
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
+
+
+        self.total_hash = weisfeiler_lehman_graph_hash(
+                self.graph,
+                node_attr='specie')
+
+        self.covalent_hash = weisfeiler_lehman_graph_hash(
+                self.covalent_graph,
+                node_attr='specie')
+
 
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
@@ -266,13 +264,9 @@ class MoleculeEntry(MSONable):
     def get_solvation_free_energy(self):
         if self.solvation_free_energy is None:
 
-            m_inds = [
-                i for i, x in enumerate(self.species) if x in metals
-            ]
-
             correction = 0.0
 
-            for i in m_inds:
+            for i in self.m_inds:
                 number_of_bonds = len([bond for bond in self.bonds if i in bond])
                 species = self.species[i]
                 correction += solvation_correction[species] * (
@@ -305,10 +299,8 @@ class MoleculeEntry(MSONable):
             else:
                 output.append(f"{name} = {value:.4f} {unit}")
 
-        if self.parameters:
-            output.append("Parameters:")
-            for k, v in self.parameters.items():
-                output.append("{} = {}".format(k, v))
+        if self.ind:
+            output.append("index: {}".format(self.ind))
 
         return "\n".join(output)
 
