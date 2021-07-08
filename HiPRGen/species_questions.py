@@ -157,6 +157,14 @@ def metal_complex(mol):
     else:
         return False
 
+def carbon_metal_bond(mol):
+    # TODO: make this more general for metals
+    for bond in mol.bonds:
+        if set([mol.species[i] for i in bond]) == set(['Li', 'C']):
+            return True
+
+    return False
+
 def default_true(mol):
     return True
 
@@ -165,6 +173,7 @@ standard_mol_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
+    (carbon_metal_bond, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
     (add_total_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),

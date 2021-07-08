@@ -60,24 +60,27 @@ def species_filter(dataset_entries,
         MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
 
 
-    # currently, take lowest energy mol in each iso class
-    # if we want to add more non local species filtering it would go here
+    # note: it is important here that we are applying the local filters before
+    # the non local ones. We remove some molecules which are lower energy
+    # than other more realistic lithomers.
 
+    log_message("applying local filters")
+    mol_entries_filtered = [
+        m for m in mol_entries_unfiltered
+        if run_decision_tree(m, species_decision_tree)]
+
+
+
+    # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
 
     def collapse_isomorphism_class(g):
         return min(g,key=lambda x: x.get_solvation_free_energy())
 
 
-    mol_entries_no_iso = [
-        collapse_isomorphism_class(g)
-        for g in groupby_isomorphism(mol_entries_unfiltered).values()]
-
-    log_message("applying local filters")
-
     mol_entries = [
-        m for m in mol_entries_no_iso
-        if run_decision_tree(m, species_decision_tree)]
+        collapse_isomorphism_class(g)
+        for g in groupby_isomorphism(mol_entries_filtered).values()]
 
 
     log_message("assigning indices")
