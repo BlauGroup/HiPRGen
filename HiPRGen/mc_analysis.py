@@ -33,7 +33,9 @@ def reaction_tally_report(network_loader, reaction_tally_report_path, cutoff=10)
         if number > cutoff:
             report_generator.emit_text(str(number) + " occourances of:")
             report_generator.emit_reaction(
-                network_loader.index_to_reaction(reaction_index))
+                network_loader.index_to_reaction(reaction_index),
+                label=str(reaction_index)
+            )
             report_generator.emit_newline()
 
     report_generator.finished()
@@ -196,7 +198,7 @@ class Pathfinding:
 
             for reaction_index in unique_pathway["pathway"]:
                 reaction = self.network_loader.index_to_reaction(reaction_index)
-                report_generator.emit_reaction(reaction)
+                report_generator.emit_reaction(reaction, label=str(reaction_index))
 
             report_generator.emit_newpage()
             count += 1

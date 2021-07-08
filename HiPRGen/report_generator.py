@@ -125,13 +125,17 @@ class ReportGenerator:
                 self.emit_newline()
 
 
-    def emit_reaction(self, reaction):
+    def emit_reaction(self, reaction, label=None):
         reactants_filtered = [i for i in reaction['reactants']
                               if i != -1]
 
         products_filtered = [i for i in reaction['products']
                              if i != -1]
+
         self.f.write("$$\n")
+        if label is not None:
+            self.f.write(label + ":  \n")
+
         first = True
 
         for reactant_index in reactants_filtered:
