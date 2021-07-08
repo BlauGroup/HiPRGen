@@ -30,7 +30,7 @@ def test_species_filter(network_loader):
 
 def test_reaction_gen(network_loader):
 
-    if network_loader.number_of_reactions == 110371:
+    if network_loader.number_of_reactions == 5291:
         print(bcolors.PASS + "passed: test_reaction_gen" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "failed: test_reaction_gen" + bcolors.ENDC)
