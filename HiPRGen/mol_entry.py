@@ -242,7 +242,7 @@ class MoleculeEntry(MSONable):
             correction += solvation_correction[species] * (
                 max_number_of_bonds[species] - number_of_bonds)
 
-        return correction + self.get_free_energy()
+        return correction + self.free_energy
 
 
     def __repr__(self):
