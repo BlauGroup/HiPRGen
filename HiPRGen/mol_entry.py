@@ -31,8 +31,6 @@ class MoleculeEntry(MSONable):
         energy: Electronic energy of the molecule in Hartree.
         enthalpy: Enthalpy of the molecule (kcal/mol). Defaults to None.
         entropy: Entropy of the molecule (cal/mol.K). Defaults to None.
-        parameters: An optional dict of parameters associated with
-            the molecule. Defaults to None.
         entry_id: An optional id to uniquely identify the entry.
         attribute: Optional attribute of the entry. This can be used to
             specify that the entry is a newly found compound, or to specify
@@ -48,7 +46,6 @@ class MoleculeEntry(MSONable):
         energy: float,
         enthalpy: Optional[float] = None,
         entropy: Optional[float] = None,
-        parameters: Optional[Dict] = None,
         entry_id: Optional[Any] = None,
         attribute=None,
         mol_graph: Optional[MoleculeGraph] = None,
@@ -111,7 +108,6 @@ class MoleculeEntry(MSONable):
     def from_molecule_document(
         cls,
         mol_doc: Dict,
-        parameters: Optional[Dict] = None,
         attribute=None,
     ):
         """
@@ -120,8 +116,6 @@ class MoleculeEntry(MSONable):
         Args:
             mol_doc: MongoDB molecule document (nested dictionary) that contains the
                 molecule information.
-            parameters: An optional dict of parameters associated with
-                the molecule. Defaults to None.
             attribute: Optional attribute of the entry. This can be used to
                 specify that the entry is a newly found compound, or to specify
                 a particular label for the entry, or else ... Used for further
@@ -156,7 +150,6 @@ class MoleculeEntry(MSONable):
             energy=energy,
             enthalpy=enthalpy,
             entropy=entropy,
-            parameters=parameters,
             entry_id=entry_id,
             attribute=attribute,
             mol_graph=mol_graph,
@@ -167,7 +160,6 @@ class MoleculeEntry(MSONable):
         cls,
         doc: Dict,
         use_thermo: str = "raw",
-        parameters: Optional[Dict] = None,
         attribute=None,
     ):
         """
@@ -184,8 +176,6 @@ class MoleculeEntry(MSONable):
                 "qrrho" (meaning that Grimme's Quasi-Rigid Rotor Harmonic
                 Oscillator - see Grimme, Chem. Eur. J. 2012, 18, 9955-9964) will
                 be used.
-            parameters: An optional dict of parameters associated with
-                the molecule. Defaults to None.
             attribute: Optional attribute of the entry. This can be used to
                 specify that the entry is a newly found compound, or to specify
                 a particular label for the entry, or else ... Used for further
@@ -241,7 +231,6 @@ class MoleculeEntry(MSONable):
             energy=energy,
             enthalpy=enthalpy,
             entropy=entropy,
-            parameters=parameters,
             entry_id=entry_id,
             attribute=attribute,
             mol_graph=mol_graph,
