@@ -40,9 +40,6 @@ class MoleculeEntry(MSONable):
     Args:
         molecule: Molecule of interest.
         energy: Electronic energy of the molecule in Hartree.
-        correction: A correction to be applied to the energy.
-            This is used to modify the energy for certain analyses.
-            Defaults to 0.0.
         enthalpy: Enthalpy of the molecule (kcal/mol). Defaults to None.
         entropy: Entropy of the molecule (cal/mol.K). Defaults to None.
         parameters: An optional dict of parameters associated with
@@ -60,7 +57,6 @@ class MoleculeEntry(MSONable):
         self,
         molecule: Molecule,
         energy: float,
-        correction: float = 0.0,
         enthalpy: Optional[float] = None,
         entropy: Optional[float] = None,
         parameters: Optional[Dict] = None,
@@ -68,10 +64,11 @@ class MoleculeEntry(MSONable):
         attribute=None,
         mol_graph: Optional[MoleculeGraph] = None,
     ):
-        self.uncorrected_energy = energy
-        self.correction = correction
+        self.energy = energy
         self.enthalpy = enthalpy
         self.entropy = entropy
+
+
         self.parameters = parameters if parameters else {}
 
 
@@ -90,11 +87,21 @@ class MoleculeEntry(MSONable):
         else:
             self.mol_graph = mol_graph
 
+        self.molecule = self.mol_graph.molecule
+        self.graph = self.mol_graph.graph
+        self.formula = self.molecule.composition.alphabetical_formula
+        self.charge = self.molecule.charge
+        self.species = [str(s) for s in self.molecule.species]
+        self.bonds = [(int(sorted(e)[0]), int(sorted(e)[1])) for e in self.graph.edges()]
+        self.num_atoms = len(self.molecule)
+        self.num_bonds = len(self.bonds)
+
+
+
     @classmethod
     def from_molecule_document(
         cls,
         mol_doc: Dict,
-        correction: float = 0.0,
         parameters: Optional[Dict] = None,
         attribute=None,
     ):
@@ -104,8 +111,6 @@ class MoleculeEntry(MSONable):
         Args:
             mol_doc: MongoDB molecule document (nested dictionary) that contains the
                 molecule information.
-            correction: A correction to be applied to the energy. This is used to modify
-                the energy for certain analyses. Defaults to 0.0.
             parameters: An optional dict of parameters associated with
                 the molecule. Defaults to None.
             attribute: Optional attribute of the entry. This can be used to
@@ -140,7 +145,6 @@ class MoleculeEntry(MSONable):
         return cls(
             molecule=molecule,
             energy=energy,
-            correction=correction,
             enthalpy=enthalpy,
             entropy=entropy,
             parameters=parameters,
@@ -234,45 +238,7 @@ class MoleculeEntry(MSONable):
             mol_graph=mol_graph,
         )
 
-    @property
-    def molecule(self):
-        return self.mol_graph.molecule
 
-    @property
-    def graph(self) -> nx.MultiDiGraph:
-        return self.mol_graph.graph
-
-    @property
-    def energy(self) -> float:
-        return self.uncorrected_energy + self.correction
-
-    @property
-    def formula(self) -> str:
-        return self.molecule.composition.alphabetical_formula
-
-    @property
-    def charge(self) -> float:
-        return self.molecule.charge
-
-    @property
-    def species(self) -> List[str]:
-        return [str(s) for s in self.molecule.species]
-
-    @property
-    def bonds(self) -> List[Tuple[int, int]]:
-        return [(int(sorted(e)[0]), int(sorted(e)[1])) for e in self.graph.edges()]
-
-    @property
-    def num_atoms(self) -> int:
-        return len(self.molecule)
-
-    @property
-    def num_bonds(self) -> int:
-        return len(self.bonds)
-
-    @property
-    def coords(self) -> np.ndarray:
-        return self.molecule.cart_coords
 
     def get_free_energy(self, temperature: float = ROOM_TEMP) -> Optional[float]:
         """
@@ -320,8 +286,7 @@ class MoleculeEntry(MSONable):
         ]
 
         energies = [
-            ("Energy", "Hartree", self.uncorrected_energy),
-            ("Correction", "Hartree", self.correction),
+            ("Energy", "Hartree", self.energy),
             ("Enthalpy", "kcal/mol", self.enthalpy),
             ("Entropy", "cal/mol.K", self.entropy),
             ("Free Energy (298.15 K)", "eV", self.get_free_energy()),
