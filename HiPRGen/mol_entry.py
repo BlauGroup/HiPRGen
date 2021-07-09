@@ -43,6 +43,7 @@ class MoleculeEntry(MSONable):
         entropy: Optional[float] = None,
         entry_id: Optional[Any] = None,
         mol_graph: Optional[MoleculeGraph] = None,
+        partial_charges: Optional[list] = None
     ):
         self.energy = energy
         self.enthalpy = enthalpy
@@ -64,6 +65,7 @@ class MoleculeEntry(MSONable):
         else:
             self.mol_graph = mol_graph
 
+        self.partial_charges = partial_charges
         self.molecule = self.mol_graph.molecule
         self.graph = self.mol_graph.graph.to_undirected()
         self.species = [str(s) for s in self.molecule.species]
@@ -200,11 +202,15 @@ class MoleculeEntry(MSONable):
                 mol_graph = doc["molecule_graph"]
             else:
                 mol_graph = MoleculeGraph.from_dict(doc["molecule_graph"])
+
+            partial_charges = doc['partial_charges']['resp']
         except KeyError as e:
             raise MoleculeEntryError(
                 "Unable to construct molecule entry from molecule document; missing "
                 f"attribute {e} in `doc`."
             )
+
+
 
         return cls(
             molecule=molecule,
@@ -213,6 +219,7 @@ class MoleculeEntry(MSONable):
             entropy=entropy,
             entry_id=entry_id,
             mol_graph=mol_graph,
+            partial_charges=partial_charges
         )
 
 
