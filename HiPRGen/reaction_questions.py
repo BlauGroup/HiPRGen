@@ -106,7 +106,8 @@ def default_rate(dG, params):
     return rate
 
 def dG_above_threshold(threshold, reaction, mol_entries, params):
-    dG = 0.0
+    uncorrected_dG = 0.0
+    solvation_dG = 0.0
 
     # positive dCharge means electrons are lost
     dCharge = 0.0
@@ -114,17 +115,24 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mol_entries[reactant_index]
-        dG -= mol.solvation_free_energy
+        uncorrected_dG -= mol.free_energy
+        solvation_dG  -= mol.solvation_free_energy
         dCharge -= mol.charge
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mol_entries[product_index]
-        dG += mol.solvation_free_energy
+        uncorrected_dG += mol.free_energy
+        solvation_dG += mol.solvation_free_energy
         dCharge += mol.charge
 
-    dG += dCharge * params['electron_free_energy']
+    uncorrected_dG += dCharge * params['electron_free_energy']
+    solvation_dG += dCharge * params['electron_free_energy']
 
+    if uncorrected_dG < 0 and solvation_dG > 0:
+        dG = 0.0
+    else:
+        dG = solvation_dG
 
     if dG > threshold:
         return True
