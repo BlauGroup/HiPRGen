@@ -101,6 +101,8 @@ class MoleculeEntry(MSONable):
         self.atom_locations = [
             site.coords for site in self.molecule]
 
+
+        self.number_of_coordination_bonds = 0
         self.free_energy = self.get_free_energy()
         self.solvation_free_energy = self.get_solvation_free_energy()
 
@@ -267,13 +269,15 @@ class MoleculeEntry(MSONable):
             radius = coordination_radius[species]
 
             for j in range(self.num_atoms):
-                displacement_vector = self.atom_locations[j] - self.atom_locations[i]
-                if (np.inner(displacement_vector, displacement_vector) < radius ** 2
-                    and self.partial_charges[j] < 0):
-                    coordination_partners.append(j)
+                if j != i:
+                    displacement_vector = self.atom_locations[j] - self.atom_locations[i]
+                    if (np.inner(displacement_vector, displacement_vector) < radius ** 2
+                        and self.partial_charges[j] < 0):
+                        coordination_partners.append(j)
 
 
             number_of_coordination_bonds = len(coordination_partners)
+            self.number_of_coordination_bonds += number_of_coordination_bonds
             correction += solvation_correction[species] * (
                 max_number_of_coordination_bonds[species] -
                 number_of_coordination_bonds)
