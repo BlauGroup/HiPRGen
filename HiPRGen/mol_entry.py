@@ -18,7 +18,11 @@ solvation_correction = {
     "Li" : -0.68,
     }
 
-max_number_of_bonds = {
+coordination_radius = {
+    "Li" : 3.0,
+    }
+
+max_number_of_coordination_bonds = {
     "Li" : 4,
     }
 
@@ -93,6 +97,9 @@ class MoleculeEntry(MSONable):
         self.bonds = [(int(sorted(e)[0]), int(sorted(e)[1])) for e in self.graph.edges()]
         self.num_atoms = len(self.molecule)
         self.num_bonds = len(self.bonds)
+
+        self.atom_locations = [
+            site.coords for site in self.molecule]
 
         self.free_energy = self.get_free_energy()
         self.solvation_free_energy = self.get_solvation_free_energy()
@@ -240,14 +247,36 @@ class MoleculeEntry(MSONable):
 
 
     def get_solvation_free_energy(self):
+        """
+        metal atoms coordinate with the surrounding solvent. We need to correct
+        free energy to take this into account. The correction is
+        solvation_correction * (
+               max_coodination_bonds -
+               number_of_coordination_bonds_in_mol).
+        Since coordination bonding can't reliably be detected from the molecule
+        graph, we search for all atoms within a radius of the metal atom and
+        discard them if they are positively charged.
+        """
 
         correction = 0.0
 
         for i in self.m_inds:
-            number_of_bonds = len([bond for bond in self.bonds if i in bond])
+
             species = self.species[i]
+            coordination_partners = []
+            radius = coordination_radius[species]
+
+            for j in range(self.num_atoms):
+                displacement_vector = self.atom_locations[j] - self.atom_locations[i]
+                if (np.inner(displacement_vector, displacement_vector) < radius ** 2
+                    and self.partial_charges[j] < 0):
+                    coordination_partners.append(j)
+
+
+            number_of_coordination_bonds = len(coordination_partners)
             correction += solvation_correction[species] * (
-                max_number_of_bonds[species] - number_of_bonds)
+                max_number_of_coordination_bonds[species] -
+                number_of_coordination_bonds)
 
         return correction + self.free_energy
 
