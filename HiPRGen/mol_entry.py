@@ -23,7 +23,7 @@ coordination_radius = {
     }
 
 max_number_of_coordination_bonds = {
-    "Li" : 4,
+    "Li" : 2.3,
     }
 
 class MoleculeEntry(MSONable):
