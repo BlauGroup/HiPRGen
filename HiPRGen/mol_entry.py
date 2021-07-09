@@ -19,11 +19,11 @@ solvation_correction = {
     }
 
 coordination_radius = {
-    "Li" : 3.0,
+    "Li" : 2.3,
     }
 
 max_number_of_coordination_bonds = {
-    "Li" : 2.3,
+    "Li" : 4,
     }
 
 class MoleculeEntry(MSONable):
