@@ -137,6 +137,37 @@ def carbon_metal_bond(mol):
 
     return False
 
+def bad_hydrogen(mol):
+
+    for i in range(mol.num_atoms):
+
+
+        if mol.species[i] == 'H':
+
+            num_bonds = 0
+            for bond in mol.bonds:
+                if i in bond:
+                    num_bonds += 1
+
+            if num_bonds > 1:
+                return True
+
+            else:
+                return False
+
+    return False
+
+def bad_lithium(mol):
+
+    if mol.formula != 'Li1':
+
+        if 'Li' in mol.species and mol.number_of_coordination_bonds == 0:
+            return True
+
+    return False
+
+
+
 def default_true(mol):
     return True
 
@@ -146,6 +177,8 @@ standard_mol_decision_tree = [
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
     (carbon_metal_bond, Terminal.DISCARD),
+    (bad_hydrogen, Terminal.DISCARD),
+    (bad_lithium, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
