@@ -187,10 +187,3 @@ standard_species_decision_tree = [
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
-
-standard_species_logging_decision_tree = [
-    (bad_hydrogen_bonding, Terminal.KEEP),
-#    (carbon_metal_bond, Terminal.KEEP),
-    (bad_lithium_partial_charge, Terminal.KEEP),
-    (default_true, Terminal.DISCARD)
-    ]
