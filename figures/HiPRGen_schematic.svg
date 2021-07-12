@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1024"
+   height="1024"
+   viewBox="0 0 270.93333 270.93334"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15)"
+   sodipodi:docname="HiPRGen_schematic.svg">
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible;"
+       id="marker1455"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.8) rotate(180) translate(12.5,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path1453" />
+    </marker>
+    <marker
+       style="overflow:visible;"
+       id="marker1407"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         transform="scale(0.8) rotate(180) translate(12.5,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path1405" />
+    </marker>
+    <marker
+       style="overflow:visible;"
+       id="marker1361"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         transform="scale(0.8) rotate(180) translate(12.5,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path1359" />
+    </marker>
+    <marker
+       style="overflow:visible;"
+       id="Arrow1Lend"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true"
+       inkscape:collect="always">
+      <path
+         transform="scale(0.8) rotate(180) translate(12.5,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path1052" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="-318.80571"
+     inkscape:cy="643.98005"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="3436"
+     inkscape:window-height="1386"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="27.871614"
+       y="67.580666"
+       id="text194"><tspan
+         sodipodi:role="line"
+         id="tspan192"
+         x="27.871614"
+         y="67.580666"
+         style="stroke-width:0.264583">species </tspan><tspan
+         sodipodi:role="line"
+         x="27.871614"
+         y="74.636215"
+         style="stroke-width:0.264583"
+         id="tspan196">filtering</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="27.583399"
+       y="129.32629"
+       id="text202"><tspan
+         sodipodi:role="line"
+         x="27.583399"
+         y="129.32629"
+         style="stroke-width:0.264583"
+         id="tspan200">species</tspan><tspan
+         sodipodi:role="line"
+         x="27.583399"
+         y="136.38185"
+         style="stroke-width:0.264583"
+         id="tspan206">bucketing</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.265;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1189"
+       width="44.6632"
+       height="25.066023"
+       x="14.2187"
+       y="176.07687"
+       ry="6.7541108" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.265;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1187"
+       width="44.6632"
+       height="25.066023"
+       x="18.452034"
+       y="178.72267"
+       ry="6.7541108" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.265;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1045"
+       width="44.6632"
+       height="25.066023"
+       x="21.627035"
+       y="181.36847"
+       ry="6.7541108" />
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="28.257851"
+       y="192.54831"
+       id="text212"><tspan
+         sodipodi:role="line"
+         x="28.257851"
+         y="192.54831"
+         style="stroke-width:0.264583"
+         id="tspan210">reaction</tspan><tspan
+         sodipodi:role="line"
+         x="28.257851"
+         y="199.60387"
+         style="stroke-width:0.264583"
+         id="tspan216">filtering</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.265;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect218"
+       width="44.6632"
+       height="25.066023"
+       x="19.560564"
+       y="57.72818"
+       ry="6.7541108" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.265;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1043"
+       width="44.6632"
+       height="25.066023"
+       x="20.311792"
+       y="118.59386"
+       ry="6.7541108" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.219314;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#Arrow1Lend)"
+       d="m 41.841023,33.864051 -0.32593,19.137398"
+       id="path1047" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.226386;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1361)"
+       d="M 41.585574,91.689944 41.265123,112.43018"
+       id="path1357" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.230742;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1407)"
+       d="m 41.532158,150.18763 -0.317077,21.77529"
+       id="path1403" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.236294;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker1455)"
+       d="m 41.289541,211.41649 -0.312777,23.14986"
+       id="path1451" />
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="19.422956"
+       y="20.703056"
+       id="text1065"><tspan
+         sodipodi:role="line"
+         id="tspan1063"
+         x="19.422956"
+         y="20.703056"
+         style="stroke-width:0.264583">molecules from</tspan><tspan
+         sodipodi:role="line"
+         x="19.422956"
+         y="27.758606"
+         style="stroke-width:0.264583"
+         id="tspan1067">a database</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="20.627756"
+       y="249.84375"
+       id="text1097"><tspan
+         sodipodi:role="line"
+         x="20.627756"
+         y="249.84375"
+         style="stroke-width:0.264583"
+         id="tspan1095">reaction network</tspan><tspan
+         sodipodi:role="line"
+         x="20.627756"
+         y="256.89929"
+         style="stroke-width:0.264583"
+         id="tspan1270">database</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="75.757652"
+       y="64.626549"
+       id="text1217"><tspan
+         sodipodi:role="line"
+         id="tspan1215"
+         x="75.757652"
+         y="64.626549"
+         style="stroke-width:0.264583">each molecule is run through </tspan><tspan
+         sodipodi:role="line"
+         x="75.757652"
+         y="71.682098"
+         style="stroke-width:0.264583"
+         id="tspan1219">a decision tree and undesired molecules</tspan><tspan
+         sodipodi:role="line"
+         x="75.757652"
+         y="78.737648"
+         style="stroke-width:0.264583"
+         id="tspan1221">are removed</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="76.336426"
+       y="122.02135"
+       id="text1229"><tspan
+         sodipodi:role="line"
+         x="76.336426"
+         y="122.02135"
+         style="stroke-width:0.264583"
+         id="tspan1227">Generate a sequence of buckets in which </tspan><tspan
+         sodipodi:role="line"
+         x="76.336426"
+         y="129.0769"
+         style="stroke-width:0.264583"
+         id="tspan1235">we group the pairs (A) and (A,B) according </tspan><tspan
+         sodipodi:role="line"
+         x="76.336426"
+         y="136.13246"
+         style="stroke-width:0.264583"
+         id="tspan1243">to atomic composition. Reactants and products</tspan><tspan
+         sodipodi:role="line"
+         x="76.336426"
+         y="143.188"
+         style="stroke-width:0.264583"
+         id="tspan1245">for a reaction must be taken from a single bucket</tspan><tspan
+         sodipodi:role="line"
+         x="76.336426"
+         y="150.24356"
+         style="stroke-width:0.264583"
+         id="tspan1237" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64444px;line-height:1.25;font-family:'Source Code Pro';-inkscape-font-specification:'Source Code Pro';word-spacing:0px;stroke-width:0.264583"
+       x="74.118774"
+       y="184.0493"
+       id="text1253"><tspan
+         sodipodi:role="line"
+         x="74.118774"
+         y="184.0493"
+         style="stroke-width:0.264583"
+         id="tspan1251">For each bucket, generate each possible reaction</tspan><tspan
+         sodipodi:role="line"
+         x="74.118774"
+         y="191.10486"
+         style="stroke-width:0.264583"
+         id="tspan1260">and run those reactions through a decision tree.</tspan><tspan
+         sodipodi:role="line"
+         x="74.118774"
+         y="198.1604"
+         style="stroke-width:0.264583"
+         id="tspan1262">Undesirable reactions are removed. The reactions</tspan><tspan
+         sodipodi:role="line"
+         x="74.118774"
+         y="205.21596"
+         style="stroke-width:0.264583"
+         id="tspan1264">which survive are written into a reaction </tspan><tspan
+         sodipodi:role="line"
+         x="74.118774"
+         y="212.2715"
+         style="stroke-width:0.264583"
+         id="tspan1266">network database.</tspan></text>
+  </g>
+</svg>
