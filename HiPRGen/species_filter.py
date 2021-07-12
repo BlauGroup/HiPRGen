@@ -3,9 +3,10 @@ from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
-from HiPRGen.species_questions import standard_mol_decision_tree, Terminal, run_decision_tree
+from HiPRGen.species_questions import *
 from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
+from HiPRGen.report_generator import ReportGenerator
 
 """
 Phase 1: species filtering
@@ -43,7 +44,9 @@ def log_message(string):
 
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
-                   species_decision_tree=standard_mol_decision_tree
+                   species_report,
+                   species_decision_tree=standard_mol_decision_tree,
+                   species_logging_decision_tree=Terminal.KEEP,
                    ):
 
     log_message("starting species filter")
@@ -82,6 +85,29 @@ def species_filter(dataset_entries,
         e.ind = i
 
 
+    log_message("generating species report")
+
+    report_generator = ReportGenerator(
+        mol_entries,
+        species_report)
+
+    report_generator.emit_text("species report")
+
+    for i, mol in enumerate(mol_entries):
+        decision_history = []
+        if (run_decision_tree(mol, species_decision_tree, decision_history) and
+            run_decision_tree(mol, species_logging_decision_tree)):
+
+            report_generator.emit_verbatim(
+                '\n'.join([str(f) for f in decision_history]))
+
+            report_generator.emit_text(mol.entry_id)
+            report_generator.emit_molecule(i)
+            report_generator.emit_newline()
+
+
+    report_generator.finished()
+
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
@@ -89,5 +115,9 @@ def species_filter(dataset_entries,
     # pickles work better in this setting
     with open(mol_entries_pickle_location, 'wb') as f:
         pickle.dump(mol_entries, f)
+
+    log_message("species filtering finished. " +
+                str(len(mol_entries)) +
+                " species")
 
     return mol_entries

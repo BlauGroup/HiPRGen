@@ -4,9 +4,9 @@ fi
 
 mkdir scratch
 
-python run_bucketing.py ./data/ronald_LIBE.json ./scratch/ronald_mol_entries.pickle ./scratch/buckets.sqlite ./scratch/report.tex
+python run_bucketing.py ./data/ronald_LIBE.json ./scratch/ronald_mol_entries.pickle ./scratch/buckets.sqlite ./scratch/species_report.tex
 
-mpiexec --use-hwthread-cpus -n $1 python run_network_generation.py ./scratch/ronald_mol_entries.pickle ./scratch/buckets.sqlite ./scratch/rn.sqlite ./scratch/report.tex
+mpiexec --use-hwthread-cpus -n $1 python run_network_generation.py ./scratch/ronald_mol_entries.pickle ./scratch/buckets.sqlite ./scratch/rn.sqlite ./scratch/reaction_report.tex
 
 python run_initial_state.py ./scratch/rn.sqlite ./scratch/ronald_mol_entries.pickle
 

@@ -30,13 +30,24 @@ class Terminal(Enum):
     KEEP = 1
     DISCARD = -1
 
-def run_decision_tree(mol_entry, decision_tree):
+def run_decision_tree(mol_entry,
+                      decision_tree,
+                      decision_pathway=None):
+
     node = decision_tree
 
     while type(node) == list:
         next_node = None
         for (question, new_node) in node:
             if question(mol_entry):
+
+                # if decision_pathway is a list,
+                # append the question which
+                # answered true i.e the edge we follow
+                if decision_pathway is not None:
+                    decision_pathway.append(question)
+
+
                 next_node = new_node
                 break
 
@@ -44,6 +55,10 @@ def run_decision_tree(mol_entry, decision_tree):
 
 
     if type(node) == Terminal:
+        if decision_pathway is not None:
+            decision_pathway.append(node)
+
+
         if node == Terminal.KEEP:
             return True
         else:

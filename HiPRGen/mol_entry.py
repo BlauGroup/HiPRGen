@@ -260,6 +260,10 @@ class MoleculeEntry(MSONable):
         discard them if they are positively charged.
         """
 
+        # this method should only be called once, but just to be safe,
+        # reset the coordination bond count
+        self.number_of_coordination_bonds = 0
+
         correction = 0.0
 
         for i in self.m_inds:

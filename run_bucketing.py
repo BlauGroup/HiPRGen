@@ -15,12 +15,6 @@ bucket_db_file = sys.argv[3]
 report_file = sys.argv[4]
 
 database_entries = loadfn(database_json_file)
-mol_entries = species_filter(database_entries, mol_entries_pickle_file)
+mol_entries = species_filter(database_entries, mol_entries_pickle_file, report_file)
 Bucket(mol_entries, bucket_db_file)
-
-# generate a dummy report to get the mol pictures
-report_generator = ReportGenerator(
-    mol_entries,
-    report_file
-)
 
