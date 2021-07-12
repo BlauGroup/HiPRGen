@@ -6,7 +6,6 @@ import pickle
 from HiPRGen.species_questions import *
 from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
-from HiPRGen.report_generator import ReportGenerator
 
 """
 Phase 1: species filtering
@@ -44,9 +43,16 @@ def log_message(string):
 
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
-                   species_report,
                    species_decision_tree=standard_species_decision_tree
                    ):
+
+    """
+    reaction filtering has fairly sophisticated built in logging. That is
+    facilitated by species having fixed indices so latex knows which molecule
+    pictures to use. These indices don't exist until after the species filter
+    has run, which makes it complicated to introspect the inner workings of
+    species filtering.
+    """
 
     log_message("starting species filter")
     log_message("loading molecule entries from json")

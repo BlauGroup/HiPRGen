@@ -64,11 +64,14 @@ class ReportGenerator:
             self,
             mol_entries,
             report_file_path,
+            mol_pictures_folder_name='mol_pictures',
             rebuild_mol_pictures=True
     ):
         self.report_file_path = Path(report_file_path)
+        self.mol_pictures_folder_name = mol_pictures_folder_name
         self.mol_pictures_folder = self.report_file_path.parent.joinpath(
-            'mol_pictures')
+            mol_pictures_folder_name)
+
 
         if rebuild_mol_pictures:
             visualize_molecules(mol_entries, self.mol_pictures_folder)
@@ -94,7 +97,7 @@ class ReportGenerator:
         self.f.write(
             "\\raisebox{-.5\\height}{"
             + "\\includegraphics[scale=0.2]{"
-            + './mol_pictures/'
+            + self.mol_pictures_folder_name + '/'
             + str(species_index)
             + ".pdf}}\n"
         )
