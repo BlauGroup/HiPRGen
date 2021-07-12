@@ -49,13 +49,6 @@ def species_report(network_loader, species_report_path):
     report_generator.emit_text("species report")
     for i in range(network_loader.number_of_species):
         report_generator.emit_molecule(i)
-        mol = network_loader.mol_entries[i]
-        report_generator.emit_text(mol.entry_id)
-
-        report_generator.emit_text(
-            "number of coordination bonds:" +
-            str(mol.number_of_coordination_bonds))
-
         report_generator.emit_newline()
 
     report_generator.finished()
