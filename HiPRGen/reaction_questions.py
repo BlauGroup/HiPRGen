@@ -1,6 +1,5 @@
 import math
 from HiPRGen.mol_entry import *
-from enum import Enum
 from functools import partial
 from HiPRGen.constants import *
 
@@ -46,10 +45,6 @@ Once a Terminal node is reached, it tells us whether to keep or discard the reac
 logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
 
 """
-
-class Terminal(Enum):
-    KEEP = 1
-    DISCARD = -1
 
 def run_decision_tree(
         reaction,

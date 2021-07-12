@@ -1,9 +1,9 @@
 from HiPRGen.mol_entry import *
-from enum import Enum
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import copy
 from functools import partial
+from HiPRGen.constants import *
 
 
 """
@@ -25,10 +25,6 @@ for non terminal nodes, it is an error if every question returns False. i.e gett
 
 Once a Terminal node is reached, it tells us whether to keep or discard the species.
 """
-
-class Terminal(Enum):
-    KEEP = 1
-    DISCARD = -1
 
 def run_decision_tree(mol_entry,
                       decision_tree,

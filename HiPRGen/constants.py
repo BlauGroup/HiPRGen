@@ -1,6 +1,9 @@
 # coding: utf-8
 # Copyright (c) MR.Net development team
 
+
+from enum import Enum
+
 # Basic constants
 
 # Room temperature (25 C) in Kelvin
@@ -11,3 +14,8 @@ KB = 8.617333262 * 10 ** -5
 
 # Planck constant in eV * s
 PLANCK = 4.135667696 * 10 ** -15
+
+class Terminal(Enum):
+    KEEP = 1
+    DISCARD = -1
+
