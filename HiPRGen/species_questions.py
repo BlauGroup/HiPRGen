@@ -133,7 +133,7 @@ def carbon_metal_bond(mol):
 
     return False
 
-def bad_hydrogen(mol):
+def bad_hydrogen_bonding(mol):
 
     for i in range(mol.num_atoms):
 
@@ -153,7 +153,7 @@ def bad_hydrogen(mol):
 
     return False
 
-def bad_lithium(mol):
+def bad_lithium_coordination(mol):
 
     if mol.formula != 'Li1':
 
@@ -162,20 +162,35 @@ def bad_lithium(mol):
 
     return False
 
+def bad_lithium_partial_charge(mol):
+    for i in range(mol.num_atoms):
+        if (mol.species[i] == "Li" and
+            mol.partial_charges[i] < 0.0):
+            return True
+
+    return False
 
 
 def default_true(mol):
     return True
 
 
-standard_mol_decision_tree = [
+standard_species_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-    (carbon_metal_bond, Terminal.DISCARD),
-    (bad_hydrogen, Terminal.DISCARD),
-    (bad_lithium, Terminal.DISCARD),
+#    (carbon_metal_bond, Terminal.DISCARD),
+#    (bad_hydrogen_bonding, Terminal.DISCARD),
+    (bad_lithium_coordination, Terminal.DISCARD),
+#    (bad_lithium_partial_charge, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
+    ]
+
+standard_species_logging_decision_tree = [
+    (bad_hydrogen_bonding, Terminal.KEEP),
+#    (carbon_metal_bond, Terminal.KEEP),
+    (bad_lithium_partial_charge, Terminal.KEEP),
+    (default_true, Terminal.DISCARD)
     ]

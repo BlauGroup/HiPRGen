@@ -45,8 +45,8 @@ def log_message(string):
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
                    species_report,
-                   species_decision_tree=standard_mol_decision_tree,
-                   species_logging_decision_tree=Terminal.KEEP,
+                   species_decision_tree=standard_species_decision_tree,
+                   species_logging_decision_tree=standard_species_logging_decision_tree,
                    ):
 
     log_message("starting species filter")
@@ -85,6 +85,11 @@ def species_filter(dataset_entries,
         e.ind = i
 
 
+
+    # report generation duing species filtering is a little weird.
+    # for reaction generation, reaction filtering and reaction report generation
+    # are indipendent. On the other hand, we can't do report generation until every
+    # species has an index, so it needs to happen after species filtering.
     log_message("generating species report")
 
     report_generator = ReportGenerator(
@@ -94,12 +99,12 @@ def species_filter(dataset_entries,
     report_generator.emit_text("species report")
 
     for i, mol in enumerate(mol_entries):
-        decision_history = []
-        if (run_decision_tree(mol, species_decision_tree, decision_history) and
-            run_decision_tree(mol, species_logging_decision_tree)):
+        decision_pathway = []
+        if run_decision_tree(mol, species_logging_decision_tree, decision_pathway):
+
 
             report_generator.emit_verbatim(
-                '\n'.join([str(f) for f in decision_history]))
+                '\n'.join([str(f) for f in decision_pathway]))
 
             report_generator.emit_text(mol.entry_id)
             report_generator.emit_molecule(i)
