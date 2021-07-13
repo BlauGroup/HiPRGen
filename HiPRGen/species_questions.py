@@ -125,14 +125,6 @@ def metal_complex(mol):
     return not nx.is_connected(mol.covalent_graph)
 
 
-def carbon_metal_bond(mol):
-    # TODO: make this more general for metals
-    for bond in mol.bonds:
-        if set([mol.species[i] for i in bond]) == set(['Li', 'C']):
-            return True
-
-    return False
-
 def bad_hydrogen_bonding(mol):
 
     for i in range(mol.num_atoms):
@@ -162,14 +154,6 @@ def bad_lithium_coordination(mol):
 
     return False
 
-def bad_lithium_partial_charge(mol):
-    for i in range(mol.num_atoms):
-        if (mol.species[i] == "Li" and
-            mol.partial_charges[i] < 0.0):
-            return True
-
-    return False
-
 
 def default_true(mol):
     return True
@@ -179,10 +163,8 @@ standard_species_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-#    (carbon_metal_bond, Terminal.DISCARD),
-#    (bad_hydrogen_bonding, Terminal.DISCARD),
+    (bad_hydrogen_bonding, Terminal.DISCARD),
     (bad_lithium_coordination, Terminal.DISCARD),
-#    (bad_lithium_partial_charge, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
