@@ -38,18 +38,29 @@ def test_reaction_gen(network_loader):
 
 def test_mc_pathfinding(network_loader):
 
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        './scratch/dummy.tex',
+        rebuild_mol_pictures=True)
+
+    reaction_tally_report(
+        network_loader,
+        './scratch/reaction_tally.tex'
+    )
+
     LEDC_id = find_mol_entry_from_xyz_and_charge(
         network_loader.mol_entries,
         './xyz_files/LEDC.xyz',
         0)
 
-    reaction_tally_report(network_loader, './scratch/reaction_tally.tex')
     pathfinding = Pathfinding(network_loader)
     pathfinding.generate_pathway_report(
         LEDC_id,
         './scratch/LEDC_pathways.tex',
         sort_by_frequency=False
     )
+
+    species_report(network_loader, './scratch/species_report.tex')
 
 
 test_mc_pathfinding(network_loader)

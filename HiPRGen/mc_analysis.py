@@ -8,7 +8,10 @@ def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
 
 
-def reaction_tally_report(network_loader, reaction_tally_report_path, cutoff=10):
+def reaction_tally_report(
+        network_loader,
+        reaction_tally_report_path,
+        cutoff=10):
 
     reaction_tally = {}
     for seed in network_loader.trajectories:

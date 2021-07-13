@@ -48,13 +48,6 @@ def species_filter(dataset_entries,
                    species_logging_decision_tree=Terminal.KEEP
                    ):
 
-    """
-    reaction filtering has fairly sophisticated built in logging. That is
-    facilitated by species having fixed indices so latex knows which molecule
-    pictures to use. These indices don't exist until after the species filter
-    has run, which makes it complicated to introspect the inner workings of
-    species filtering.
-    """
 
     log_message("starting species filter")
     log_message("loading molecule entries from json")
@@ -62,10 +55,6 @@ def species_filter(dataset_entries,
     mol_entries_unfiltered = [
         MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
 
-
-    # note: it is important here that we are applying the local filters before
-    # the non local ones. We remove some molecules which are lower energy
-    # than other more realistic lithomers.
 
     log_message("generating unfiltered mol pictures")
 
@@ -80,6 +69,10 @@ def species_filter(dataset_entries,
     log_message("applying local filters")
     mol_entries_filtered = []
 
+    # note: it is important here that we are applying the local filters before
+    # the non local ones. We remove some molecules which are lower energy
+    # than other more realistic lithomers.
+
     for i, mol in enumerate(mol_entries_unfiltered):
         decision_pathway = []
         if run_decision_tree(mol, species_decision_tree, decision_pathway):
@@ -91,7 +84,7 @@ def species_filter(dataset_entries,
                 '\n'.join([str(f) for f in decision_pathway]))
 
             report_generator.emit_text(mol.entry_id)
-            report_generator.emit_molecule(i)
+            report_generator.emit_molecule(i, include_index=False)
             report_generator.emit_newline()
 
 

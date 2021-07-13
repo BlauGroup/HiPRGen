@@ -92,9 +92,10 @@ class ReportGenerator:
         self.f.write("\\end{document}")
         self.f.close()
 
-    def emit_molecule(self, species_index):
-        # TODO: make it optional to include index
-        self.f.write(str(species_index) + "\n")
+    def emit_molecule(self, species_index, include_index=True):
+        if include_index:
+            self.f.write(str(species_index) + "\n")
+
         self.f.write(
             "\\raisebox{-.5\\height}{"
             + "\\includegraphics[scale=0.2]{"
