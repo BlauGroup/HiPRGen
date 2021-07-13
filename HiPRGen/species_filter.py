@@ -6,7 +6,7 @@ import pickle
 from HiPRGen.species_questions import *
 from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
-
+from HiPRGen.report_generator import ReportGenerator
 """
 Phase 1: species filtering
 input: a list of dataset entries
@@ -43,7 +43,9 @@ def log_message(string):
 
 def species_filter(dataset_entries,
                    mol_entries_pickle_location,
-                   species_decision_tree=standard_species_decision_tree
+                   species_report,
+                   species_decision_tree=standard_species_decision_tree,
+                   species_logging_decision_tree=Terminal.KEEP
                    ):
 
     """
@@ -65,12 +67,35 @@ def species_filter(dataset_entries,
     # the non local ones. We remove some molecules which are lower energy
     # than other more realistic lithomers.
 
+    log_message("generating unfiltered mol pictures")
+
+    report_generator = ReportGenerator(
+        mol_entries_unfiltered,
+        species_report,
+        mol_pictures_folder_name='mol_pictures_unfiltered'
+    )
+
+    report_generator.emit_text("species report")
+
     log_message("applying local filters")
-    mol_entries_filtered = [
-        m for m in mol_entries_unfiltered
-        if run_decision_tree(m, species_decision_tree)]
+    mol_entries_filtered = []
+
+    for i, mol in enumerate(mol_entries_unfiltered):
+        decision_pathway = []
+        if run_decision_tree(mol, species_decision_tree, decision_pathway):
+            mol_entries_filtered.append(mol)
+
+        if run_decision_tree(mol, species_logging_decision_tree):
+
+            report_generator.emit_verbatim(
+                '\n'.join([str(f) for f in decision_pathway]))
+
+            report_generator.emit_text(mol.entry_id)
+            report_generator.emit_molecule(i)
+            report_generator.emit_newline()
 
 
+    report_generator.finished()
 
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
