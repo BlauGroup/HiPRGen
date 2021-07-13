@@ -125,25 +125,39 @@ def metal_complex(mol):
     return not nx.is_connected(mol.covalent_graph)
 
 
-def bad_hydrogen_bonding(mol):
+def fix_hydrogen_bonding(mol):
 
-    for i in range(mol.num_atoms):
+    if mol.num_atoms > 1:
+        for i in range(mol.num_atoms):
+            if mol.species[i] == 'H':
+
+                adjacent_atoms = []
+
+                for bond in mol.bonds:
+                    if i in bond:
+
+                        if i == bond[0]:
+                            adjacent_atom = bond[1]
+                        else:
+                            adjacent_atom = bond[0]
+
+                        displacement = (mol.atom_locations[adjacent_atom] -
+                                        mol.atom_locations[i])
+
+                        dist = np.inner(displacement, displacement)
+
+                        adjacent_atoms.append((adjacent_atom, dist))
 
 
-        if mol.species[i] == 'H':
+                closest_atom, _ = min(adjacent_atoms, key=lambda pair: pair[1])
 
-            num_bonds = 0
-            for bond in mol.bonds:
-                if i in bond:
-                    num_bonds += 1
-
-            if num_bonds > 1:
-                return True
-
-            else:
-                return False
+                for adjacent_atom, _ in adjacent_atoms:
+                    if adjacent_atom != closest_atom:
+                        mol.graph.remove_edge(i, adjacent_atom)
+                        mol.covalent_graph.remove_edge(i, adjacent_atom)
 
     return False
+
 
 def bad_lithium_coordination(mol):
 
@@ -163,9 +177,14 @@ standard_species_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-    (bad_hydrogen_bonding, Terminal.DISCARD),
     (bad_lithium_coordination, Terminal.DISCARD),
+    (fix_hydrogen_bonding, Terminal.KEEP),
     (add_star_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
     (default_true, Terminal.KEEP)
+    ]
+
+standard_species_logging_decision_tree = [
+    (bad_lithium_coordination, Terminal.KEEP),
+    (default_true, Terminal.DISCARD)
     ]

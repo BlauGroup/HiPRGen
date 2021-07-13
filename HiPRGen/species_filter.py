@@ -41,12 +41,12 @@ def log_message(string):
         '[' + strftime('%H:%M:%S', localtime()) + ']',
         string)
 
-def species_filter(dataset_entries,
-                   mol_entries_pickle_location,
-                   species_report,
-                   species_decision_tree=standard_species_decision_tree,
-                   species_logging_decision_tree=Terminal.KEEP
-                   ):
+def species_filter(
+        dataset_entries,
+        mol_entries_pickle_location,
+        species_report,
+        species_decision_tree=standard_species_decision_tree,
+        species_logging_decision_tree=standard_species_logging_decision_tree):
 
 
     log_message("starting species filter")

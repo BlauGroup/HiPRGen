@@ -47,7 +47,8 @@ class MoleculeEntry(MSONable):
         entropy: Optional[float] = None,
         entry_id: Optional[Any] = None,
         mol_graph: Optional[MoleculeGraph] = None,
-        partial_charges: Optional[list] = None
+        partial_charges_resp: Optional[list] = None,
+        partial_charges_mulliken: Optional[list] = None
     ):
         self.energy = energy
         self.enthalpy = enthalpy
@@ -69,7 +70,8 @@ class MoleculeEntry(MSONable):
         else:
             self.mol_graph = mol_graph
 
-        self.partial_charges = partial_charges
+        self.partial_charges_resp = partial_charges_resp
+        self.partial_charges_mulliken = partial_charges_mulliken
         self.molecule = self.mol_graph.molecule
         self.graph = self.mol_graph.graph.to_undirected()
         self.species = [str(s) for s in self.molecule.species]
@@ -212,7 +214,8 @@ class MoleculeEntry(MSONable):
             else:
                 mol_graph = MoleculeGraph.from_dict(doc["molecule_graph"])
 
-            partial_charges = doc['partial_charges']['resp']
+            partial_charges_resp = doc['partial_charges']['resp']
+            partial_charges_mulliken = doc['partial_charges']['mulliken']
         except KeyError as e:
             raise MoleculeEntryError(
                 "Unable to construct molecule entry from molecule document; missing "
@@ -228,7 +231,8 @@ class MoleculeEntry(MSONable):
             entropy=entropy,
             entry_id=entry_id,
             mol_graph=mol_graph,
-            partial_charges=partial_charges
+            partial_charges_resp=partial_charges_resp,
+            partial_charges_mulliken=partial_charges_mulliken
         )
 
 
@@ -274,9 +278,14 @@ class MoleculeEntry(MSONable):
 
             for j in range(self.num_atoms):
                 if j != i:
-                    displacement_vector = self.atom_locations[j] - self.atom_locations[i]
-                    if (np.inner(displacement_vector, displacement_vector) < radius ** 2
-                        and self.partial_charges[j] < 0):
+                    displacement_vector = (
+                        self.atom_locations[j] -
+                        self.atom_locations[i])
+
+                    if (np.inner(displacement_vector, displacement_vector)
+                        < radius ** 2 and (
+                            self.partial_charges_resp[j] < 0 or
+                            self.partial_charges_mulliken[j] < 0)):
                         coordination_partners.append(j)
 
 
