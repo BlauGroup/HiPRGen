@@ -96,9 +96,7 @@ class MoleculeEntry(MSONable):
 
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
-        self.bonds = [(int(sorted(e)[0]), int(sorted(e)[1])) for e in self.graph.edges()]
         self.num_atoms = len(self.molecule)
-        self.num_bonds = len(self.bonds)
 
         self.atom_locations = [
             site.coords for site in self.molecule]

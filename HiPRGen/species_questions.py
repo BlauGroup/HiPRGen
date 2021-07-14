@@ -127,14 +127,15 @@ def metal_complex(mol):
 
 def fix_hydrogen_bonding(mol):
 
+
     if mol.num_atoms > 1:
         for i in range(mol.num_atoms):
             if mol.species[i] == 'H':
 
                 adjacent_atoms = []
 
-                for bond in mol.bonds:
-                    if i in bond:
+                for bond in mol.graph.edges:
+                    if i in bond[0:2]:
 
                         if i == bond[0]:
                             adjacent_atom = bond[1]
@@ -153,8 +154,11 @@ def fix_hydrogen_bonding(mol):
 
                 for adjacent_atom, _ in adjacent_atoms:
                     if adjacent_atom != closest_atom:
-                        mol.graph.remove_edge(i, adjacent_atom)
-                        mol.covalent_graph.remove_edge(i, adjacent_atom)
+                        try:
+                            mol.graph.remove_edge(i, adjacent_atom)
+                            mol.covalent_graph.remove_edge(i, adjacent_atom)
+                        except:
+                            breakpoint()
 
     return False
 
