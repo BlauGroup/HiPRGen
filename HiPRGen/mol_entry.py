@@ -19,7 +19,7 @@ solvation_correction = {
     }
 
 coordination_radius = {
-    "Li" : 2.3,
+    "Li" : 2.4,
     }
 
 max_number_of_coordination_bonds = {

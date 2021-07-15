@@ -26,8 +26,3 @@ else:
     worker(mol_entries,
            bucket_db_file,
            )
-
-
-
-
-

@@ -154,11 +154,8 @@ def fix_hydrogen_bonding(mol):
 
                 for adjacent_atom, _ in adjacent_atoms:
                     if adjacent_atom != closest_atom:
-                        try:
-                            mol.graph.remove_edge(i, adjacent_atom)
-                            mol.covalent_graph.remove_edge(i, adjacent_atom)
-                        except:
-                            breakpoint()
+                        mol.graph.remove_edge(i, adjacent_atom)
+                        mol.covalent_graph.remove_edge(i, adjacent_atom)
 
     return False
 
@@ -188,7 +185,5 @@ standard_species_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
-standard_species_logging_decision_tree = [
-    (bad_lithium_coordination, Terminal.KEEP),
-    (default_true, Terminal.DISCARD)
-    ]
+
+standard_species_logging_decision_tree = Terminal.KEEP

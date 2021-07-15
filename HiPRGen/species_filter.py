@@ -62,7 +62,7 @@ def species_filter(
         mol_entries_unfiltered,
         species_report,
         mol_pictures_folder_name='mol_pictures_unfiltered',
-        rebuild_mol_pictures=False
+        rebuild_mol_pictures=True
     )
 
     report_generator.emit_text("species report")
@@ -84,7 +84,21 @@ def species_filter(
             report_generator.emit_verbatim(
                 '\n'.join([str(f) for f in decision_pathway]))
 
-            report_generator.emit_text(mol.entry_id)
+            report_generator.emit_text("libe string: " + mol.entry_id)
+            report_generator.emit_text("uncorrected free energy: " +
+                                       str(mol.free_energy))
+
+            report_generator.emit_text(
+                "number of coordination bonds: " +
+                str(mol.number_of_coordination_bonds))
+
+            report_generator.emit_text(
+                "corrected free energy: " +
+                str(mol.solvation_free_energy))
+
+            report_generator.emit_text(
+                "formula: " + mol.formula)
+
             report_generator.emit_molecule(i, include_index=False)
             report_generator.emit_newline()
 

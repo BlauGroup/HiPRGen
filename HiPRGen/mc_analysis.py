@@ -51,6 +51,8 @@ def species_report(network_loader, species_report_path):
 
     report_generator.emit_text("species report")
     for i in range(network_loader.number_of_species):
+        mol = network_loader.mol_entries[i]
+        report_generator.emit_text(str(mol.entry_id))
         report_generator.emit_molecule(i)
         report_generator.emit_newline()
 
