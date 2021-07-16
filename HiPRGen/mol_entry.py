@@ -300,7 +300,6 @@ class MoleculeEntry(MSONable):
 
         output = [
             f"MoleculeEntry {self.entry_id} - {self.formula}",
-            f"Number of bonds = {self.num_bonds}",
             f"Total charge = {self.charge}",
         ]
 

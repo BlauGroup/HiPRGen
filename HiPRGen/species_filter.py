@@ -6,6 +6,7 @@ import pickle
 from HiPRGen.species_questions import *
 from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
+import networkx.algorithms.isomorphism as iso
 from HiPRGen.report_generator import ReportGenerator
 """
 Phase 1: species filtering
@@ -18,7 +19,7 @@ species isomorphism filtering:
 The input dataset entries will often contain isomorphic molecules. Identifying such isomorphisms doesn't fit into the species decision tree, so we have it as a preprocessing phase.
 """
 
-def groupby_isomorphism(mols):
+def sort_into_tags(mols):
     isomorphism_buckets = {}
     for mol in mols:
 
@@ -35,6 +36,42 @@ def groupby_isomorphism(mols):
             isomorphism_buckets[tag] = [mol]
 
     return isomorphism_buckets
+
+
+def really_covalent_isomorphic(mol1, mol2):
+    """
+    check for isomorphism directly instead of using hash.
+    warning: this is really slow. It is used in species filtering
+    to avoid hash collisions. Do not use it anywhere else.
+    """
+    return nx.is_isomorphic(
+        mol1.covalent_graph,
+        mol2.covalent_graph,
+        node_match = iso.categorical_node_match('specie', None)
+    )
+
+
+
+def groupby(equivalence_relation, xs):
+    """
+    warning: this has slightly different semantics than
+    itertools groupby which depends on ordering.
+    """
+    groups = []
+
+    for x in xs:
+        group_found = False
+        for group in groups:
+            if equivalence_relation(x, group[0]):
+                group.append(x)
+                group_found = True
+                break
+
+        if not group_found:
+            groups.append([x])
+
+    return groups
+
 
 def log_message(string):
     print(
@@ -108,13 +145,16 @@ def species_filter(
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
 
-    def collapse_isomorphism_class(g):
+    def collapse_isomorphism_group(g):
         return min(g,key=lambda x: x.solvation_free_energy)
 
 
-    mol_entries = [
-        collapse_isomorphism_class(g)
-        for g in groupby_isomorphism(mol_entries_filtered).values()]
+    mol_entries = []
+
+    for tag_group in sort_into_tags(mol_entries_filtered).values():
+        for iso_group in groupby(really_covalent_isomorphic, tag_group):
+            mol_entries.append(
+                collapse_isomorphism_group(iso_group))
 
 
     log_message("assigning indices")
