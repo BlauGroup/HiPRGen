@@ -160,11 +160,13 @@ def fix_hydrogen_bonding(mol):
     return False
 
 
-def bad_lithium_coordination(mol):
+def bad_metal_coordination(mol):
 
-    if mol.formula != 'Li1':
+    if mol.formula not in m_formulas:
 
-        if 'Li' in mol.species and mol.number_of_coordination_bonds == 0:
+        if (len(metals.intersection(set(mol.species))) > 0 and
+            mol.number_of_coordination_bonds == 0):
+
             return True
 
     return False
@@ -178,7 +180,7 @@ standard_species_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
     (metal_complex, Terminal.DISCARD),
-    (bad_lithium_coordination, Terminal.DISCARD),
+    (bad_metal_coordination, Terminal.DISCARD),
     (fix_hydrogen_bonding, Terminal.KEEP),
     (add_star_hashes, Terminal.KEEP),
     (add_fragment_hashes, Terminal.KEEP),
