@@ -1,5 +1,5 @@
 from mpi4py import MPI
-from itertools import combinations
+from itertools import permutations
 from HiPRGen.report_generator import ReportGenerator
 import sqlite3
 from time import localtime, strftime
@@ -266,7 +266,7 @@ def worker(
         for pair in res:
             bucket.append(pair)
 
-        for (reactants, products) in combinations(bucket, 2):
+        for (reactants, products) in permutations(bucket, r=2):
             reaction = {
                 'reactants' : reactants,
                 'products' : products,
@@ -274,20 +274,12 @@ def worker(
                 'number_of_products' : len([i for i in products if i != -1])}
 
 
-            reverse_reaction = {
-                'reactants' : reaction['products'],
-                'products' : reaction['reactants'],
-                'number_of_reactants' : reaction['number_of_products'],
-                'number_of_products' : reaction['number_of_reactants'],
-            }
-
-            decision_pathway_forward = []
-            decision_pathway_reverse = []
+            decision_pathway = []
             if run_decision_tree(reaction,
                                  mol_entries,
                                  params,
                                  reaction_decision_tree,
-                                 decision_pathway_forward
+                                 decision_pathway
                                  ):
 
                 comm.send(
@@ -296,37 +288,12 @@ def worker(
                     tag=NEW_REACTION_DB)
 
 
-            if run_decision_tree(reverse_reaction,
-                                 mol_entries,
-                                 params,
-                                 reaction_decision_tree,
-                                 decision_pathway_reverse
-                                 ):
-
-                comm.send(
-                    reverse_reaction,
-                    dest=DISPATCHER_RANK,
-                    tag=NEW_REACTION_DB)
-
             if run_decision_tree(reaction,
                                  mol_entries,
                                  params,
                                  logging_decision_tree):
 
                 comm.send(
-                    (reaction, decision_pathway_forward),
-                    dest=DISPATCHER_RANK,
-                    tag=NEW_REACTION_LOGGING)
-
-
-
-
-            if run_decision_tree(reverse_reaction,
-                                 mol_entries,
-                                 params,
-                                 logging_decision_tree):
-
-                comm.send(
-                    (reverse_reaction, decision_pathway_reverse),
+                    (reaction, decision_pathway),
                     dest=DISPATCHER_RANK,
                     tag=NEW_REACTION_LOGGING)
