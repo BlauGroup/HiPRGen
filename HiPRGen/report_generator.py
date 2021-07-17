@@ -9,10 +9,17 @@ def visualize_molecule_entry(molecule_entry, path):
     output the resulting pdf to path
     """
 
-    atom_colors = {"O": "red",
-                   "H": "gray",
+    atom_colors = {"H": "gray",
                    "C": "black",
-                   "Li": "purple"}
+                   "Li": "#cc80ff",
+                   "B": "#ffb5b5",
+                   "N": "#3050f8",
+                   "O": "#ff0d0d",
+                   "F": "#90e050",
+                   "Mg": "#8aff00",
+                   "P": "#ff8000",
+                   "S": "#ffff30",
+                   "Cl": "#1ff01f"}
 
     graph = deepcopy(molecule_entry.graph)
 

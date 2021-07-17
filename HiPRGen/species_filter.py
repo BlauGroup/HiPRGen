@@ -8,6 +8,9 @@ from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import networkx.algorithms.isomorphism as iso
 from HiPRGen.report_generator import ReportGenerator
+from HiPRGen.solvation_corrections import (solvation_correction_ec,
+                                           solvation_correction_g2,
+                                           solvation_correction_thf)
 """
 Phase 1: species filtering
 input: a list of dataset entries
@@ -84,14 +87,16 @@ def species_filter(
         species_report,
         species_decision_tree=standard_species_decision_tree,
         species_logging_decision_tree=standard_species_logging_decision_tree,
-        generate_unfiltered_mol_pictures=False):
+        generate_unfiltered_mol_pictures=False
+        solvation_correction=solvation_correction_ec):
 
 
     log_message("starting species filter")
     log_message("loading molecule entries from json")
 
     mol_entries_unfiltered = [
-        MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
+        MoleculeEntry.from_dataset_entry(e, solvation_correction=solvation_correction)
+        for e in dataset_entries ]
 
 
     log_message("generating unfiltered mol pictures")
