@@ -231,7 +231,8 @@ def fix_hydrogen_bonding(mol):
                 for adjacent_atom, _ in adjacent_atoms:
                     if adjacent_atom != closest_atom:
                         mol.graph.remove_edge(i, adjacent_atom)
-                        mol.covalent_graph.remove_edge(i, adjacent_atom)
+                        if adjacent_atom in mol.covalent_graph:
+                            mol.covalent_graph.remove_edge(i, adjacent_atom)
 
     return False
 

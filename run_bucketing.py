@@ -3,7 +3,9 @@ from monty.serialization import loadfn
 from HiPRGen.species_filter import *
 from HiPRGen.bucketing import *
 from HiPRGen.report_generator import ReportGenerator
-
+from HiPRGen.solvation_corrections import (solvation_correction_ec,
+                                           solvation_correction_g2,
+                                           solvation_correction_thf)
 
 if len(sys.argv) != 5:
     print("usage: python run_bucketing.py database_json_file mol_entries_pickle_file bucket_db_file report_file")
