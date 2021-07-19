@@ -66,7 +66,7 @@ insert_reaction = """
 """
 
 get_complex_group_sql = """
-    SELECT * FROM complexes WHERE composition=? AND group_id=?
+    SELECT * FROM complexes WHERE composition_id=? AND group_id=?
 """
 
 
@@ -121,11 +121,15 @@ def dispatcher(
     size_cur = bucket_con.cursor()
 
     res = bucket_cur.execute("SELECT * FROM group_counts")
-    for (composition, count) in res:
+    for (composition_id, count) in res:
         for (i,j) in product(range(count), repeat=2):
             work_batch_list.append(
-                (composition, i, j))
+                (composition_id, i, j))
 
+    composition_names = {}
+    res = bucket_cur.execute("SELECT * FROM compositions")
+    for (composition_id, composition) in res:
+        composition_names[composition_id] = composition
 
     log_message("creating reaction network db")
     rn_con = sqlite3.connect(rn_db)
@@ -181,9 +185,13 @@ def dispatcher(
                 # pop removes and returns the last item in the list
                 work_batch = work_batch_list.pop()
                 comm.send(work_batch, dest=rank, tag=HERE_IS_A_WORK_BATCH)
+                composition_id, group_id_0, group_id_1 = work_batch
                 log_message(
                     "dispatched",
-                    work_batch)
+                    composition_names[composition_id],
+                    ": group ids:",
+                    group_id_0, group_id_1
+                )
 
 
         elif tag == NEW_REACTION_DB:
@@ -261,14 +269,14 @@ def worker(
             break
 
 
-        composition, group_id_0, group_id_1 = work_batch
+        composition_id, group_id_0, group_id_1 = work_batch
 
 
         if group_id_0 == group_id_1:
 
             res = cur.execute(
                 get_complex_group_sql,
-                (composition, group_id_0))
+                (composition_id, group_id_0))
 
             bucket = []
             for row in res:
@@ -280,7 +288,7 @@ def worker(
 
             res_0 = cur.execute(
                 get_complex_group_sql,
-                (composition, group_id_0))
+                (composition_id, group_id_0))
 
             bucket_0 = []
             for row in res_0:
@@ -288,7 +296,7 @@ def worker(
 
             res_1 = cur.execute(
                 get_complex_group_sql,
-                (composition, group_id_1))
+                (composition_id, group_id_1))
 
             bucket_1 = []
             for row in res_1:
