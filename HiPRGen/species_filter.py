@@ -99,7 +99,7 @@ def species_filter(
         mol_entries_unfiltered,
         species_report,
         mol_pictures_folder_name='mol_pictures_unfiltered',
-        rebuild_mol_pictures=True
+        rebuild_mol_pictures=False
     )
 
     report_generator.emit_text("species report")

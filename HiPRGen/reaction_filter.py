@@ -1,5 +1,5 @@
 from mpi4py import MPI
-from itertools import permutations
+from itertools import permutations, product
 from HiPRGen.report_generator import ReportGenerator
 import sqlite3
 from time import localtime, strftime
@@ -76,10 +76,10 @@ DISPATCHER_RANK = 0
 INITIALIZATION_FINISHED = 0
 
 # sent by workers to the dispatcher to request a new table
-SEND_ME_A_TABLE = 1
+SEND_ME_A_WORK_BATCH = 1
 
 # sent by dispatcher to workers when delivering a new table
-HERE_IS_A_TABLE = 2
+HERE_IS_A_WORK_BATCH = 2
 
 # sent by workers to the dispatcher when reaction passes db decision tree
 NEW_REACTION_DB = 3
@@ -111,19 +111,17 @@ def dispatcher(
 ):
 
     comm = MPI.COMM_WORLD
-    table_list = []
+    work_batch_list = []
     bucket_con = sqlite3.connect(bucket_db)
     bucket_cur = bucket_con.cursor()
     size_cur = bucket_con.cursor()
 
-    res = bucket_cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    for name in res:
-        table = name[0]
-        table_size = list(size_cur.execute("SELECT COUNT(*) FROM " + table))[0][0]
-        table_list.append((table, table_size))
+    res = bucket_cur.execute("SELECT * FROM group_counts")
+    for (composition, count) in res:
+        for (i,j) in product(range(count), repeat=2):
+            work_batch_list.append(
+                (composition, i, j))
 
-    # we want the biggest buckets to be processed first
-    table_list.sort(key=lambda pair: pair[1])
 
     log_message("creating reaction network db")
     rn_con = sqlite3.connect(rn_db)
@@ -171,19 +169,17 @@ def dispatcher(
         tag = status.Get_tag()
         rank = status.Get_source()
 
-        if tag == SEND_ME_A_TABLE:
-            if len(table_list) == 0:
-                comm.send(None, dest=rank, tag=HERE_IS_A_TABLE)
+        if tag == SEND_ME_A_WORK_BATCH:
+            if len(work_batch_list) == 0:
+                comm.send(None, dest=rank, tag=HERE_IS_A_WORK_BATCH)
                 worker_states[rank] = WorkerState.FINISHED
             else:
                 # pop removes and returns the last item in the list
-                next_table, table_size = table_list.pop()
-                comm.send(next_table, dest=rank, tag=HERE_IS_A_TABLE)
+                work_batch = work_batch_list.pop()
+                comm.send(work_batch, dest=rank, tag=HERE_IS_A_WORK_BATCH)
                 log_message(
                     "dispatched",
-                    next_table,
-                    str(table_size),
-                    "rows")
+                    work_batch)
 
 
         elif tag == NEW_REACTION_DB:
@@ -254,19 +250,51 @@ def worker(
     comm.send(None, dest=DISPATCHER_RANK, tag=INITIALIZATION_FINISHED)
 
     while True:
-        comm.send(None, dest=DISPATCHER_RANK, tag=SEND_ME_A_TABLE)
-        table = comm.recv(source=DISPATCHER_RANK, tag=HERE_IS_A_TABLE)
+        comm.send(None, dest=DISPATCHER_RANK, tag=SEND_ME_A_WORK_BATCH)
+        work_batch = comm.recv(source=DISPATCHER_RANK, tag=HERE_IS_A_WORK_BATCH)
 
-        if table is None:
+        if work_batch is None:
             break
 
 
-        bucket = []
-        res = cur.execute("SELECT * FROM " + table)
-        for pair in res:
-            bucket.append(pair)
+        composition, group_id_0, group_id_1 = work_batch
 
-        for (reactants, products) in permutations(bucket, r=2):
+
+        if group_id_0 == group_id_1:
+
+            res = cur.execute(
+                "SELECT * FROM complexes WHERE composition=? AND group_id=?",
+                (composition, group_id_0))
+
+            bucket = []
+            for row in res:
+                bucket.append((row[0],row[1]))
+
+            iterator = permutations(bucket, r=2)
+
+        else:
+
+            res_0 = cur.execute(
+                "SELECT * FROM complexes WHERE composition=? AND group_id=?",
+                (composition, group_id_0))
+
+            bucket_0 = []
+            for row in res_0:
+                bucket_0.append((row[0],row[1]))
+
+            res_1 = cur.execute(
+                "SELECT * FROM complexes WHERE composition=? AND group_id=?",
+                (composition, group_id_1))
+
+            bucket_1 = []
+            for row in res_1:
+                bucket_1.append((row[0],row[1]))
+
+            iterator = product(bucket_0, bucket_1)
+
+
+
+        for (reactants, products) in iterator:
             reaction = {
                 'reactants' : reactants,
                 'products' : products,
