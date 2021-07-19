@@ -11,7 +11,11 @@ description: since each reaction conserves atom numbers, a concerted reaction on
 
 
 
-def bucket(mol_entries, bucket_db, commit_freq=2000, group_size=5000):
+def bucket(
+        mol_entries,
+        bucket_db,
+        commit_freq=2000,
+        group_size=1000):
 
     con = sqlite3.connect(bucket_db)
     cur = con.cursor()

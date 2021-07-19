@@ -65,6 +65,10 @@ insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
+get_complex_group_sql = """
+    SELECT * FROM complexes WHERE composition=? AND group_id=?
+"""
+
 
 # TODO: structure these global variables better
 DISPATCHER_RANK = 0
@@ -263,7 +267,7 @@ def worker(
         if group_id_0 == group_id_1:
 
             res = cur.execute(
-                "SELECT * FROM complexes WHERE composition=? AND group_id=?",
+                get_complex_group_sql,
                 (composition, group_id_0))
 
             bucket = []
@@ -275,7 +279,7 @@ def worker(
         else:
 
             res_0 = cur.execute(
-                "SELECT * FROM complexes WHERE composition=? AND group_id=?",
+                get_complex_group_sql,
                 (composition, group_id_0))
 
             bucket_0 = []
@@ -283,7 +287,7 @@ def worker(
                 bucket_0.append((row[0],row[1]))
 
             res_1 = cur.execute(
-                "SELECT * FROM complexes WHERE composition=? AND group_id=?",
+                get_complex_group_sql,
                 (composition, group_id_1))
 
             bucket_1 = []

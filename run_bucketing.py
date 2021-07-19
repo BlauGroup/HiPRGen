@@ -16,5 +16,5 @@ report_file = sys.argv[4]
 
 database_entries = loadfn(database_json_file)
 mol_entries = species_filter(database_entries, mol_entries_pickle_file, report_file)
-bucket(mol_entries, bucket_db_file, group_size=50)
+bucket(mol_entries, bucket_db_file)
 
