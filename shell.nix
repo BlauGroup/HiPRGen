@@ -11,7 +11,6 @@ let
           ]);
 in mkShell rec {
   buildInputs = [ pythonEnv
-                  sqlitebrowser
                   texlive.combined.scheme-small
                   mpi
                   (import ./RNMC.nix)
