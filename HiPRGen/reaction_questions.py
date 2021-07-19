@@ -336,6 +336,29 @@ def concerted_metal_coordination(reaction, mols, params):
     return False
 
 
+def concerted_metal_coordination_one_product(reaction, mols, params):
+
+    if (reaction['number_of_reactants'] == 2 and
+        reaction['number_of_products'] == 1):
+
+        reactant_0 = mols[reaction['reactants'][0]]
+        reactant_1 = mols[reaction['reactants'][1]]
+        product = mols[reaction['products'][0]]
+
+        reactant_covalent_hashes = set([
+            reactant_0.covalent_hash,
+            reactant_1.covalent_hash])
+
+        if ((reactant_0.formula in m_formulas or
+            reactant_1.formula in m_formulas) and
+            product.covalent_hash not in reactant_covalent_hashes
+            ):
+            return True
+        else:
+            return False
+
+    return False
+
 standard_reaction_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
@@ -356,6 +379,7 @@ standard_reaction_decision_tree = [
 
     (concerted_metal_coordination, Terminal.DISCARD),
 
+    (concerted_metal_coordination_one_product, Terminal.DISCARD),
     (default_true, Terminal.KEEP)
     ]
 
@@ -366,5 +390,5 @@ minimal_reaction_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
-standard_logging_decision_tree = Terminal.DISCARD
 
+standard_logging_decision_tree = Terminal.DISCARD
