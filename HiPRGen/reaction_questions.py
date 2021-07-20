@@ -253,13 +253,13 @@ def no_fragment_matching_found(reaction, mols, params):
     for i in range(reaction['number_of_reactants']):
         reactant_id = reaction['reactants'][i]
         reactant = mols[reactant_id]
-        if reactant.num_atoms == 1:
+        if reactant.formula in m_formulas:
             return False
 
     for i in range(reaction['number_of_products']):
         product_id = reaction['products'][i]
         product = mols[product_id]
-        if reactant.num_atoms == 1:
+        if product.formula in m_formulas:
             return False
 
 
@@ -375,11 +375,12 @@ standard_reaction_decision_tree = [
 
     (reaction_is_covalent_decomposable, Terminal.DISCARD),
 
-    (no_fragment_matching_found, Terminal.DISCARD),
-
     (concerted_metal_coordination, Terminal.DISCARD),
 
     (concerted_metal_coordination_one_product, Terminal.DISCARD),
+
+    (no_fragment_matching_found, Terminal.DISCARD),
+
     (default_true, Terminal.KEEP)
     ]
 

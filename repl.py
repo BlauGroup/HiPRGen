@@ -11,8 +11,8 @@ params={
     'electron_free_energy' : -1.4
     }
 
-reaction = {
-    'number_of_reactants' : 2,
-    'number_of_products' : 2,
-    'reactants' : [53,53],
-    'products' : [189,9]}
+# reaction = {
+#     'number_of_reactants' : 2,
+#     'number_of_products' : 2,
+#     'reactants' : [53,53],
+#     'products' : [189,9]}

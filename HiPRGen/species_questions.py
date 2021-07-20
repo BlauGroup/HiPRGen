@@ -94,7 +94,7 @@ def add_star_hashes(mol):
     return False
 
 
-def add_fragment_hashes(mol):
+def add_fragment_hashes(width, mol):
     if mol.formula in m_formulas:
         return False
 
@@ -103,14 +103,38 @@ def add_fragment_hashes(mol):
         h = copy.deepcopy(mol.covalent_graph)
         h.remove_edge(*edge)
         connected_components = nx.algorithms.components.connected_components(h)
-        fragment_hashes = [
-            weisfeiler_lehman_graph_hash(
-                h.subgraph(c),
+        fragment_hashes = []
+        fragment_neighborhoods = []
+        for c in connected_components:
+
+            subgraph = h.subgraph(c)
+
+            full_component_hash = weisfeiler_lehman_graph_hash(
+                subgraph,
                 node_attr='specie')
 
-            for c in connected_components
-            ]
 
+            atom_mapping_hashes = {}
+            for i in c:
+                atom_mapping_hashes[i] = []
+                for d in range(width):
+                    neighborhood = nx.generators.ego.ego_graph(
+                        subgraph,
+                        i,
+                        d,
+                        undirected=True)
+
+                    neighborhood_hash = weisfeiler_lehman_graph_hash(
+                        neighborhood,
+                        node_attr='specie')
+
+                    atom_mapping_hashes[i].append(neighborhood_hash)
+
+
+            fragment_hashes.append(full_component_hash)
+            fragment_neighborhoods.append(atom_mapping_hashes)
+
+        mol.fragment_neighborhoods.append(fragment_neighborhoods)
         mol.fragment_hashes.append(fragment_hashes)
 
     return False
@@ -183,7 +207,7 @@ standard_species_decision_tree = [
     (bad_metal_coordination, Terminal.DISCARD),
     (fix_hydrogen_bonding, Terminal.KEEP),
     (add_star_hashes, Terminal.KEEP),
-    (add_fragment_hashes, Terminal.KEEP),
+    (partial(add_fragment_hashes, 5), Terminal.KEEP),
     (default_true, Terminal.KEEP)
     ]
 

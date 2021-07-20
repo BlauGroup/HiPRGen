@@ -59,6 +59,7 @@ class MoleculeEntry(MSONable):
 
         self.star_hashes = {}
         self.fragment_hashes = []
+        self.fragment_neighborhoods = []
 
 
 
