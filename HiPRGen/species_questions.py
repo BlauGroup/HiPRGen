@@ -99,6 +99,28 @@ def add_fragment_hashes(width, mol):
         return False
 
 
+    for i in range(mol.num_atoms):
+        if mol.species[i] not in metals:
+            atom_mapping_hashes_list = []
+            for d in range(width):
+                neighborhood = nx.generators.ego.ego_graph(
+                    mol.covalent_graph,
+                    i,
+                    d,
+                    undirected=True)
+
+                neighborhood_hash = weisfeiler_lehman_graph_hash(
+                    neighborhood,
+                    node_attr='specie')
+
+                atom_mapping_hashes_list.append(neighborhood_hash)
+
+            mol.neighborhoods[i] = hash(tuple(atom_mapping_hashes_list))
+
+
+
+
+
     for edge in mol.covalent_graph.edges:
         h = copy.deepcopy(mol.covalent_graph)
         h.remove_edge(*edge)
@@ -116,7 +138,7 @@ def add_fragment_hashes(width, mol):
 
             atom_mapping_hashes = {}
             for i in c:
-                atom_mapping_hashes[i] = []
+                atom_mapping_hashes_list = []
                 for d in range(width):
                     neighborhood = nx.generators.ego.ego_graph(
                         subgraph,
@@ -128,8 +150,9 @@ def add_fragment_hashes(width, mol):
                         neighborhood,
                         node_attr='specie')
 
-                    atom_mapping_hashes[i].append(neighborhood_hash)
+                    atom_mapping_hashes_list.append(neighborhood_hash)
 
+                atom_mapping_hashes[i] = hash(tuple(atom_mapping_hashes_list))
 
             fragment_hashes.append(full_component_hash)
             fragment_neighborhoods.append(atom_mapping_hashes)
@@ -138,7 +161,6 @@ def add_fragment_hashes(width, mol):
         mol.fragment_hashes.append(fragment_hashes)
 
     return False
-
 
 
 def metal_complex(mol):

@@ -266,7 +266,6 @@ def metal_coordination_passthrough(reaction, mols, params):
 def fragment_matching_found(reaction, mols, params):
 
 
-
     if reaction['number_of_reactants'] == 1:
         reactant = mols[reaction['reactants'][0]]
         reactant_fragments = [ (frozenset([reactant.covalent_hash]), (-1)) ]
@@ -330,6 +329,8 @@ def fragment_matching_found(reaction, mols, params):
                 return True
 
     return False
+
+
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
