@@ -245,20 +245,25 @@ def reaction_is_covalent_decomposable(reaction, mols, params):
     return False
 
 
-
-def no_fragment_matching_found(reaction, mols, params):
+def metal_coordination_passthrough(reaction, mols, params):
 
     for i in range(reaction['number_of_reactants']):
         reactant_id = reaction['reactants'][i]
         reactant = mols[reactant_id]
         if reactant.formula in m_formulas:
-            return False
+            return True
 
     for i in range(reaction['number_of_products']):
         product_id = reaction['products'][i]
         product = mols[product_id]
         if product.formula in m_formulas:
-            return False
+            return True
+
+    return False
+
+
+
+def no_fragment_matching_found(reaction, mols, params):
 
 
 
@@ -320,6 +325,8 @@ def no_fragment_matching_found(reaction, mols, params):
     for reactant_tag in reactant_fragments:
         for product_tag in product_fragments:
             if reactant_tag[0] == product_tag[0]:
+                reaction['reactant_fragments'] = reactant_tag[1]
+                reaction['product_fragments'] = product_tag[1]
                 return False
 
     return True
@@ -382,6 +389,8 @@ standard_reaction_decision_tree = [
     (concerted_metal_coordination, Terminal.DISCARD),
 
     (concerted_metal_coordination_one_product, Terminal.DISCARD),
+
+    (metal_coordination_passthrough, Terminal.KEEP),
 
     (no_fragment_matching_found, Terminal.DISCARD),
 
