@@ -248,8 +248,6 @@ def reaction_is_covalent_decomposable(reaction, mols, params):
 
 def no_fragment_matching_found(reaction, mols, params):
 
-    # is a reactant or a product is a single atom, then this breaks
-    # TODO: fix this
     for i in range(reaction['number_of_reactants']):
         reactant_id = reaction['reactants'][i]
         reactant = mols[reactant_id]
@@ -266,34 +264,34 @@ def no_fragment_matching_found(reaction, mols, params):
 
     if reaction['number_of_reactants'] == 1:
         reactant = mols[reaction['reactants'][0]]
-        reactant_fragments = set([frozenset([reactant.covalent_hash])])
+        reactant_fragments = [ frozenset([reactant.covalent_hash]) ]
         for fragments in reactant.fragment_hashes:
-            reactant_fragments.add(
+            reactant_fragments.append(
                 frozenset(fragments))
 
     elif reaction['number_of_reactants'] == 2:
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
 
-        reactant_fragments = set([
+        reactant_fragments = [
             frozenset([reactant_0.covalent_hash, reactant_1.covalent_hash])
-        ])
+        ]
 
         for fragments in reactant_0.fragment_hashes:
-            reactant_fragments.add(
+            reactant_fragments.append(
                 frozenset(fragments + [reactant_1.covalent_hash]))
 
         for fragments in reactant_1.fragment_hashes:
-            reactant_fragments.add(
+            reactant_fragments.append(
                 frozenset(fragments + [reactant_0.covalent_hash]))
 
 
     if reaction['number_of_products'] == 1:
 
         product = mols[reaction['products'][0]]
-        product_fragments = set([frozenset([product.covalent_hash])])
+        product_fragments = [frozenset([product.covalent_hash])]
         for fragments in product.fragment_hashes:
-            product_fragments.add(
+            product_fragments.append(
                 frozenset(fragments))
 
     elif reaction['number_of_products'] == 2:
@@ -301,24 +299,25 @@ def no_fragment_matching_found(reaction, mols, params):
         product_0 = mols[reaction['products'][0]]
         product_1 = mols[reaction['products'][1]]
 
-        product_fragments = set([
+        product_fragments = [
             frozenset([product_0.covalent_hash, product_1.covalent_hash])
-        ])
+        ]
 
         for fragments in product_0.fragment_hashes:
-            product_fragments.add(
+            product_fragments.append(
                 frozenset(fragments + [product_1.covalent_hash]))
 
         for fragments in product_1.fragment_hashes:
-            product_fragments.add(
+            product_fragments.append(
                 frozenset(fragments + [product_0.covalent_hash]))
 
 
-    if len(reactant_fragments.intersection(product_fragments)) == 0:
-        return True
-    else:
-        return False
+    for reactant_tag in reactant_fragments:
+        for product_tag in product_fragments:
+            if reactant_tag == product_tag:
+                return False
 
+    return True
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
