@@ -264,35 +264,38 @@ def no_fragment_matching_found(reaction, mols, params):
 
     if reaction['number_of_reactants'] == 1:
         reactant = mols[reaction['reactants'][0]]
-        reactant_fragments = [ frozenset([reactant.covalent_hash]) ]
-        for fragments in reactant.fragment_hashes:
+        reactant_fragments = [ (frozenset([reactant.covalent_hash]), (-1)) ]
+        for i, fragments in enumerate(reactant.fragment_hashes):
             reactant_fragments.append(
-                frozenset(fragments))
+                (frozenset(fragments), (i) )
+            )
 
     elif reaction['number_of_reactants'] == 2:
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
 
         reactant_fragments = [
-            frozenset([reactant_0.covalent_hash, reactant_1.covalent_hash])
+            (frozenset([reactant_0.covalent_hash, reactant_1.covalent_hash]), (-1,-1))
         ]
 
-        for fragments in reactant_0.fragment_hashes:
+        for i, fragments in enumerate(reactant_0.fragment_hashes):
             reactant_fragments.append(
-                frozenset(fragments + [reactant_1.covalent_hash]))
+                (frozenset(fragments + [reactant_1.covalent_hash]), (i, -1) )
+            )
 
-        for fragments in reactant_1.fragment_hashes:
+        for i, fragments in enumerate(reactant_1.fragment_hashes):
             reactant_fragments.append(
-                frozenset(fragments + [reactant_0.covalent_hash]))
+                (frozenset(fragments + [reactant_0.covalent_hash]), (-1, i) )
+            )
 
 
     if reaction['number_of_products'] == 1:
 
         product = mols[reaction['products'][0]]
-        product_fragments = [frozenset([product.covalent_hash])]
-        for fragments in product.fragment_hashes:
+        product_fragments = [ (frozenset([product.covalent_hash]), (-1) ) ]
+        for i, fragments in enumerate(product.fragment_hashes):
             product_fragments.append(
-                frozenset(fragments))
+                (frozenset(fragments), (i) ))
 
     elif reaction['number_of_products'] == 2:
 
@@ -300,21 +303,23 @@ def no_fragment_matching_found(reaction, mols, params):
         product_1 = mols[reaction['products'][1]]
 
         product_fragments = [
-            frozenset([product_0.covalent_hash, product_1.covalent_hash])
+            (frozenset([product_0.covalent_hash, product_1.covalent_hash]), (-1, -1))
         ]
 
-        for fragments in product_0.fragment_hashes:
+        for i, fragments in enumerate(product_0.fragment_hashes):
             product_fragments.append(
-                frozenset(fragments + [product_1.covalent_hash]))
+                (frozenset(fragments + [product_1.covalent_hash]), (i, -1))
+            )
 
-        for fragments in product_1.fragment_hashes:
+        for i, fragments in enumerate(product_1.fragment_hashes):
             product_fragments.append(
-                frozenset(fragments + [product_0.covalent_hash]))
+                (frozenset(fragments + [product_0.covalent_hash]), (-1, i))
+            )
 
 
     for reactant_tag in reactant_fragments:
         for product_tag in product_fragments:
-            if reactant_tag == product_tag:
+            if reactant_tag[0] == product_tag[0]:
                 return False
 
     return True
