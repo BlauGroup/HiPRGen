@@ -263,7 +263,7 @@ def metal_coordination_passthrough(reaction, mols, params):
 
 
 
-def no_fragment_matching_found(reaction, mols, params):
+def fragment_matching_found(reaction, mols, params):
 
 
 
@@ -327,9 +327,9 @@ def no_fragment_matching_found(reaction, mols, params):
             if reactant_tag[0] == product_tag[0]:
                 reaction['reactant_fragments'] = reactant_tag[1]
                 reaction['product_fragments'] = product_tag[1]
-                return False
+                return True
 
-    return True
+    return False
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
@@ -392,9 +392,9 @@ standard_reaction_decision_tree = [
 
     (metal_coordination_passthrough, Terminal.KEEP),
 
-    (no_fragment_matching_found, Terminal.DISCARD),
+    (fragment_matching_found, Terminal.KEEP),
 
-    (default_true, Terminal.KEEP)
+    (default_true, Terminal.DISCARD)
     ]
 
 
