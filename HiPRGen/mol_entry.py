@@ -130,6 +130,11 @@ class MoleculeEntry(MSONable):
         self.free_energy = self.get_free_energy()
         self.solvation_free_energy = self.get_solvation_free_energy()
 
+        self.non_metal_atoms = [
+            i for i in range(self.num_atoms)
+            if self.species[i] not in metals]
+
+
 
 
     @classmethod

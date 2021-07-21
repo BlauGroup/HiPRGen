@@ -339,6 +339,9 @@ def fragment_matching_found(reaction, mols, params):
     return False
 
 
+def compute_atom_mapping(reaction, mols, params):
+    pass
+
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and

@@ -97,13 +97,9 @@ def add_unbroken_fragment(width, mol):
     if mol.formula in m_formulas:
         return False
 
-    non_metal_atoms = [
-        i for i in range(mol.num_atoms)
-        if mol.species[i] not in metals]
-
     neighborhood_hashes = {}
 
-    for i in non_metal_atoms:
+    for i in mol.non_metal_atoms:
         hash_list = []
         for d in range(width):
             neighborhood = nx.generators.ego.ego_graph(
@@ -122,7 +118,7 @@ def add_unbroken_fragment(width, mol):
 
     fragment = Fragment(
         mol.covalent_hash,
-        non_metal_atoms,
+        mol.non_metal_atoms,
         neighborhood_hashes)
 
     fragment_complex = FragmentComplex(
