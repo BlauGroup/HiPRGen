@@ -120,6 +120,7 @@ def add_unbroken_fragment(width, mol):
         mol.covalent_hash,
         mol.non_metal_atoms,
         neighborhood_hashes,
+        mol.covalent_graph,
         []
     )
 
@@ -174,6 +175,7 @@ def add_single_bond_fragments(width, mol):
                 fragment_hash,
                 c,
                 neighborhood_hashes,
+                subgraph,
                 [i for i in c if i in edge[0:2]]
             )
 

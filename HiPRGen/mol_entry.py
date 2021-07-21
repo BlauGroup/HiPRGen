@@ -33,13 +33,16 @@ class Fragment:
             fragment_hash,
             atom_ids,
             neighborhood_hashes,
+            graph,
             hot_atoms
     ):
 
         self.fragment_hash = fragment_hash
         self.atom_ids = atom_ids
         self.neighborhood_hashes = neighborhood_hashes
+        self.graph = graph
         self.hot_atoms = hot_atoms
+
 
 
 class FragmentComplex:
@@ -53,6 +56,7 @@ class FragmentComplex:
         self.number_of_fragments = number_of_fragments
         self.number_of_bonds_broken = number_of_bonds_broken
         self.fragments = fragments
+
 
 
 class MoleculeEntry(MSONable):
