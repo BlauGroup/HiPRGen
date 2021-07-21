@@ -9,6 +9,7 @@ from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Molecule
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 from HiPRGen.constants import ROOM_TEMP
+from itertools import permutations, product
 
 
 metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
@@ -42,6 +43,46 @@ class Fragment:
         self.neighborhood_hashes = neighborhood_hashes
         self.graph = graph
         self.hot_atoms = hot_atoms
+
+
+def sym_iterator(n):
+    return permutations(range(n), r=n)
+
+
+def find_fragment_atom_mapping(fragment_1, fragment_2, hot_preserving=False):
+
+    groups_by_hash = {}
+
+    for left_index in fragment_1.atom_ids:
+
+        neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
+        if neighborhood_hash not in groups_by_hash:
+            groups_by_hash[neighborhood_hash] = ([],[])
+
+        groups_by_hash[neighborhood_hash][0].append(left_index)
+
+
+    for right_index in fragment_2.atom_ids:
+
+        neighborhood_hash = fragment_2.neighborhood_hashes[right_index]
+        if neighborhood_hash not in groups_by_hash:
+            groups_by_hash[neighborhood_hash] = ([],[])
+
+        groups_by_hash[neighborhood_hash][1].append(right_index)
+
+    groups = list(groups_by_hash.values())
+
+    product_sym_iterator = product(*[
+        sym_iterator(len(p[0])) for
+        p in groups ])
+
+    mappings = []
+    for product_perm in product_sym_iterator:
+        mapping = {}
+        for perm, vals in zip(product_perm, groups):
+            for i, j in enumerate(perm):
+                mapping[vals[0][i]] = vals[1][j]
+        mappings.append(mapping)
 
 
 
