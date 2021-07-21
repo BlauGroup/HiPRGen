@@ -341,6 +341,48 @@ def fragment_matching_found(reaction, mols, params):
 
 def compute_atom_mapping(reaction, mols, params):
     pass
+    atom_mapping = {}
+
+    for i in range(reaction['number_of_reactants']):
+        reactant = mols[reaction['reactants'][i]]
+        reactant_fragments = reactant.fragment_data[
+            reaction['reactant_fragments'][i]].fragments
+
+        for atom_index in reactant.non_metal_atoms:
+
+
+            for fragment in reactant_fragments:
+                if atom_index in fragment.atom_ids:
+                    current_fragment = fragment
+                    break
+
+            atom_mapping[(i, atom_index, current_fragment.fragment_hash)] = []
+
+            for j in range(reaction['number_of_products']):
+                product = mols[reaction['products'][j]]
+                product_fragments = product.fragment_data[
+                    reaction['product_fragments'][j]].fragments
+
+                for fragment in product_fragments:
+
+                    if (current_fragment.fragment_hash ==
+                        fragment.fragment_hash):
+
+                        for product_atom in fragment.atom_ids:
+                            if (current_fragment.neighborhood_hashes[atom_index] ==
+                                fragment.neighborhood_hashes[product_atom]):
+
+
+                                atom_mapping[
+                                    (i,
+                                     atom_index,
+                                     current_fragment.fragment_hash)].append(
+                                        (j, product_atom))
+
+    return atom_mapping
+
+
+
 
 
 def concerted_metal_coordination(reaction, mols, params):

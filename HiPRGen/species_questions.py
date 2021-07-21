@@ -119,7 +119,9 @@ def add_unbroken_fragment(width, mol):
     fragment = Fragment(
         mol.covalent_hash,
         mol.non_metal_atoms,
-        neighborhood_hashes)
+        neighborhood_hashes,
+        []
+    )
 
     fragment_complex = FragmentComplex(
         1,
@@ -171,7 +173,9 @@ def add_single_bond_fragments(width, mol):
             fragment = Fragment(
                 fragment_hash,
                 c,
-                neighborhood_hashes)
+                neighborhood_hashes,
+                [i for i in c if i in edge[0:2]]
+            )
 
             fragments.append(fragment)
 

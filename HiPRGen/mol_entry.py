@@ -32,11 +32,14 @@ class Fragment:
             self,
             fragment_hash,
             atom_ids,
-            neighborhood_hashes):
+            neighborhood_hashes,
+            hot_atoms
+    ):
 
         self.fragment_hash = fragment_hash
         self.atom_ids = atom_ids
         self.neighborhood_hashes = neighborhood_hashes
+        self.hot_atoms = hot_atoms
 
 
 class FragmentComplex:
