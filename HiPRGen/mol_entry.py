@@ -82,7 +82,10 @@ def find_fragment_atom_mapping(fragment_1, fragment_2, hot_preserving=False):
         for perm, vals in zip(product_perm, groups):
             for i, j in enumerate(perm):
                 mapping[vals[0][i]] = vals[1][j]
-        mappings.append(mapping)
+
+        maggings.append(mapping)
+        #TODO: validate mapping is an iso
+        #TODO: check if we preserve a hot atom
 
 
 
