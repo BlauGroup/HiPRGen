@@ -265,67 +265,75 @@ def metal_coordination_passthrough(reaction, mols, params):
 
 def fragment_matching_found(reaction, mols, params):
 
+    reactant_fragment_indices_list = []
+    product_fragment_indices_list = []
 
     if reaction['number_of_reactants'] == 1:
         reactant = mols[reaction['reactants'][0]]
-        reactant_fragments = [ (frozenset([reactant.covalent_hash]), (-1)) ]
-        for i, fragments in enumerate(reactant.fragment_hashes):
-            reactant_fragments.append(
-                (frozenset(fragments), (i) )
-            )
+        for i in range(len(reactant.fragment_data)):
+            reactant_fragment_indices_list.append([i])
 
-    elif reaction['number_of_reactants'] == 2:
+
+    if reaction['number_of_reactants'] == 2:
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
+        for i in range(len(reactant_0.fragment_data)):
+            for j in range(len(reactant_1.fragment_data)):
+                if (reactant_0.fragment_data[i].number_of_bonds_broken +
+                    reactant_1.fragment_data[j].number_of_bonds_broken <= 1):
 
-        reactant_fragments = [
-            (frozenset([reactant_0.covalent_hash, reactant_1.covalent_hash]), (-1,-1))
-        ]
-
-        for i, fragments in enumerate(reactant_0.fragment_hashes):
-            reactant_fragments.append(
-                (frozenset(fragments + [reactant_1.covalent_hash]), (i, -1) )
-            )
-
-        for i, fragments in enumerate(reactant_1.fragment_hashes):
-            reactant_fragments.append(
-                (frozenset(fragments + [reactant_0.covalent_hash]), (-1, i) )
-            )
+                    reactant_fragment_indices_list.append([i,j])
 
 
     if reaction['number_of_products'] == 1:
-
         product = mols[reaction['products'][0]]
-        product_fragments = [ (frozenset([product.covalent_hash]), (-1) ) ]
-        for i, fragments in enumerate(product.fragment_hashes):
-            product_fragments.append(
-                (frozenset(fragments), (i) ))
+        for i in range(len(product.fragment_data)):
+            product_fragment_indices_list.append([i])
 
-    elif reaction['number_of_products'] == 2:
 
+    if reaction['number_of_products'] == 2:
         product_0 = mols[reaction['products'][0]]
         product_1 = mols[reaction['products'][1]]
+        for i in range(len(product_0.fragment_data)):
+            for j in range(len(product_1.fragment_data)):
+                if (product_0.fragment_data[i].number_of_bonds_broken +
+                    product_1.fragment_data[j].number_of_bonds_broken <= 1):
 
-        product_fragments = [
-            (frozenset([product_0.covalent_hash, product_1.covalent_hash]), (-1, -1))
-        ]
-
-        for i, fragments in enumerate(product_0.fragment_hashes):
-            product_fragments.append(
-                (frozenset(fragments + [product_1.covalent_hash]), (i, -1))
-            )
-
-        for i, fragments in enumerate(product_1.fragment_hashes):
-            product_fragments.append(
-                (frozenset(fragments + [product_0.covalent_hash]), (-1, i))
-            )
+                    product_fragment_indices_list.append([i,j])
 
 
-    for reactant_tag in reactant_fragments:
-        for product_tag in product_fragments:
-            if reactant_tag[0] == product_tag[0]:
-                reaction['reactant_fragments'] = reactant_tag[1]
-                reaction['product_fragments'] = product_tag[1]
+    for reactant_fragment_indices in reactant_fragment_indices_list:
+        for product_fragment_indices in product_fragment_indices_list:
+
+            reactant_hashes = set()
+            for reactant_index, frag_complex_index in enumerate(
+                    reactant_fragment_indices):
+
+                fragment_complex = mols[
+                    reaction['reactants'][reactant_index]].fragment_data[
+                        frag_complex_index]
+
+                for i in range(fragment_complex.number_of_fragments):
+                    reactant_hashes.add(
+                        fragment_complex.fragments[i].fragment_hash)
+
+
+            product_hashes = set()
+            for product_index, frag_complex_index in enumerate(
+                    product_fragment_indices):
+
+                fragment_complex = mols[
+                    reaction['products'][product_index]].fragment_data[
+                        frag_complex_index]
+
+                for i in range(fragment_complex.number_of_fragments):
+                    product_hashes.add(
+                        fragment_complex.fragments[i].fragment_hash)
+
+
+            if reactant_hashes == product_hashes:
+                reaction['reactant_fragments'] = reactant_fragment_indices
+                reaction['product_fragments'] = product_fragment_indices
                 return True
 
     return False

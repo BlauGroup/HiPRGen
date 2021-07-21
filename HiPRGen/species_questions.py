@@ -93,52 +93,70 @@ def add_star_hashes(mol):
 
     return False
 
+def add_unbroken_fragment(width, mol):
+    if mol.formula in m_formulas:
+        return False
 
-def add_fragment_hashes(width, mol):
+    non_metal_atoms = [
+        i for i in range(mol.num_atoms)
+        if mol.species[i] not in metals]
+
+    neighborhood_hashes = {}
+
+    for i in non_metal_atoms:
+        hash_list = []
+        for d in range(width):
+            neighborhood = nx.generators.ego.ego_graph(
+                mol.covalent_graph,
+                i,
+                d,
+                undirected=True)
+
+            neighborhood_hash = weisfeiler_lehman_graph_hash(
+                neighborhood,
+                node_attr='specie')
+
+            hash_list.append(neighborhood_hash)
+
+        neighborhood_hashes[i] = hash(tuple(hash_list))
+
+    fragment = Fragment(
+        mol.covalent_hash,
+        non_metal_atoms,
+        neighborhood_hashes)
+
+    fragment_complex = FragmentComplex(
+        1,
+        0,
+        [fragment])
+
+    mol.fragment_data.append(fragment_complex)
+
+    return False
+
+
+def add_single_bond_fragments(width, mol):
     if mol.formula in m_formulas:
         return False
 
 
-    for i in range(mol.num_atoms):
-        if mol.species[i] not in metals:
-            atom_mapping_hashes_list = []
-            for d in range(width):
-                neighborhood = nx.generators.ego.ego_graph(
-                    mol.covalent_graph,
-                    i,
-                    d,
-                    undirected=True)
-
-                neighborhood_hash = weisfeiler_lehman_graph_hash(
-                    neighborhood,
-                    node_attr='specie')
-
-                atom_mapping_hashes_list.append(neighborhood_hash)
-
-            mol.neighborhoods[i] = hash(tuple(atom_mapping_hashes_list))
-
-
-
-
-
     for edge in mol.covalent_graph.edges:
+        fragments = []
         h = copy.deepcopy(mol.covalent_graph)
         h.remove_edge(*edge)
         connected_components = nx.algorithms.components.connected_components(h)
-        fragment_hashes = []
-        fragment_neighborhoods = []
         for c in connected_components:
 
             subgraph = h.subgraph(c)
 
-            full_component_hash = weisfeiler_lehman_graph_hash(
+            fragment_hash = weisfeiler_lehman_graph_hash(
                 subgraph,
                 node_attr='specie')
 
 
-            atom_mapping_hashes = {}
+            neighborhood_hashes = {}
             for i in c:
-                atom_mapping_hashes_list = []
+                hash_list = []
                 for d in range(width):
                     neighborhood = nx.generators.ego.ego_graph(
                         subgraph,
@@ -150,15 +168,23 @@ def add_fragment_hashes(width, mol):
                         neighborhood,
                         node_attr='specie')
 
-                    atom_mapping_hashes_list.append(neighborhood_hash)
+                    hash_list.append(neighborhood_hash)
 
-                atom_mapping_hashes[i] = hash(tuple(atom_mapping_hashes_list))
+                neighborhood_hashes[i] = hash(tuple(hash_list))
 
-            fragment_hashes.append(full_component_hash)
-            fragment_neighborhoods.append(atom_mapping_hashes)
+            fragment = Fragment(
+                fragment_hash,
+                c,
+                neighborhood_hashes)
 
-        mol.fragment_neighborhoods.append(fragment_neighborhoods)
-        mol.fragment_hashes.append(fragment_hashes)
+            fragments.append(fragment)
+
+        fragment_complex = FragmentComplex(
+            len(fragments),
+            1,
+            fragments)
+
+        mol.fragment_data.append(fragment_complex)
 
     return False
 
@@ -222,6 +248,8 @@ def default_true(mol):
     return True
 
 
+fragment_neighborhood_width = 5
+
 standard_species_decision_tree = [
     (mol_not_connected, Terminal.DISCARD),
     (metal_ion_filter, Terminal.DISCARD),
@@ -229,7 +257,12 @@ standard_species_decision_tree = [
     (bad_metal_coordination, Terminal.DISCARD),
     (fix_hydrogen_bonding, Terminal.KEEP),
     (add_star_hashes, Terminal.KEEP),
-    (partial(add_fragment_hashes, 5), Terminal.KEEP),
+
+    (partial(add_unbroken_fragment,
+             fragment_neighborhood_width), Terminal.KEEP),
+    (partial(add_single_bond_fragments,
+             fragment_neighborhood_width), Terminal.KEEP),
+
     (default_true, Terminal.KEEP)
     ]
 

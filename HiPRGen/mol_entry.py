@@ -26,6 +26,32 @@ max_number_of_coordination_bonds = {
     "Li" : 4,
     }
 
+
+class Fragment:
+    def __init__(
+            self,
+            fragment_hash,
+            atom_ids,
+            neighborhood_hashes):
+
+        self.fragment_hash = fragment_hash
+        self.atom_ids = atom_ids
+        self.neighborhood_hashes = neighborhood_hashes
+
+
+class FragmentComplex:
+
+    def __init__(
+            self,
+            number_of_fragments,
+            number_of_bonds_broken,
+            fragments):
+
+        self.number_of_fragments = number_of_fragments
+        self.number_of_bonds_broken = number_of_bonds_broken
+        self.fragments = fragments
+
+
 class MoleculeEntry(MSONable):
     """
     A molecule entry class to provide easy access to Molecule properties.
@@ -56,14 +82,11 @@ class MoleculeEntry(MSONable):
 
 
         self.ind = None
+        self.entry_id = entry_id
 
         self.star_hashes = {}
-        self.fragment_hashes = []
-        self.fragment_neighborhoods = []
-        self.neighborhoods = {}
+        self.fragment_data = []
 
-
-        self.entry_id = entry_id
 
         if not mol_graph:
             mol_graph = MoleculeGraph.with_local_env_strategy(molecule, OpenBabelNN())
@@ -108,50 +131,6 @@ class MoleculeEntry(MSONable):
         self.solvation_free_energy = self.get_solvation_free_energy()
 
 
-
-    @classmethod
-    def from_molecule_document(
-        cls,
-        mol_doc: Dict,
-    ):
-        """
-        Initialize a MoleculeEntry from a molecule document.
-
-        Args:
-            mol_doc: MongoDB molecule document (nested dictionary) that contains the
-                molecule information.
-        """
-        try:
-            if isinstance(mol_doc["molecule"], Molecule):
-                molecule = mol_doc["molecule"]
-            else:
-                molecule = Molecule.from_dict(mol_doc["molecule"])  # type: ignore
-            energy = mol_doc["energy_Ha"]
-            enthalpy = mol_doc["enthalpy_kcal/mol"]
-            entropy = mol_doc["entropy_cal/molK"]
-            entry_id = mol_doc["task_id"]
-        except KeyError as e:
-            raise MoleculeEntryError(
-                "Unable to construct molecule entry from molecule document; missing "
-                f"attribute {e} in `mol_doc`."
-            )
-
-        if "mol_graph" in mol_doc:
-            if isinstance(mol_doc["mol_graph"], MoleculeGraph):
-                mol_graph = mol_doc["mol_graph"]
-            else:
-                mol_graph = MoleculeGraph.from_dict(mol_doc["mol_graph"])
-        else:
-            mol_graph = None
-
-        return cls(
-            molecule=molecule,
-            energy=energy,
-            enthalpy=enthalpy,
-            entropy=entropy,
-            entry_id=entry_id,
-            mol_graph=mol_graph,
-        )
 
     @classmethod
     def from_dataset_entry(
