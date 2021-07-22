@@ -127,6 +127,7 @@ def add_unbroken_fragment(width, mol):
     fragment_complex = FragmentComplex(
         1,
         0,
+        [],
         [fragment])
 
     mol.fragment_data.append(fragment_complex)
@@ -184,6 +185,7 @@ def add_single_bond_fragments(width, mol):
         fragment_complex = FragmentComplex(
             len(fragments),
             1,
+            [edge[0:2]],
             fragments)
 
         mol.fragment_data.append(fragment_complex)

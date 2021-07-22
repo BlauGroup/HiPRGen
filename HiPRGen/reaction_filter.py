@@ -222,6 +222,7 @@ def dispatcher(
             report_generator.emit_verbatim(
                 '\n'.join([str(f) for f in decision_path]))
             report_generator.emit_reaction(reaction)
+            report_generator.emit_bond_breakage(reaction)
             report_generator.emit_newline()
 
 

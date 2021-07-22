@@ -125,10 +125,12 @@ class FragmentComplex:
             self,
             number_of_fragments,
             number_of_bonds_broken,
+            bonds_broken,
             fragments):
 
         self.number_of_fragments = number_of_fragments
         self.number_of_bonds_broken = number_of_bonds_broken
+        self.bonds_broken = bonds_broken
         self.fragments = fragments
 
 

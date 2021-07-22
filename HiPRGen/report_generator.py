@@ -87,6 +87,7 @@ class ReportGenerator:
         self.f.write("\\usepackage{amsmath}\n")
         self.f.write("\\pagenumbering{gobble}\n")
         self.f.write("\\begin{document}\n")
+        self.f.write("\\setlength\\parindent{0pt}\n")
 
     def finished(self):
         self.f.write("\\end{document}")
@@ -168,4 +169,17 @@ class ReportGenerator:
             self.emit_molecule(product_index)
 
         self.f.write("$$")
+        self.f.write("\n\n\n")
+
+    def emit_bond_breakage(self, reaction):
+        if 'reactant_bonds_broken' in reaction:
+            self.f.write("reactant bonds broken:")
+            for bond in reaction['reactant_bonds_broken']:
+                self.emit_verbatim(str(bond))
+
+        if 'product_bonds_broken' in reaction:
+            self.f.write("product bonds broken:")
+            for bond in reaction['product_bonds_broken']:
+                self.emit_verbatim(str(bond))
+
         self.f.write("\n\n\n")

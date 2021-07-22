@@ -307,6 +307,8 @@ def fragment_matching_found(reaction, mols, params):
         for product_fragment_indices in product_fragment_indices_list:
             reactant_fragment_count = 0
             product_fragment_count = 0
+            reactant_bonds_broken = []
+            product_bonds_broken = []
 
             reactant_hashes = set()
             for reactant_index, frag_complex_index in enumerate(
@@ -315,6 +317,9 @@ def fragment_matching_found(reaction, mols, params):
                 fragment_complex = mols[
                     reaction['reactants'][reactant_index]].fragment_data[
                         frag_complex_index]
+
+                for bond in fragment_complex.bonds_broken:
+                    reactant_bonds_broken.append([(reactant_index, x) for x in bond])
 
                 for i in range(fragment_complex.number_of_fragments):
                     reactant_fragment_count += 1
@@ -329,6 +334,10 @@ def fragment_matching_found(reaction, mols, params):
                 fragment_complex = mols[
                     reaction['products'][product_index]].fragment_data[
                         frag_complex_index]
+
+                for bond in fragment_complex.bonds_broken:
+                    product_bonds_broken.append([(product_index, x) for x in bond])
+
 
                 for i in range(fragment_complex.number_of_fragments):
                     product_fragment_count += 1
@@ -345,6 +354,8 @@ def fragment_matching_found(reaction, mols, params):
             if reactant_hashes == product_hashes:
                 reaction['reactant_fragments'] = reactant_fragment_indices
                 reaction['product_fragments'] = product_fragment_indices
+                reaction['reactant_bonds_broken'] = reactant_bonds_broken
+                reaction['product_bonds_broken'] = product_bonds_broken
                 return True
 
     return False
