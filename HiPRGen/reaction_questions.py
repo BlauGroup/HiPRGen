@@ -352,7 +352,7 @@ def compute_atom_mapping(reaction, mols, params):
             tag = fragment.fragment_hash
 
             if tag in reactant_fragments:
-                tag = tag + '1'
+                tag = tag + '%'
 
             reactant_fragments[tag] = (i,fragment)
 
@@ -364,8 +364,8 @@ def compute_atom_mapping(reaction, mols, params):
         for fragment in fragment_complex.fragments:
             tag = fragment.fragment_hash
 
-            if tag in reactant_fragments:
-                tag = tag + '1'
+            if tag in product_fragments:
+                tag = tag + '%'
 
             product_fragments[tag] = (j,fragment)
 
