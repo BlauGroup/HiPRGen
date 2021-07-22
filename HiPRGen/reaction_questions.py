@@ -304,6 +304,8 @@ def fragment_matching_found(reaction, mols, params):
 
     for reactant_fragment_indices in reactant_fragment_indices_list:
         for product_fragment_indices in product_fragment_indices_list:
+            reactant_fragment_count = 0
+            product_fragment_count = 0
 
             reactant_hashes = set()
             for reactant_index, frag_complex_index in enumerate(
@@ -314,6 +316,7 @@ def fragment_matching_found(reaction, mols, params):
                         frag_complex_index]
 
                 for i in range(fragment_complex.number_of_fragments):
+                    reactant_fragment_count += 1
                     reactant_hashes.add(
                         fragment_complex.fragments[i].fragment_hash)
 
@@ -327,9 +330,16 @@ def fragment_matching_found(reaction, mols, params):
                         frag_complex_index]
 
                 for i in range(fragment_complex.number_of_fragments):
+                    product_fragment_count += 1
                     product_hashes.add(
                         fragment_complex.fragments[i].fragment_hash)
 
+            # don't consider fragmentations with both a ring opening and closing
+            if (reaction['number_of_reactants'] == 2 and
+                reaction['number_of_products'] == 2 and
+                reactant_fragment_count == 2 and
+                product_fragment_count == 2):
+                continue
 
             if reactant_hashes == product_hashes:
                 reaction['reactant_fragments'] = reactant_fragment_indices
@@ -511,4 +521,35 @@ minimal_reaction_decision_tree = [
     ]
 
 
-standard_logging_decision_tree = Terminal.DISCARD
+standard_logging_decision_tree = [
+    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+
+    # redox branch
+    (is_redox_reaction, [
+
+        (too_many_reactants_or_products, Terminal.DISCARD),
+        (dcharge_too_large, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (default_true, Terminal.DISCARD)
+    ]),
+
+    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
+
+    (reaction_is_covalent_decomposable, Terminal.DISCARD),
+
+    (concerted_metal_coordination, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_product, Terminal.DISCARD),
+
+    (metal_coordination_passthrough, Terminal.DISCARD),
+
+    (fragment_matching_found, [
+
+        (atom_mapping, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)
+    ]),
+
+    (default_true, Terminal.DISCARD)
+    ]
+
+

@@ -12,11 +12,10 @@ params={
     }
 
 reaction = {
-    'number_of_reactants' : 1,
-    'number_of_products' : 1,
-    'reactants' : [54],
-    'products' : [53]
+    'number_of_reactants' : 2,
+    'number_of_products' : 2,
+    'reactants' : [29, 161],
+    'products' : [32, 160]
 }
 
-m54 = network_loader.mol_entries[54]
-m53 = network_loader.mol_entries[53]
+fragment_matching_found(reaction, network_loader.mol_entries, params)
