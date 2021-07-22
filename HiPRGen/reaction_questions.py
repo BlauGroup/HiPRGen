@@ -1,6 +1,7 @@
 import math
 from HiPRGen.mol_entry import *
 from functools import partial
+import itertools
 from HiPRGen.constants import *
 
 """
@@ -349,14 +350,14 @@ def fragment_matching_found(reaction, mols, params):
     return False
 
 
+
+
+
 def atom_mapping(reaction, mols, params):
 
-    # NOTE: currently, this filter chooses a single matching of fragments.
-    # in the edge case where there are two identical fragments, we don't
-    # explore all atom mappings.
 
-    reactant_fragments = {}
-    product_fragments = {}
+    # compute all ways to match up the fragments and store in fragment_mappings
+    fragments_by_hash = {}
     bond_change = 0
 
     for i in range(reaction['number_of_reactants']):
@@ -369,10 +370,10 @@ def atom_mapping(reaction, mols, params):
         for fragment in fragment_complex.fragments:
             tag = fragment.fragment_hash
 
-            if tag in reactant_fragments:
-                tag = tag + '%'
+            if tag not in fragments_by_hash:
+                fragments_by_hash[tag] = ([],[])
 
-            reactant_fragments[tag] = (i,fragment)
+            fragments_by_hash[tag][0].append((i,fragment))
 
 
     for j in range(reaction['number_of_products']):
@@ -382,64 +383,78 @@ def atom_mapping(reaction, mols, params):
 
         bond_change += fragment_complex.number_of_bonds_broken
 
+
         for fragment in fragment_complex.fragments:
             tag = fragment.fragment_hash
 
-            if tag in product_fragments:
-                tag = tag + '%'
+            if tag not in fragments_by_hash:
+                fragments[tag] = ([],[])
 
-            product_fragments[tag] = (j,fragment)
+            fragments_by_hash[tag][1].append((j,fragment))
+
+    fragments = fragments_by_hash.values()
+    product_sym_iterator = itertools.product(*[
+        sym_iterator(len(f[0])) for
+        f in fragments ])
+
+    fragment_mappings = []
+    for product_perm in product_sym_iterator:
+        fragment_mapping = []
+        for perm, matching_fragments in zip(product_perm, fragments):
+            for i, j in enumerate(perm):
+                fragment_mapping.append(
+                    (matching_fragments[0][i],
+                     matching_fragments[1][j]))
+
+        fragment_mappings.append(fragment_mapping)
 
 
-    mapping_parts = []
+    for fragment_mapping in fragment_mappings:
+        atom_mapping_parts = []
+
+        # if only 1 bond is changing, we don't need to enforce reaction center
+        if bond_change < 2:
+            hot_found = True
+        else:
+            hot_found = False
 
 
-    # if only 1 bond is changing, we don't need to enforce reaction center
-    if bond_change < 2:
-        hot_found = True
-    else:
-        hot_found = False
+        for (i, fragment_1), (j,fragment_2) in fragment_mapping:
 
+            if hot_found:
+                mapping = find_fragment_atom_mappings(
+                    fragment_1,
+                    fragment_2,
+                    return_one=True)[0]
 
-    for key in reactant_fragments:
-        i, fragment_1 = reactant_fragments[key]
-        j, fragment_2 = product_fragments[key]
+                atom_mapping_parts.append((i,j,mapping))
+
+            else:
+                all_mappings = find_fragment_atom_mappings(
+                    fragment_1,
+                    fragment_2)
+
+                hot_preserving_mapping = find_hot_atom_preserving_fragment_map(
+                    fragment_1,
+                    fragment_2,
+                    all_mappings)
+
+                if hot_preserving_mapping is not None:
+                    atom_mapping_parts.append((i,j,hot_preserving_mapping))
+                    hot_found = True
+                else:
+                    atom_mapping_parts.append((i,j,all_mappings[0]))
 
         if hot_found:
-            mapping = find_fragment_atom_mappings(
-                fragment_1,
-                fragment_2,
-                return_one=True)[0]
+            combined_map = {}
+            for i, j, mapping in atom_mapping_parts:
+                for atom_index in mapping.keys():
+                    combined_map[(i,atom_index)] = (j, mapping[atom_index])
 
-            mapping_parts.append((i,j,mapping))
+            reaction['atom_map'] = combined_map
+            return True
 
-        else:
-            all_mappings = find_fragment_atom_mappings(
-                fragment_1,
-                fragment_2)
-
-            hot_preserving_mapping = find_hot_atom_preserving_fragment_map(
-                fragment_1,
-                fragment_2,
-                all_mappings)
-
-            if hot_preserving_mapping is not None:
-                mapping_parts.append((i,j,hot_preserving_mapping))
-                hot_found = True
-            else:
-                mapping_parts.append((i,j,all_mappings[0]))
-
-    if hot_found:
-        combined_map = {}
-        for i, j, mapping in mapping_parts:
-            for atom_index in mapping.keys():
-                combined_map[(i,atom_index)] = (j, mapping[atom_index])
-
-        reaction['atom_map'] = combined_map
-        return True
-
-    else:
-        return False
+    return False
 
 
 
@@ -521,35 +536,4 @@ minimal_reaction_decision_tree = [
     ]
 
 
-standard_logging_decision_tree = [
-    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
-
-    # redox branch
-    (is_redox_reaction, [
-
-        (too_many_reactants_or_products, Terminal.DISCARD),
-        (dcharge_too_large, Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
-        (default_true, Terminal.DISCARD)
-    ]),
-
-    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
-
-    (reaction_is_covalent_decomposable, Terminal.DISCARD),
-
-    (concerted_metal_coordination, Terminal.DISCARD),
-
-    (concerted_metal_coordination_one_product, Terminal.DISCARD),
-
-    (metal_coordination_passthrough, Terminal.DISCARD),
-
-    (fragment_matching_found, [
-
-        (atom_mapping, Terminal.DISCARD),
-        (default_true, Terminal.KEEP)
-    ]),
-
-    (default_true, Terminal.DISCARD)
-    ]
-
-
+standard_logging_decision_tree = Terminal.DISCARD

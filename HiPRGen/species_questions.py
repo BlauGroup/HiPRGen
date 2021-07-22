@@ -252,12 +252,15 @@ def default_true(mol):
 
 fragment_neighborhood_width = 5
 
+# any species filter which modifies bonding has to come before
+# any filter checking for connectivity (which includes the metal-centric complex filter)
+
 standard_species_decision_tree = [
-    (mol_not_connected, Terminal.DISCARD),
-    (metal_ion_filter, Terminal.DISCARD),
-    (metal_complex, Terminal.DISCARD),
-    (bad_metal_coordination, Terminal.DISCARD),
     (fix_hydrogen_bonding, Terminal.KEEP),
+    (metal_ion_filter, Terminal.DISCARD),
+    (bad_metal_coordination, Terminal.DISCARD),
+    (mol_not_connected, Terminal.DISCARD),
+    (metal_complex, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
 
     (partial(add_unbroken_fragment,
