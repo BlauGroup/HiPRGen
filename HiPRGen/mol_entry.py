@@ -49,7 +49,7 @@ def sym_iterator(n):
     return permutations(range(n), r=n)
 
 
-def find_fragment_atom_mappings(fragment_1, fragment_2):
+def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=False):
     groups_by_hash = {}
 
     for left_index in fragment_1.atom_ids:
@@ -94,6 +94,9 @@ def find_fragment_atom_mappings(fragment_1, fragment_2):
 
         if isomorphism:
             mappings.append(mapping)
+
+            if return_one:
+                return mappings
 
     return mappings
 

@@ -340,7 +340,67 @@ def fragment_matching_found(reaction, mols, params):
 
 
 def compute_atom_mapping(reaction, mols, params):
-    pass
+
+    #TODO: deal with case when there are identical fragments
+    reactant_fragments = {}
+    product_fragments = {}
+
+    for i in range(reaction['number_of_reactants']):
+        reactant = mols[reaction['reactants'][i]]
+        fragment_complex = reactant.fragment_data[
+            reaction['reactant_fragments'][i]]
+        for fragment in fragment_complex.fragments:
+            reactant_fragments[fragment.fragment_hash] = (i,fragment)
+
+
+    for j in range(reaction['number_of_products']):
+        product = mols[reaction['products'][j]]
+        fragment_complex = product.fragment_data[
+            reaction['product_fragments'][j]]
+        for fragment in fragment_complex.fragments:
+            product_fragments[fragment.fragment_hash] = (j,fragment)
+
+
+    mapping_parts = []
+    hot_found = False
+    for key in reactant_fragments:
+        i, fragment_1 = reactant_fragments[key]
+        j, fragment_2 = product_fragments[key]
+
+        if hot_found:
+            mapping = find_fragment_atom_mappings(
+                fragment_1,
+                fragment_2,
+                return_one=True)[0]
+
+            mapping_parts.append((i,j,mapping))
+
+        else:
+            all_mappings = find_fragment_atom_mappings(
+                fragment_1,
+                fragment_2)
+
+            hot_preserving_mapping = find_hot_atom_preserving_fragment_map(
+                fragment_1,
+                fragment_2,
+                all_mappings)
+
+            if hot_preserving_mapping is not None:
+                mapping_parts.append((i,j,hot_preserving_mapping))
+                hot_found = True
+            else:
+                mapping_parts.append((i,j,all_mappings[0]))
+
+    if hot_found:
+        combined_map = {}
+        for i, j, mapping in mapping_parts:
+            for atom_index in mapping.keys():
+                combined_map[(i,atom_index)] = (j, mapping[atom_index])
+
+        return combined_map
+
+    else:
+        return None
 
 
 
