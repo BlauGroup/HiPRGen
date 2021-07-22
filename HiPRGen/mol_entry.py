@@ -49,8 +49,7 @@ def sym_iterator(n):
     return permutations(range(n), r=n)
 
 
-def find_fragment_atom_mapping(fragment_1, fragment_2, hot_preserving=False):
-
+def find_fragment_atom_mappings(fragment_1, fragment_2):
     groups_by_hash = {}
 
     for left_index in fragment_1.atom_ids:
@@ -77,15 +76,43 @@ def find_fragment_atom_mapping(fragment_1, fragment_2, hot_preserving=False):
         p in groups ])
 
     mappings = []
+
     for product_perm in product_sym_iterator:
         mapping = {}
         for perm, vals in zip(product_perm, groups):
             for i, j in enumerate(perm):
                 mapping[vals[0][i]] = vals[1][j]
 
-        maggings.append(mapping)
-        #TODO: validate mapping is an iso
-        #TODO: check if we preserve a hot atom
+        isomorphism = True
+        for edge in fragment_1.graph.edges:
+            u = mapping[edge[0]]
+            v = mapping[edge[1]]
+            if not fragment_2.graph.has_edge(u,v):
+                isomorphism = False
+                break
+
+
+        if isomorphism:
+            mappings.append(mapping)
+
+    return mappings
+
+def find_hot_atom_preserving_fragment_map(
+        fragment_1,
+        fragment_2,
+        mappings):
+
+    for mapping in mappings:
+        hot_atom_preserving = False
+        for hot_atom in fragment_1.hot_atoms:
+            if mapping[hot_atom] in fragment_2.hot_atoms:
+                hot_atom_preserving = True
+                break
+
+        if hot_atom_preserving:
+            return mapping
+
+    return None
 
 
 
