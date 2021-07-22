@@ -341,13 +341,21 @@ def fragment_matching_found(reaction, mols, params):
 
 def atom_mapping(reaction, mols, params):
 
+    # NOTE: currently, this filter chooses a single matching of fragments.
+    # in the edge case where there are two identical fragments, we don't
+    # explore all atom mappings.
+
     reactant_fragments = {}
     product_fragments = {}
+    bond_change = 0
 
     for i in range(reaction['number_of_reactants']):
         reactant = mols[reaction['reactants'][i]]
         fragment_complex = reactant.fragment_data[
             reaction['reactant_fragments'][i]]
+
+        bond_change += fragment_complex.number_of_bonds_broken
+
         for fragment in fragment_complex.fragments:
             tag = fragment.fragment_hash
 
@@ -361,6 +369,9 @@ def atom_mapping(reaction, mols, params):
         product = mols[reaction['products'][j]]
         fragment_complex = product.fragment_data[
             reaction['product_fragments'][j]]
+
+        bond_change += fragment_complex.number_of_bonds_broken
+
         for fragment in fragment_complex.fragments:
             tag = fragment.fragment_hash
 
@@ -371,7 +382,15 @@ def atom_mapping(reaction, mols, params):
 
 
     mapping_parts = []
-    hot_found = False
+
+
+    # if only 1 bond is changing, we don't need to enforce reaction center
+    if bond_change < 2:
+        hot_found = True
+    else:
+        hot_found = False
+
+
     for key in reactant_fragments:
         i, fragment_1 = reactant_fragments[key]
         j, fragment_2 = product_fragments[key]
@@ -475,7 +494,11 @@ standard_reaction_decision_tree = [
 
     (metal_coordination_passthrough, Terminal.KEEP),
 
-    (fragment_matching_found, Terminal.KEEP),
+    (fragment_matching_found, [
+
+        (atom_mapping, Terminal.KEEP),
+        (default_true, Terminal.DISCARD)
+    ]),
 
     (default_true, Terminal.DISCARD)
     ]

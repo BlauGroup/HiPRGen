@@ -12,13 +12,11 @@ params={
     }
 
 reaction = {
-    'number_of_reactants' : 2,
-    'number_of_products' : 2,
-    'reactants' : [53,53],
-    'products' : [10,191]
+    'number_of_reactants' : 1,
+    'number_of_products' : 1,
+    'reactants' : [54],
+    'products' : [53]
 }
 
+m54 = network_loader.mol_entries[54]
 m53 = network_loader.mol_entries[53]
-m191 = network_loader.mol_entries[191]
-f0=m53.fragment_data[4].fragments[1]
-f1=m191.fragment_data[0].fragments[0]
