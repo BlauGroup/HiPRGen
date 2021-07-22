@@ -339,7 +339,7 @@ def fragment_matching_found(reaction, mols, params):
     return False
 
 
-def compute_atom_mapping(reaction, mols, params):
+def atom_mapping(reaction, mols, params):
 
     reactant_fragments = {}
     product_fragments = {}
@@ -406,10 +406,11 @@ def compute_atom_mapping(reaction, mols, params):
             for atom_index in mapping.keys():
                 combined_map[(i,atom_index)] = (j, mapping[atom_index])
 
-        return combined_map
+        reaction['atom_map'] = combined_map
+        return True
 
     else:
-        return None
+        return False
 
 
 
