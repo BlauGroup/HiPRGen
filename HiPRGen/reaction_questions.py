@@ -341,7 +341,6 @@ def fragment_matching_found(reaction, mols, params):
 
 def compute_atom_mapping(reaction, mols, params):
 
-    #TODO: deal with case when there are identical fragments
     reactant_fragments = {}
     product_fragments = {}
 
@@ -350,7 +349,12 @@ def compute_atom_mapping(reaction, mols, params):
         fragment_complex = reactant.fragment_data[
             reaction['reactant_fragments'][i]]
         for fragment in fragment_complex.fragments:
-            reactant_fragments[fragment.fragment_hash] = (i,fragment)
+            tag = fragment.fragment_hash
+
+            if tag in reactant_fragments:
+                tag = tag + '1'
+
+            reactant_fragments[tag] = (i,fragment)
 
 
     for j in range(reaction['number_of_products']):
@@ -358,7 +362,12 @@ def compute_atom_mapping(reaction, mols, params):
         fragment_complex = product.fragment_data[
             reaction['product_fragments'][j]]
         for fragment in fragment_complex.fragments:
-            product_fragments[fragment.fragment_hash] = (j,fragment)
+            tag = fragment.fragment_hash
+
+            if tag in reactant_fragments:
+                tag = tag + '1'
+
+            product_fragments[tag] = (j,fragment)
 
 
     mapping_parts = []
