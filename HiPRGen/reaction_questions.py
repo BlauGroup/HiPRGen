@@ -310,7 +310,7 @@ def fragment_matching_found(reaction, mols, params):
             reactant_bonds_broken = []
             product_bonds_broken = []
 
-            reactant_hashes = set()
+            reactant_hashes = dict()
             for reactant_index, frag_complex_index in enumerate(
                     reactant_fragment_indices):
 
@@ -323,11 +323,13 @@ def fragment_matching_found(reaction, mols, params):
 
                 for i in range(fragment_complex.number_of_fragments):
                     reactant_fragment_count += 1
-                    reactant_hashes.add(
-                        fragment_complex.fragments[i].fragment_hash)
+                    tag = fragment_complex.fragments[i].fragment_hash
+                    if tag in reactant_hashes:
+                        reactant_hashes[tag] += 1
+                    else:
+                        reactant_hashes[tag] = 1
 
-
-            product_hashes = set()
+            product_hashes = dict()
             for product_index, frag_complex_index in enumerate(
                     product_fragment_indices):
 
@@ -341,8 +343,12 @@ def fragment_matching_found(reaction, mols, params):
 
                 for i in range(fragment_complex.number_of_fragments):
                     product_fragment_count += 1
-                    product_hashes.add(
-                        fragment_complex.fragments[i].fragment_hash)
+                    tag = fragment_complex.fragments[i].fragment_hash
+                    if tag in product_hashes:
+                        product_hashes[tag] += 1
+                    else:
+                        product_hashes[tag] = 1
+
 
             # don't consider fragmentations with both a ring opening and closing
             if (reaction['number_of_reactants'] == 2 and
