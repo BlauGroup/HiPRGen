@@ -113,6 +113,7 @@ def species_filter(
     # than other more realistic lithomers.
 
     for i, mol in enumerate(mol_entries_unfiltered):
+        log_message("filtering " + mol.entry_id)
         decision_pathway = []
         if run_decision_tree(mol, species_decision_tree, decision_pathway):
             mol_entries_filtered.append(mol)
