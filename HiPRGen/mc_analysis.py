@@ -262,3 +262,67 @@ def sink_report(
 
 
     report_generator.finished()
+
+
+def consumption_report(
+        network_loader,
+        species_index,
+        consumption_report_path
+):
+
+
+    producing_reactions = {}
+    consuming_reactions = {}
+
+    for seed in network_loader.trajectories:
+        for step in network_loader.trajectories[seed]:
+            reaction_index = network_loader.trajectories[seed][step][0]
+
+            reaction = network_loader.index_to_reaction(reaction_index)
+
+            for i in range(reaction['number_of_reactants']):
+                reactant_index = reaction['reactants'][i]
+                if reactant_index == species_index:
+                    if reaction_index not in consuming_reactions:
+                        consuming_reactions[reaction_index] = 1
+                    else:
+                        consuming_reactions[reaction_index] += 1
+
+
+
+            for j in range(reaction['number_of_products']):
+                product_index = reaction['products'][j]
+                if product_index == species_index:
+                    if reaction_index not in producing_reactions:
+                        producing_reactions[reaction_index] = 1
+                    else:
+                        producing_reactions[reaction_index] += 1
+
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        consumption_report_path,
+        rebuild_mol_pictures=False)
+
+
+    report_generator.emit_text("consuming reactions:")
+    for (reaction_index, number) in sorted(
+            consuming_reactions.items(),
+            key=lambda item: -item[1]):
+
+        reaction = network_loader.index_to_reaction(reaction_index)
+        report_generator.emit_text(str(number) + " occourances:")
+        report_generator.emit_reaction(reaction)
+
+
+    report_generator.emit_text("producing reactions:")
+    for (reaction_index, number) in sorted(
+            producing_reactions.items(),
+            key=lambda item: -item[1]):
+
+        reaction = network_loader.index_to_reaction(reaction_index)
+        report_generator.emit_text(str(number) + " occourances:")
+        report_generator.emit_reaction(reaction)
+
+
+    report_generator.finished()

@@ -2,6 +2,7 @@ import sys
 from HiPRGen.reaction_filter import *
 import pickle
 from mpi4py import MPI
+from HiPRGen.constants import *
 
 
 # python run_network_generation.py mol_entries_pickle_file bucket_db_file rn_db_location generation_report_location
@@ -25,4 +26,8 @@ if rank == DISPATCHER_RANK:
 else:
     worker(mol_entries,
            bucket_db_file,
+        params={
+            'temperature' : ROOM_TEMP,
+            'electron_free_energy' : -1.4
+            }
            )

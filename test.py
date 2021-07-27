@@ -62,6 +62,9 @@ def test_mc_pathfinding(network_loader):
 
     species_report(network_loader, './scratch/species_report.tex')
     sink_report(network_loader, './scratch/sink_report.tex')
+    consumption_report(network_loader,
+                       LEDC_id,
+                       './scratch/LEDC_consumption_report.tex')
 
 
 test_mc_pathfinding(network_loader)
