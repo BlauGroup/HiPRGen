@@ -272,6 +272,17 @@ def sink_report(
             report_generator.emit_newline()
 
 
+    counter = 0
+    report_generator.emit_newpage()
+    report_generator.emit_text("species not produced")
+    for species_index, (c,p,r) in sink_data:
+        counter += 1
+        if c[0] + p[0] == 0:
+            report_generator.emit_molecule(species_index)
+            if counter % 4 == 0:
+                report_generator.emit_newline()
+
+
     report_generator.finished()
 
 
