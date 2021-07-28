@@ -217,8 +217,15 @@ def sink_report(
         sink_report_path
 ):
 
-    consumed_dict = [0] * network_loader.number_of_species
-    produced_dict = [0] * network_loader.number_of_species
+
+    consumed_dict = [[0,{}] for i in
+                     range(network_loader.number_of_species)]
+
+    produced_dict = [[0,{}] for i in
+                     range(network_loader.number_of_species)]
+
+
+
     for seed in network_loader.trajectories:
         for step in network_loader.trajectories[seed]:
             reaction_index = network_loader.trajectories[seed][step][0]
@@ -227,18 +234,20 @@ def sink_report(
 
             for i in range(reaction['number_of_reactants']):
                 reactant_index = reaction['reactants'][i]
-                consumed_dict[reactant_index] += 1
+                consumed_dict[reactant_index][0] += 1
+                consumed_dict[reactant_index][1][reaction_index] = True
 
             for j in range(reaction['number_of_products']):
                 product_index = reaction['products'][j]
-                produced_dict[product_index] += 1
+                produced_dict[product_index][0] += 1
+                produced_dict[product_index][1][reaction_index] = True
 
     max_ratio = 1e10
     ratio_dict = [max_ratio] * network_loader.number_of_species
 
     for i in range(network_loader.number_of_species):
-        if consumed_dict[i] != 0:
-            ratio_dict[i] = produced_dict[i] / consumed_dict[i]
+        if consumed_dict[i][0] != 0:
+            ratio_dict[i] = produced_dict[i][0] / consumed_dict[i][0]
 
 
     sink_data = sorted(
@@ -253,10 +262,12 @@ def sink_report(
         rebuild_mol_pictures=False)
 
     for species_index, (c,p,r) in sink_data:
-        if c + p > 0:
+        if c[0] + p[0] > 0:
             report_generator.emit_text("ratio: " + str(r))
-            report_generator.emit_text("produced: " + str(p))
-            report_generator.emit_text("consumed: " + str(c))
+            report_generator.emit_text("produced: " + str(p[0]))
+            report_generator.emit_text(str(len(p[1])) + " distinct producing reactions")
+            report_generator.emit_text("consumed: " + str(c[0]))
+            report_generator.emit_text(str(len(c[1])) + " distinct consuming reactions")
             report_generator.emit_molecule(species_index)
             report_generator.emit_newline()
 

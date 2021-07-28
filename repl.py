@@ -1,5 +1,6 @@
 from HiPRGen.network_loader import *
 from HiPRGen.reaction_questions import *
+from HiPRGen.mc_analysis import *
 
 network_loader = NetworkLoader(
     './scratch/rn.sqlite',
