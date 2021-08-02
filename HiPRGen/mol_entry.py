@@ -190,7 +190,6 @@ class MoleculeEntry(MSONable):
             i for i, x in enumerate(self.species) if x in metals
         ]
 
-
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
 
@@ -213,15 +212,15 @@ class MoleculeEntry(MSONable):
 
 
         self.number_of_coordination_bonds = 0
-        self.number_of_coordination_bonds = 0
         self.free_energy = self.get_free_energy()
         self.solvation_free_energy = self.get_solvation_free_energy()
+
+        if solvation_correction is None:
+            self.set_coordination()
 
         self.non_metal_atoms = [
             i for i in range(self.num_atoms)
             if self.species[i] not in metals]
-
-
 
 
     @classmethod
@@ -353,9 +352,9 @@ class MoleculeEntry(MSONable):
             species = self.species[i]
             partial_charge = self.partial_charges_mulliken[i]
 
-            if 0.5 <= partial_charge < 1.25:
+            if 0.4 <= partial_charge < 1.2:
                 effective_charge = "_1"
-            elif partial_charge >= 1.25:
+            elif partial_charge >= 1.2:
                 effective_charge = "_2"
             else:
                 # Not a cation - no correction available currently
@@ -370,7 +369,6 @@ class MoleculeEntry(MSONable):
                     displacement_vector = (
                         self.atom_locations[j] -
                         self.atom_locations[i])
-
                     if (np.inner(displacement_vector, displacement_vector)
                         < radius ** 2 and (
                             self.partial_charges_resp[j] < 0 or
@@ -385,6 +383,37 @@ class MoleculeEntry(MSONable):
 
         return correction + self.free_energy
 
+    def set_coordination(self):
+        for i in self.m_inds:
+
+            species = self.species[i]
+            partial_charge = self.partial_charges_mulliken[i]
+
+            if 0.4 <= partial_charge < 1.2:
+                effective_charge = "_1"
+            elif partial_charge >= 1.2:
+                effective_charge = "_2"
+            else:
+                # Not a cation - no correction available currently
+                continue
+
+            coordination_partners = list()
+            species_charge = species + effective_charge
+            radius = coordination_radius[species_charge]
+
+            for j in range(self.num_atoms):
+                if j != i:
+                    displacement_vector = (
+                        self.atom_locations[j] -
+                        self.atom_locations[i])
+                    if (np.inner(displacement_vector, displacement_vector)
+                        < radius ** 2 and (
+                            self.partial_charges_resp[j] < 0 or
+                            self.partial_charges_mulliken[j] < 0)):
+                        coordination_partners.append(j)
+
+            number_of_coordination_bonds = len(coordination_partners)
+            self.number_of_coordination_bonds += number_of_coordination_bonds
 
     def __repr__(self):
 

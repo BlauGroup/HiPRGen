@@ -237,6 +237,41 @@ def fix_hydrogen_bonding(mol):
     return False
 
 
+def fix_hydrogen_bonding_length(mol):
+
+    # TODO: Make this user-defined?
+    max_dist = 1.5
+
+    if mol.num_atoms > 1:
+        for i in range(mol.num_atoms):
+            if mol.species[i] == 'H':
+
+                adjacent_atoms = []
+
+                for bond in mol.graph.edges:
+                    if i in bond[0:2]:
+
+                        if i == bond[0]:
+                            adjacent_atom = bond[1]
+                        else:
+                            adjacent_atom = bond[0]
+
+                        displacement = (mol.atom_locations[adjacent_atom] -
+                                        mol.atom_locations[i])
+
+                        dist = np.inner(displacement, displacement)
+
+                        adjacent_atoms.append((adjacent_atom, dist))
+
+                for adjacent_atom, dist in adjacent_atoms:
+                    if dist > max_dist ** 2:
+                        mol.graph.remove_edge(i, adjacent_atom)
+                        if adjacent_atom in mol.covalent_graph:
+                            mol.covalent_graph.remove_edge(i, adjacent_atom)
+
+    return False
+
+
 def bad_metal_coordination(mol):
 
     if mol.formula not in m_formulas:
