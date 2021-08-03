@@ -2,6 +2,7 @@ from HiPRGen.report_generator import *
 from HiPRGen.network_loader import *
 from HiPRGen.constants import *
 import math
+import numpy as np
 
 
 def default_cost(free_energy):
@@ -93,7 +94,7 @@ class Pathfinding:
 
             for i in range(reaction['number_of_reactants']):
                 reactant_id = reaction['reactants'][i]
-                if self.network_loader.initial_state[reactant_id] == 0:
+                if self.network_loader.initial_state_dict[reactant_id] == 0:
                     pathway = self.compute_pathway(reactant_id, trajectory) + pathway
 
 
@@ -179,7 +180,7 @@ class Pathfinding:
                 " pathways sorted by cost")
 
         report_generator.emit_newline()
-        report_generator.emit_initial_state(self.network_loader.initial_state)
+        report_generator.emit_initial_state(self.network_loader.initial_state_dict)
         report_generator.emit_newpage()
 
         if sort_by_frequency:
@@ -224,9 +225,10 @@ def sink_report(
     produced_dict = [[0,{}] for i in
                      range(network_loader.number_of_species)]
 
-
+    final_state_accumulator = np.zeros(network_loader.number_of_species, dtype=int)
 
     for seed in network_loader.trajectories:
+        final_state = np.copy(network_loader.initial_state_array)
         for step in network_loader.trajectories[seed]:
             reaction_index = network_loader.trajectories[seed][step][0]
 
@@ -234,13 +236,20 @@ def sink_report(
 
             for i in range(reaction['number_of_reactants']):
                 reactant_index = reaction['reactants'][i]
+                final_state[reactant_index] -= 1
                 consumed_dict[reactant_index][0] += 1
                 consumed_dict[reactant_index][1][reaction_index] = True
 
             for j in range(reaction['number_of_products']):
                 product_index = reaction['products'][j]
+                final_state[product_index] += 1
                 produced_dict[product_index][0] += 1
                 produced_dict[product_index][1][reaction_index] = True
+
+        final_state_accumulator += final_state
+
+    number_of_trajectories = len(network_loader.trajectories)
+    final_state_accumulator = final_state_accumulator / number_of_trajectories
 
     max_ratio = 1e10
     ratio_dict = [max_ratio] * network_loader.number_of_species
@@ -251,9 +260,12 @@ def sink_report(
 
 
     sink_data = sorted(
-        list(enumerate(zip(consumed_dict, produced_dict, ratio_dict))),
-        key=lambda item: -item[1][2])
-
+        list(enumerate(zip(
+            consumed_dict,
+            produced_dict,
+            ratio_dict,
+            final_state_accumulator))),
+        key=lambda item: -item[1][3])
 
 
     report_generator = ReportGenerator(
@@ -261,9 +273,10 @@ def sink_report(
         sink_report_path,
         rebuild_mol_pictures=False)
 
-    for species_index, (c,p,r) in sink_data:
+    for species_index, (c,p,r,e) in sink_data:
         if c[0] + p[0] > 0:
             report_generator.emit_text("ratio: " + str(r))
+            report_generator.emit_text("expected val: " + str(e))
             report_generator.emit_text("produced: " + str(p[0]))
             report_generator.emit_text(str(len(p[1])) + " distinct producing reactions")
             report_generator.emit_text("consumed: " + str(c[0]))
@@ -275,7 +288,7 @@ def sink_report(
     counter = 0
     report_generator.emit_newpage()
     report_generator.emit_text("species not produced")
-    for species_index, (c,p,r) in sink_data:
+    for species_index, (c,p,r,e) in sink_data:
         counter += 1
         if c[0] + p[0] == 0:
             report_generator.emit_molecule(species_index)

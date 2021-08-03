@@ -1,6 +1,6 @@
 import sqlite3
 import pickle
-
+import numpy as np
 
 """
 class for dynamically loading a reaction network
@@ -92,9 +92,19 @@ class NetworkLoader:
     def load_initial_state(self):
 
         cur = self.con.cursor()
-        initial_state = {}
+        initial_state_dict = {}
 
         for row in cur.execute(sql_get_initial_state):
-            initial_state[row[0]] = row[1]
+            initial_state_dict[row[0]] = row[1]
 
-        self.initial_state = initial_state
+        initial_state_array = np.zeros(
+            self.number_of_species,
+            dtype=int
+        )
+
+        for i in range(self.number_of_species):
+            initial_state_array[i] = initial_state_dict[i]
+
+
+        self.initial_state_dict = initial_state_dict
+        self.initial_state_array = initial_state_array
