@@ -2,10 +2,11 @@ from mpi4py import MPI
 from itertools import permutations, product
 from HiPRGen.report_generator import ReportGenerator
 import sqlite3
-from time import localtime, strftime
+from time import localtime, strftime, time
 from HiPRGen.reaction_questions import standard_reaction_decision_tree, standard_logging_decision_tree, run_decision_tree
 from HiPRGen.constants import *
 from enum import Enum
+from math import floor
 
 """
 Phases 3 & 4 run in paralell using MPI
@@ -112,6 +113,7 @@ def dispatcher(
         factor_zero=1.0,
         factor_two=1.0,
         factor_duplicate=1.0,
+        checkpoint_interval = 10
 ):
 
     comm = MPI.COMM_WORLD
@@ -167,10 +169,31 @@ def dispatcher(
 
     log_message("handling requests")
 
-
+    batches_left_at_last_checkpoint = len(work_batch_list)
+    last_checkpoint_time = floor(time())
     while True:
         if WorkerState.RUNNING not in worker_states.values():
             break
+
+        current_time = floor(time())
+        time_diff = current_time - last_checkpoint_time
+        if ( current_time % checkpoint_interval == 0 and time_diff > 0):
+            batches_left_at_current_checkpoint = len(work_batch_list)
+            batch_count_diff = (
+                batches_left_at_last_checkpoint -
+                batches_left_at_current_checkpoint)
+
+            batch_consumption_rate = batch_count_diff / time_diff
+
+            log_message("batches remaining:", batches_left_at_current_checkpoint)
+            log_message("batch consumption rate:",
+                        batch_consumption_rate,
+                        "batches per second")
+
+
+            batches_left_at_last_checkpoint = batches_left_at_current_checkpoint
+            last_checkpoint_time = current_time
+
 
         status = MPI.Status()
         data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
