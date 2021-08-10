@@ -136,8 +136,10 @@ def add_unbroken_fragment(width, mol):
 
 
 def add_single_bond_fragments(width, mol):
+
     if mol.formula in m_formulas:
         return False
+
 
 
     for edge in mol.covalent_graph.edges:
@@ -247,6 +249,51 @@ def bad_metal_coordination(mol):
 
     return False
 
+def set_solvation_free_energy(mol):
+    """
+    metal atoms coordinate with the surrounding solvent. We need to correct
+    free energy to take this into account. The correction is
+    solvation_correction * (
+           max_coodination_bonds -
+           number_of_coordination_bonds_in_mol).
+    Since coordination bonding can't reliably be detected from the molecule
+    graph, we search for all atoms within a radius of the metal atom and
+    discard them if they are positively charged.
+    """
+
+    mol.number_of_coordination_bonds = 0
+
+    correction = 0.0
+
+    for i in mol.m_inds:
+
+        species = mol.species[i]
+        coordination_partners = []
+        radius = coordination_radius[species]
+
+        for j in range(mol.num_atoms):
+            if j != i:
+                displacement_vector = (
+                    mol.atom_locations[j] -
+                    mol.atom_locations[i])
+
+                if (np.inner(displacement_vector, displacement_vector)
+                    < radius ** 2 and (
+                        mol.partial_charges_resp[j] < 0 or
+                        mol.partial_charges_mulliken[j] < 0)):
+                    coordination_partners.append(j)
+
+
+        number_of_coordination_bonds = len(coordination_partners)
+        mol.number_of_coordination_bonds += number_of_coordination_bonds
+        correction += solvation_correction[species] * (
+            max_number_of_coordination_bonds[species] -
+            number_of_coordination_bonds)
+
+    mol.solvation_free_energy = correction + mol.free_energy
+    return False
+
+
 
 def default_true(mol):
     return True
@@ -258,6 +305,7 @@ fragment_neighborhood_width = 5
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
 standard_species_decision_tree = [
+    (set_solvation_free_energy, Terminal.KEEP),
     (fix_hydrogen_bonding, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),

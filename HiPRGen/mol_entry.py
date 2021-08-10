@@ -8,24 +8,10 @@ from pymatgen.analysis.graphs import MoleculeGraph, MolGraphSplitError
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Molecule
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
-from HiPRGen.constants import ROOM_TEMP
+from HiPRGen.constants import *
 from itertools import permutations, product
 
 
-metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
-m_formulas = frozenset([m + "1" for m in metals])
-
-solvation_correction = {
-    "Li" : -0.68,
-    }
-
-coordination_radius = {
-    "Li" : 2.4,
-    }
-
-max_number_of_coordination_bonds = {
-    "Li" : 4,
-    }
 
 
 class Fragment:
@@ -209,9 +195,7 @@ class MoleculeEntry(MSONable):
             site.coords for site in self.molecule]
 
 
-        self.number_of_coordination_bonds = 0
         self.free_energy = self.get_free_energy()
-        self.solvation_free_energy = self.get_solvation_free_energy()
 
         self.non_metal_atoms = [
             i for i in range(self.num_atoms)
@@ -316,53 +300,6 @@ class MoleculeEntry(MSONable):
             )
         else:
             return None
-
-
-    def get_solvation_free_energy(self):
-        """
-        metal atoms coordinate with the surrounding solvent. We need to correct
-        free energy to take this into account. The correction is
-        solvation_correction * (
-               max_coodination_bonds -
-               number_of_coordination_bonds_in_mol).
-        Since coordination bonding can't reliably be detected from the molecule
-        graph, we search for all atoms within a radius of the metal atom and
-        discard them if they are positively charged.
-        """
-
-        # this method should only be called once, but just to be safe,
-        # reset the coordination bond count
-        self.number_of_coordination_bonds = 0
-
-        correction = 0.0
-
-        for i in self.m_inds:
-
-            species = self.species[i]
-            coordination_partners = []
-            radius = coordination_radius[species]
-
-            for j in range(self.num_atoms):
-                if j != i:
-                    displacement_vector = (
-                        self.atom_locations[j] -
-                        self.atom_locations[i])
-
-                    if (np.inner(displacement_vector, displacement_vector)
-                        < radius ** 2 and (
-                            self.partial_charges_resp[j] < 0 or
-                            self.partial_charges_mulliken[j] < 0)):
-                        coordination_partners.append(j)
-
-
-            number_of_coordination_bonds = len(coordination_partners)
-            self.number_of_coordination_bonds += number_of_coordination_bonds
-            correction += solvation_correction[species] * (
-                max_number_of_coordination_bonds[species] -
-                number_of_coordination_bonds)
-
-        return correction + self.free_energy
-
 
     def __repr__(self):
 

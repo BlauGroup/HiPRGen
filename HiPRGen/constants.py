@@ -19,3 +19,19 @@ class Terminal(Enum):
     KEEP = 1
     DISCARD = -1
 
+metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
+m_formulas = frozenset([m + "1" for m in metals])
+
+solvation_correction = {
+    "Li" : -0.68,
+    }
+
+coordination_radius = {
+    "Li" : 2.4,
+    }
+
+max_number_of_coordination_bonds = {
+    "Li" : 4,
+    }
+
+
