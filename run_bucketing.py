@@ -22,7 +22,8 @@ mol_entries = species_filter(
     mol_entries_pickle_file,
     report_file,
     solvation_correction=None,
-   generate_unfiltered_mol_pictures=False
+    generate_unfiltered_mol_pictures=False
 )
+
 bucket(mol_entries, bucket_db_file)
 

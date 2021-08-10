@@ -87,7 +87,7 @@ def species_filter(
         species_report,
         species_decision_tree=standard_species_decision_tree,
         species_logging_decision_tree=standard_species_logging_decision_tree,
-        generate_unfiltered_mol_pictures=False
+        generate_unfiltered_mol_pictures=False,
         solvation_correction=solvation_correction_ec):
 
 

@@ -67,6 +67,6 @@ def test_mc_pathfinding(network_loader):
                        './scratch/LEDC_consumption_report.tex')
 
 
-test_mc_pathfinding(network_loader)
+# test_mc_pathfinding(network_loader)
 test_species_filter(network_loader)
 test_reaction_gen(network_loader)
