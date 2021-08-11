@@ -82,7 +82,7 @@ def species_filter(
         dataset_entries,
         mol_entries_pickle_location,
         species_report,
-        species_decision_tree=standard_species_decision_tree,
+        species_decision_tree,
         species_logging_decision_tree=standard_species_logging_decision_tree,
         generate_unfiltered_mol_pictures=False):
 

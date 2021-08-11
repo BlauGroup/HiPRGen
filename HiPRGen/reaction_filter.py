@@ -270,7 +270,7 @@ def dispatcher(
 def worker(
         mol_entries,
         bucket_db,
-        reaction_decision_tree=standard_reaction_decision_tree,
+        reaction_decision_tree,
         logging_decision_tree=standard_logging_decision_tree,
         params={
             'temperature' : ROOM_TEMP,

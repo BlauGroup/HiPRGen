@@ -249,7 +249,11 @@ def bad_metal_coordination(mol):
 
     return False
 
-def set_solvation_free_energy(mol):
+def set_solvation_free_energy(
+        solvation_correction,
+        coordination_radius,
+        max_number_of_coordination_bonds,
+        mol):
     """
     metal atoms coordinate with the surrounding solvent. We need to correct
     free energy to take this into account. The correction is
@@ -304,8 +308,12 @@ fragment_neighborhood_width = 5
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
-standard_species_decision_tree = [
-    (set_solvation_free_energy, Terminal.KEEP),
+li_species_decision_tree = [
+    (partial(set_solvation_free_energy,
+             li_solvation_correction,
+             li_coordination_radius,
+             li_max_number_of_coordination_bonds), Terminal.KEEP),
+
     (fix_hydrogen_bonding, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),

@@ -22,16 +22,37 @@ class Terminal(Enum):
 metals = frozenset(["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"])
 m_formulas = frozenset([m + "1" for m in metals])
 
-solvation_correction = {
+
+li_solvation_correction = {
     "Li" : -0.68,
-    }
+}
 
-coordination_radius = {
-    "Li" : 2.4,
-    }
+g2_solvation_correction = {
+    "Mg_1": -0.56,
+    "Mg_2": -1.49
+}
 
-max_number_of_coordination_bonds = {
-    "Li" : 4,
-    }
+thf_solvation_correction = {
+    "Mg_1": -0.70,
+    "Mg_2": -1.91
+}
 
 
+li_coordination_radius = {
+    "Li" : 2.4
+}
+
+mg_coordination_radius = {
+    "Mg_1": 2.4,
+    "Mg_2": 2.4
+}
+
+
+li_max_number_of_coordination_bonds = {
+    "Li" : 4
+}
+
+mg_max_number_of_coordination_bonds = {
+    "Mg_1": 5,
+    "Mg_2": 6
+}

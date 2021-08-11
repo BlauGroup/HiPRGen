@@ -31,7 +31,9 @@ def li_test():
     mol_entries = species_filter(
         database_entries,
         folder + '/ronald_mol_entries.pickle',
-        folder + '/report_file')
+        folder + '/report_file',
+        li_species_decision_tree
+    )
 
     bucket(mol_entries, folder + '/buckets.sqlite')
 
