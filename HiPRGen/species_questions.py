@@ -250,9 +250,7 @@ def bad_metal_coordination(mol):
     return False
 
 def set_solvation_free_energy(
-        solvation_correction,
-        coordination_radius,
-        max_number_of_coordination_bonds,
+        solvation_env,
         mol):
     """
     metal atoms coordinate with the surrounding solvent. We need to correct
@@ -273,7 +271,7 @@ def set_solvation_free_energy(
 
         species = mol.species[i]
         coordination_partners = []
-        radius = coordination_radius[species]
+        radius = solvation_env["coordination_radius"][species]
 
         for j in range(mol.num_atoms):
             if j != i:
@@ -290,8 +288,8 @@ def set_solvation_free_energy(
 
         number_of_coordination_bonds = len(coordination_partners)
         mol.number_of_coordination_bonds += number_of_coordination_bonds
-        correction += solvation_correction[species] * (
-            max_number_of_coordination_bonds[species] -
+        correction += solvation_env["solvation_correction"][species] * (
+            solvation_env["max_number_of_coordination_bonds"][species] -
             number_of_coordination_bonds)
 
     mol.solvation_free_energy = correction + mol.free_energy
@@ -310,9 +308,7 @@ fragment_neighborhood_width = 5
 
 li_species_decision_tree = [
     (partial(set_solvation_free_energy,
-             li_solvation_correction,
-             li_coordination_radius,
-             li_max_number_of_coordination_bonds), Terminal.KEEP),
+             li_ec), Terminal.KEEP),
 
     (fix_hydrogen_bonding, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
