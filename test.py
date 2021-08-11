@@ -45,7 +45,9 @@ def li_test():
         folder + '/ronald_mol_entries.pickle',
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
-        folder + '/reaction_report.tex'])
+        folder + '/reaction_report.tex',
+        'standard_reaction_decision_tree'
+    ])
 
 
     Li_plus_id = find_mol_entry_from_xyz_and_charge(

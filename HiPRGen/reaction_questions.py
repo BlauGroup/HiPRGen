@@ -574,11 +574,9 @@ standard_reaction_decision_tree = [
     ]
 
 
-# useful for testing file system performance
-minimal_reaction_decision_tree = [
-    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
-    (default_true, Terminal.KEEP)
-    ]
-
+# this dictionary exists so that we can pass a decision tree argument to mpiexec
+decision_tree_dict = {
+    'standard_reaction_decision_tree' : standard_reaction_decision_tree
+}
 
 standard_logging_decision_tree = Terminal.DISCARD

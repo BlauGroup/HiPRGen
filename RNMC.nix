@@ -12,5 +12,3 @@ stdenv.mkDerivation rec {
   installPhase = "mkdir $out && mkdir $out/bin && mv RNMC $out/bin";
 
 }
-
-
