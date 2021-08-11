@@ -6,6 +6,6 @@ setup(name='HiPRGen',
       url='https://github.com/BlauGroup/HiPRGen',
       author='Daniel Barter',
       author_email='danielbarter@gmail.com',
-      license='MIT',
+      license='LBNL',
       packages=['HiPRGen']
 )
