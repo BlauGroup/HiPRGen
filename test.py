@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import sqlite3
 import pickle
@@ -11,6 +12,11 @@ from HiPRGen.bucketing import *
 from HiPRGen.report_generator import *
 from HiPRGen.initial_state import *
 
+if len(sys.argv) != 2:
+    print("usage: python test.py number_of_threads")
+    quit()
+
+number_of_threads = sys.argv[1]
 
 class bcolors:
     PASS = '\u001b[32;1m'
@@ -26,13 +32,18 @@ subprocess.run(['mkdir', './scratch/li_test' ])
 
 
 def li_test():
+
     folder = './scratch/li_test'
-    database_entries = loadfn('./data/ronald_LIBE.json')
+    mol_json = './data/ronald_LIBE.json'
+    species_decision_tree = li_species_decision_tree
+    reaction_decision_tree = 'standard_reaction_decision_tree'
+
+    database_entries = loadfn(mol_json)
     mol_entries = species_filter(
         database_entries,
-        folder + '/ronald_mol_entries.pickle',
+        folder + '/mol_entries.pickle',
         folder + '/report_file',
-        li_species_decision_tree
+        species_decision_tree
     )
 
     bucket(mol_entries, folder + '/buckets.sqlite')
@@ -41,14 +52,14 @@ def li_test():
         'mpiexec',
         '--use-hwthread-cpus',
         '-n',
-        '8',
+        number_of_threads,
         'python',
         'run_network_generation.py',
-        folder + '/ronald_mol_entries.pickle',
+        folder + '/mol_entries.pickle',
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
         folder + '/reaction_report.tex',
-        'standard_reaction_decision_tree'
+        reaction_decision_tree
     ])
 
 
@@ -60,6 +71,11 @@ def li_test():
     EC_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,
         './xyz_files/EC.xyz',
+        0)
+
+    LEDC_id = find_mol_entry_from_xyz_and_charge(
+        mol_entries,
+        './xyz_files/LEDC.xyz',
         0)
 
     initial_state = {
@@ -74,13 +90,13 @@ def li_test():
         '--database=' + folder + '/rn.sqlite',
         '--number_of_simulations=1000',
         '--base_seed=1000',
-        '--thread_count=8',
+        '--thread_count=' + number_of_threads,
         '--step_cutoff=200'])
 
 
     network_loader = NetworkLoader(
         folder + '/rn.sqlite',
-        folder + '/ronald_mol_entries.pickle'
+        folder + '/mol_entries.pickle'
         )
 
 
@@ -93,11 +109,6 @@ def li_test():
         network_loader,
         folder + '/reaction_tally.tex'
     )
-
-    LEDC_id = find_mol_entry_from_xyz_and_charge(
-        network_loader.mol_entries,
-        './xyz_files/LEDC.xyz',
-        0)
 
     pathfinding = Pathfinding(network_loader)
     pathfinding.generate_pathway_report(
@@ -113,6 +124,7 @@ def li_test():
                        folder + '/LEDC_consumption_report.tex')
 
 
+    tests_passed = True
     if network_loader.number_of_species == 197:
         print(bcolors.PASS +
               "li_test: correct number of species" +
@@ -121,6 +133,7 @@ def li_test():
         print(bcolors.FAIL +
               "li_test: correct number of species" +
               bcolors.ENDC)
+        tests_passed = False
 
 
 
@@ -132,5 +145,9 @@ def li_test():
         print(bcolors.FAIL +
               "li_test: correct number of reactions" +
               bcolors.ENDC)
+        tests_passed = False
 
-li_test()
+    return tests_passed
+
+
+all([li_test()])
