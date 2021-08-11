@@ -43,7 +43,8 @@ def li_test():
         database_entries,
         folder + '/mol_entries.pickle',
         folder + '/report_file',
-        species_decision_tree
+        species_decision_tree,
+        lambda mol: mol.solvation_free_energy
     )
 
     bucket(mol_entries, folder + '/buckets.sqlite')

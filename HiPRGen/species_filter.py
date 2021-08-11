@@ -83,9 +83,14 @@ def species_filter(
         mol_entries_pickle_location,
         species_report,
         species_decision_tree,
+        coordimer_weight,
         species_logging_decision_tree=standard_species_logging_decision_tree,
         generate_unfiltered_mol_pictures=False):
 
+    """
+    run each molecule through the species decision tree and then choose the lowest weight
+    coordimer based on the coordimer_weight function.
+    """
 
     log_message("starting species filter")
     log_message("loading molecule entries from json")
@@ -148,7 +153,7 @@ def species_filter(
     log_message("applying non local filters")
 
     def collapse_isomorphism_group(g):
-        return min(g,key=lambda x: x.solvation_free_energy)
+        return min(g,key=coordimer_weight)
 
 
     mol_entries = []
