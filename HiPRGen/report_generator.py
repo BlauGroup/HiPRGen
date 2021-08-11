@@ -3,16 +3,25 @@ from copy import deepcopy
 import os
 from pathlib import Path
 
+atom_colors = {
+    "H": "gray",
+    "C": "black",
+    "Li": "#cc80ff",
+    "B": "#ffb5b5",
+    "N": "#3050f8",
+    "O": "#ff0d0d",
+    "F": "#90e050",
+    "Mg": "#8aff00",
+    "P": "#ff8000",
+    "S": "#ffff30",
+    "Cl": "#1ff01f"
+}
+
 def visualize_molecule_entry(molecule_entry, path):
     """
     visualize a molecule using graphviz and
     output the resulting pdf to path
     """
-
-    atom_colors = {"O": "red",
-                   "H": "gray",
-                   "C": "black",
-                   "Li": "purple"}
 
     graph = deepcopy(molecule_entry.graph)
 

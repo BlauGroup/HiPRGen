@@ -203,7 +203,7 @@ def metal_complex(mol):
     return not nx.is_connected(mol.covalent_graph)
 
 
-def fix_hydrogen_bonding(mol):
+def li_fix_hydrogen_bonding(mol):
 
 
     if mol.num_atoms > 1:
@@ -234,6 +234,41 @@ def fix_hydrogen_bonding(mol):
                     if adjacent_atom != closest_atom:
                         mol.graph.remove_edge(i, adjacent_atom)
                         mol.covalent_graph.remove_edge(i, adjacent_atom)
+
+    return False
+
+
+def mg_fix_hydrogen_bonding(mol):
+
+    # TODO: Make this user-defined?
+    max_dist = 1.5
+
+    if mol.num_atoms > 1:
+        for i in range(mol.num_atoms):
+            if mol.species[i] == 'H':
+
+                adjacent_atoms = []
+
+                for bond in mol.graph.edges:
+                    if i in bond[0:2]:
+
+                        if i == bond[0]:
+                            adjacent_atom = bond[1]
+                        else:
+                            adjacent_atom = bond[0]
+
+                        displacement = (mol.atom_locations[adjacent_atom] -
+                                        mol.atom_locations[i])
+
+                        dist = np.inner(displacement, displacement)
+
+                        adjacent_atoms.append((adjacent_atom, dist))
+
+                for adjacent_atom, dist in adjacent_atoms:
+                    if dist > max_dist ** 2:
+                        mol.graph.remove_edge(i, adjacent_atom)
+                        if adjacent_atom in mol.covalent_graph:
+                            mol.covalent_graph.remove_edge(i, adjacent_atom)
 
     return False
 
@@ -363,7 +398,7 @@ li_species_decision_tree = [
     (partial(li_set_solvation_free_energy,
              li_ec), Terminal.KEEP),
 
-    (fix_hydrogen_bonding, Terminal.KEEP),
+    (li_fix_hydrogen_bonding, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),
     (mol_not_connected, Terminal.DISCARD),
