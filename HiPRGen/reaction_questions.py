@@ -544,7 +544,7 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 
 
 
-standard_reaction_decision_tree = [
+reaction_center_decision_tree = [
     (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
 
     # redox branch
@@ -578,9 +578,41 @@ standard_reaction_decision_tree = [
     ]
 
 
+no_reaction_center_decision_tree = [
+    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+
+    # redox branch
+    (is_redox_reaction, [
+
+        (too_many_reactants_or_products, Terminal.DISCARD),
+        (dcharge_too_large, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)
+    ]),
+
+    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
+
+    (reaction_is_covalent_decomposable, Terminal.DISCARD),
+
+    (concerted_metal_coordination, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_product, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_reactant, Terminal.DISCARD),
+
+    (metal_coordination_passthrough, Terminal.KEEP),
+
+    (fragment_matching_found, Terminal.KEEP),
+
+    (default_true, Terminal.DISCARD)
+    ]
+
+
+
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
 decision_tree_dict = {
-    'standard_reaction_decision_tree' : standard_reaction_decision_tree
+    'reaction_center_decision_tree' : reaction_center_decision_tree,
+    'no_reaction_center_decision_tree' : no_reaction_center_decision_tree
 }
 
 standard_logging_decision_tree = Terminal.DISCARD

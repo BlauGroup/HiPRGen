@@ -36,7 +36,7 @@ def li_test():
     folder = './scratch/li_test'
     mol_json = './data/ronald_LIBE.json'
     species_decision_tree = li_species_decision_tree
-    reaction_decision_tree = 'standard_reaction_decision_tree'
+    reaction_decision_tree = 'reaction_center_decision_tree'
 
     database_entries = loadfn(mol_json)
     mol_entries = species_filter(
