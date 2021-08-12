@@ -473,17 +473,21 @@ def atom_mapping(reaction, mols, params):
 
     return False
 
-
-
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
         reaction['number_of_products'] == 2):
 
         reactant_0 = mols[reaction['reactants'][0]]
         reactant_1 = mols[reaction['reactants'][1]]
+        product_0 = mols[reaction['products'][0]]
+        product_1 = mols[reaction['products'][1]]
+
+
 
         if (reactant_0.formula in m_formulas or
-            reactant_1.formula in m_formulas):
+            reactant_1.formula in m_formulas or
+            product_0.formula in m_formulas or
+            product_1.formula in m_formulas):
             return True
         else:
             return False
