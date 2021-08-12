@@ -331,6 +331,42 @@ def li_set_solvation_free_energy(
     return False
 
 
+
+def mg_set_coordination(solvation_env, mol):
+    mol.number_of_coordination_bonds = 0
+    for i in mol.m_inds:
+
+        species = mol.species[i]
+        partial_charge = mol.partial_charges_mulliken[i]
+
+        if 0.4 <= partial_charge < 1.2:
+            effective_charge = "_1"
+        elif partial_charge >= 1.2:
+            effective_charge = "_2"
+        else:
+            # Not a cation - no correction available currently
+            continue
+
+        coordination_partners = list()
+        species_charge = species + effective_charge
+        radius = solvation_env["coordination_radius"][species_charge]
+
+        for j in range(mol.num_atoms):
+            if j != i:
+                displacement_vector = (
+                    mol.atom_locations[j] -
+                    mol.atom_locations[i])
+                if (np.inner(displacement_vector, displacement_vector)
+                    < radius ** 2 and (
+                        mol.partial_charges_resp[j] < 0 or
+                        mol.partial_charges_mulliken[j] < 0)):
+                    coordination_partners.append(j)
+
+        number_of_coordination_bonds = len(coordination_partners)
+        mol.number_of_coordination_bonds += number_of_coordination_bonds
+
+
+
 def mg_set_solvation_free_energy(
         solvation_env,
         mol):
@@ -375,8 +411,6 @@ def mg_set_solvation_free_energy(
                         mol.partial_charges_mulliken[j] < 0)):
                     coordination_partners.append(j)
 
-        number_of_coordination_bonds = len(coordination_partners)
-        mol.number_of_coordination_bonds += number_of_coordination_bonds
         correction += solvation_env["solvation_correction"][species_charge] * (
             solvation_env["max_number_of_coordination_bonds"][species_charge] -
             number_of_coordination_bonds)
@@ -413,5 +447,27 @@ li_species_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
+mg_thf_species_decision_tree = [
+    (partial(mg_set_coordination,
+             mg_thf), Terminal.KEEP),
+
+    (partial(mg_set_solvation_free_energy,
+             mg_thf), Terminal.KEEP),
+
+    (mg_fix_hydrogen_bonding, Terminal.KEEP),
+    (metal_ion_filter, Terminal.DISCARD),
+    (bad_metal_coordination, Terminal.DISCARD),
+    (mol_not_connected, Terminal.DISCARD),
+    (metal_complex, Terminal.DISCARD),
+    (add_star_hashes, Terminal.KEEP),
+
+    (partial(add_unbroken_fragment,
+             fragment_neighborhood_width), Terminal.KEEP),
+    (partial(add_single_bond_fragments,
+             fragment_neighborhood_width), Terminal.KEEP),
+
+    (default_true, Terminal.KEEP)
+
+    ]
 
 standard_species_logging_decision_tree = Terminal.KEEP
