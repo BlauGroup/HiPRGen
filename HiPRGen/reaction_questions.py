@@ -101,7 +101,7 @@ def default_rate(dG, params):
 
     return rate
 
-def dG_above_threshold(threshold, reaction, mol_entries, params):
+def dG_above_threshold(threshold, get_free_energy, reaction, mol_entries, params):
     dG = 0.0
 
     # positive dCharge means electrons are lost
@@ -110,17 +110,16 @@ def dG_above_threshold(threshold, reaction, mol_entries, params):
     for i in range(reaction['number_of_reactants']):
         reactant_index = reaction['reactants'][i]
         mol = mol_entries[reactant_index]
-        dG -= mol.solvation_free_energy
+        dG -= get_free_energy(mol)
         dCharge -= mol.charge
 
     for j in range(reaction['number_of_products']):
         product_index = reaction['products'][j]
         mol = mol_entries[product_index]
-        dG += mol.solvation_free_energy
+        dG += get_free_energy(mol)
         dCharge += mol.charge
 
     dG += dCharge * params['electron_free_energy']
-
 
     if dG > threshold:
         return True
@@ -545,7 +544,9 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 
 
 reaction_center_decision_tree = [
-    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+    (partial(dG_above_threshold,
+             0.5,
+             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
 
     # redox branch
     (is_redox_reaction, [
@@ -579,7 +580,9 @@ reaction_center_decision_tree = [
 
 
 no_reaction_center_decision_tree = [
-    (partial(dG_above_threshold, 0.5), Terminal.DISCARD),
+    (partial(dG_above_threshold,
+             0.5,
+             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
 
     # redox branch
     (is_redox_reaction, [
@@ -616,12 +619,12 @@ decision_tree_dict = {
 }
 
 params_dict = {
-    "1.4" : {
+    "-1.4" : {
         'temperature' : ROOM_TEMP,
         'electron_free_energy' : -1.4
     },
 
-    "2.06" : {
+    "-2.06" : {
         'temperature' : ROOM_TEMP,
         'electron_free_energy' : -2.06
     }

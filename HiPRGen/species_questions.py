@@ -351,7 +351,8 @@ def mg_set_solvation_free_energy(
     for i in mol.m_inds:
 
         species = mol.species[i]
-        partial_charge = mol.partial_charges_mulliken[i]
+        partial_charge = max( mol.partial_charges_mulliken[i],
+                              mol.partial_charges_resp[i])
 
         if partial_charge < 1.2:
             effective_charge = "_1"

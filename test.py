@@ -36,7 +36,7 @@ def mg_test():
     mol_json = './data/sam_G2.json'
     species_decision_tree = mg_g2_species_decision_tree
     reaction_decision_tree = 'reaction_center_decision_tree'
-    electron_free_energy = "2.06"
+    electron_free_energy = "-2.06"
 
     database_entries = loadfn(mol_json)
     mol_entries = species_filter(
@@ -160,7 +160,7 @@ def li_test():
     mol_json = './data/ronald_LIBE.json'
     species_decision_tree = li_species_decision_tree
     reaction_decision_tree = 'reaction_center_decision_tree'
-    electron_free_energy = "1.4"
+    electron_free_energy = "-1.4"
 
     database_entries = loadfn(mol_json)
     mol_entries = species_filter(
@@ -277,7 +277,7 @@ def li_test():
 
 tests = [
     mg_test,
-    li_test,
+#    li_test,
 ]
 
 for test in tests:
