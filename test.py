@@ -36,6 +36,7 @@ def mg_test():
     mol_json = './data/sam_G2.json'
     species_decision_tree = mg_g2_species_decision_tree
     reaction_decision_tree = 'reaction_center_decision_tree'
+    electron_free_energy = "2.06"
 
     database_entries = loadfn(mol_json)
     mol_entries = species_filter(
@@ -61,7 +62,8 @@ def mg_test():
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
         folder + '/reaction_report.tex',
-        reaction_decision_tree
+        reaction_decision_tree,
+        electron_free_energy
     ])
 
     mg_g2_plus_plus_id = find_mol_entry_from_xyz_and_charge(
@@ -139,7 +141,7 @@ def mg_test():
 
 
 
-    if network_loader.number_of_reactions == 713:
+    if network_loader.number_of_reactions == 721:
         print(bcolors.PASS +
               "mg_test: correct number of reactions" +
               bcolors.ENDC)
@@ -158,6 +160,7 @@ def li_test():
     mol_json = './data/ronald_LIBE.json'
     species_decision_tree = li_species_decision_tree
     reaction_decision_tree = 'reaction_center_decision_tree'
+    electron_free_energy = "1.4"
 
     database_entries = loadfn(mol_json)
     mol_entries = species_filter(
@@ -181,7 +184,8 @@ def li_test():
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
         folder + '/reaction_report.tex',
-        reaction_decision_tree
+        reaction_decision_tree,
+        electron_free_energy
     ])
 
 

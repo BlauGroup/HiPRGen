@@ -615,4 +615,16 @@ decision_tree_dict = {
     'no_reaction_center_decision_tree' : no_reaction_center_decision_tree
 }
 
+params_dict = {
+    "1.4" : {
+        'temperature' : ROOM_TEMP,
+        'electron_free_energy' : -1.4
+    },
+
+    "2.06" : {
+        'temperature' : ROOM_TEMP,
+        'electron_free_energy' : -2.06
+    }
+}
+
 standard_logging_decision_tree = Terminal.DISCARD

@@ -271,11 +271,8 @@ def worker(
         mol_entries,
         bucket_db,
         reaction_decision_tree,
-        logging_decision_tree=standard_logging_decision_tree,
-        params={
-            'temperature' : ROOM_TEMP,
-            'electron_free_energy' : -1.4
-            }
+        params,
+        logging_decision_tree=standard_logging_decision_tree
 ):
 
     comm = MPI.COMM_WORLD
