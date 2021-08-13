@@ -28,8 +28,93 @@ if os.path.isdir('./scratch'):
 
 subprocess.run(['mkdir', './scratch'])
 subprocess.run(['mkdir', './scratch/li_test' ])
+subprocess.run(['mkdir', './scratch/mg_test' ])
 
 
+def mg_test():
+    folder = './scratch/mg_test'
+    mol_json = './data/sam_G2.json'
+    species_decision_tree = mg_g2_species_decision_tree
+    reaction_decision_tree = 'reaction_center_decision_tree'
+
+    database_entries = loadfn(mol_json)
+    mol_entries = species_filter(
+        database_entries,
+        folder + '/mol_entries.pickle',
+        folder + '/unfiltered_species_report.tex',
+        species_decision_tree,
+        lambda mol: mol.solvation_free_energy,
+        species_logging_decision_tree=Terminal.KEEP,
+        generate_unfiltered_mol_pictures=True
+    )
+
+    bucket(mol_entries, folder + '/buckets.sqlite')
+
+    subprocess.run([
+        'mpiexec',
+        '--use-hwthread-cpus',
+        '-n',
+        number_of_threads,
+        'python',
+        'run_network_generation.py',
+        folder + '/mol_entries.pickle',
+        folder + '/buckets.sqlite',
+        folder + '/rn.sqlite',
+        folder + '/reaction_report.tex',
+        reaction_decision_tree
+    ])
+
+    mg_g2_plus_plus_id = find_mol_entry_from_xyz_and_charge(
+        mol_entries,
+        './xyz_files/mgg2.xyz',
+        2)
+
+    c2h6_id = find_mol_entry_from_xyz_and_charge(
+        mol_entries,
+        './xyz_files/c2h6.xyz',
+        0)
+
+    initial_state = {
+        mg_g2_plus_plus_id : 30
+    }
+
+    insert_initial_state(initial_state, mol_entries, folder + '/rn.sqlite')
+
+    subprocess.run([
+        'RNMC',
+        '--database=' + folder + '/rn.sqlite',
+        '--number_of_simulations=1000',
+        '--base_seed=1000',
+        '--thread_count=' + number_of_threads,
+        '--step_cutoff=200'])
+
+
+    network_loader = NetworkLoader(
+        folder + '/rn.sqlite',
+        folder + '/mol_entries.pickle'
+        )
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        folder + '/dummy.tex',
+        rebuild_mol_pictures=True)
+
+    reaction_tally_report(
+        network_loader,
+        folder + '/reaction_tally.tex'
+    )
+
+    pathfinding = Pathfinding(network_loader)
+    pathfinding.generate_pathway_report(
+        c2h6_id,
+        folder + '/C2H6_pathways.tex',
+        sort_by_frequency=False
+    )
+
+    species_report(network_loader, folder + '/species_report.tex')
+
+
+    return False
 
 def li_test():
 
@@ -42,7 +127,7 @@ def li_test():
     mol_entries = species_filter(
         database_entries,
         folder + '/mol_entries.pickle',
-        folder + '/report_file',
+        folder + '/unfiltered_species_report.tex',
         species_decision_tree,
         lambda mol: mol.solvation_free_energy
     )
@@ -150,5 +235,5 @@ def li_test():
 
     return tests_passed
 
-
-all([li_test()])
+mg_test()
+#all([mg_test(), li_test()])

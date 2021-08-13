@@ -413,9 +413,9 @@ li_species_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
-mg_thf_species_decision_tree = [
+mg_g2_species_decision_tree = [
     (partial(mg_set_solvation_free_energy,
-             mg_thf), Terminal.KEEP),
+             mg_g2), Terminal.KEEP),
 
     (mg_fix_hydrogen_bonding, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
