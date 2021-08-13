@@ -69,6 +69,11 @@ def mg_test():
         './xyz_files/mgg2.xyz',
         2)
 
+    c2h4_id = find_mol_entry_from_xyz_and_charge(
+        mol_entries,
+        './xyz_files/c2h4.xyz',
+        0)
+
     c2h6_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,
         './xyz_files/c2h6.xyz',
@@ -111,10 +116,41 @@ def mg_test():
         sort_by_frequency=False
     )
 
+    pathfinding.generate_pathway_report(
+        c2h4_id,
+        folder + '/C2H4_pathways.tex',
+        sort_by_frequency=False
+    )
+
+
+
     species_report(network_loader, folder + '/species_report.tex')
 
+    tests_passed = True
+    if network_loader.number_of_species == 87:
+        print(bcolors.PASS +
+              "mg_test: correct number of species" +
+              bcolors.ENDC)
+    else:
+        print(bcolors.FAIL +
+              "mg_test: correct number of species" +
+              bcolors.ENDC)
+        tests_passed = False
 
-    return False
+
+
+    if network_loader.number_of_reactions == 713:
+        print(bcolors.PASS +
+              "mg_test: correct number of reactions" +
+              bcolors.ENDC)
+    else:
+        print(bcolors.FAIL +
+              "mg_test: correct number of reactions" +
+              bcolors.ENDC)
+        tests_passed = False
+
+    return tests_passed
+
 
 def li_test():
 
@@ -235,5 +271,11 @@ def li_test():
 
     return tests_passed
 
-mg_test()
-#all([mg_test(), li_test()])
+tests = [
+    mg_test,
+    li_test,
+]
+
+for test in tests:
+    if not test():
+        break
