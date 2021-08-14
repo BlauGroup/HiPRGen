@@ -322,7 +322,7 @@ def fragment_matching_found(reaction, mols, params):
 
                 for i in range(fragment_complex.number_of_fragments):
                     reactant_fragment_count += 1
-                    tag = fragment_complex.fragments[i].fragment_hash
+                    tag = fragment_complex.fragment_hashes[i]
                     if tag in reactant_hashes:
                         reactant_hashes[tag] += 1
                     else:
@@ -342,7 +342,7 @@ def fragment_matching_found(reaction, mols, params):
 
                 for i in range(fragment_complex.number_of_fragments):
                     product_fragment_count += 1
-                    tag = fragment_complex.fragments[i].fragment_hash
+                    tag = fragment_complex.fragment_hashes[i]
                     if tag in product_hashes:
                         product_hashes[tag] += 1
                     else:
@@ -357,120 +357,12 @@ def fragment_matching_found(reaction, mols, params):
                 continue
 
             if reactant_hashes == product_hashes:
-                reaction['reactant_fragments'] = reactant_fragment_indices
-                reaction['product_fragments'] = product_fragment_indices
                 reaction['reactant_bonds_broken'] = reactant_bonds_broken
                 reaction['product_bonds_broken'] = product_bonds_broken
                 return True
 
     return False
 
-
-
-
-
-def atom_mapping(reaction, mols, params):
-
-
-    # compute all ways to match up the fragments and store in fragment_mappings
-    fragments_by_hash = {}
-    bond_change = 0
-
-    for i in range(reaction['number_of_reactants']):
-        reactant = mols[reaction['reactants'][i]]
-        fragment_complex = reactant.fragment_data[
-            reaction['reactant_fragments'][i]]
-
-        bond_change += fragment_complex.number_of_bonds_broken
-
-        for fragment in fragment_complex.fragments:
-            tag = fragment.fragment_hash
-
-            if tag not in fragments_by_hash:
-                fragments_by_hash[tag] = ([],[])
-
-            fragments_by_hash[tag][0].append((i,fragment))
-
-
-    for j in range(reaction['number_of_products']):
-        product = mols[reaction['products'][j]]
-        fragment_complex = product.fragment_data[
-            reaction['product_fragments'][j]]
-
-        bond_change += fragment_complex.number_of_bonds_broken
-
-
-        for fragment in fragment_complex.fragments:
-            tag = fragment.fragment_hash
-
-            if tag not in fragments_by_hash:
-                fragments[tag] = ([],[])
-
-            fragments_by_hash[tag][1].append((j,fragment))
-
-    fragments = fragments_by_hash.values()
-    product_sym_iterator = itertools.product(*[
-        sym_iterator(len(f[0])) for
-        f in fragments ])
-
-    fragment_mappings = []
-    for product_perm in product_sym_iterator:
-        fragment_mapping = []
-        for perm, matching_fragments in zip(product_perm, fragments):
-            for i, j in enumerate(perm):
-                fragment_mapping.append(
-                    (matching_fragments[0][i],
-                     matching_fragments[1][j]))
-
-        fragment_mappings.append(fragment_mapping)
-
-
-    for fragment_mapping in fragment_mappings:
-        atom_mapping_parts = []
-
-        # if only 1 bond is changing, we don't need to enforce reaction center
-        if bond_change < 2:
-            hot_found = True
-        else:
-            hot_found = False
-
-
-        for (i, fragment_1), (j,fragment_2) in fragment_mapping:
-
-            if hot_found:
-                mapping = find_fragment_atom_mappings(
-                    fragment_1,
-                    fragment_2,
-                    return_one=True)[0]
-
-                atom_mapping_parts.append((i,j,mapping))
-
-            else:
-                all_mappings = find_fragment_atom_mappings(
-                    fragment_1,
-                    fragment_2)
-
-                hot_preserving_mapping = find_hot_atom_preserving_fragment_map(
-                    fragment_1,
-                    fragment_2,
-                    all_mappings)
-
-                if hot_preserving_mapping is not None:
-                    atom_mapping_parts.append((i,j,hot_preserving_mapping))
-                    hot_found = True
-                else:
-                    atom_mapping_parts.append((i,j,all_mappings[0]))
-
-        if hot_found:
-            combined_map = {}
-            for i, j, mapping in atom_mapping_parts:
-                for atom_index in mapping.keys():
-                    combined_map[(i,atom_index)] = (j, mapping[atom_index])
-
-            reaction['atom_map'] = combined_map
-            return True
-
-    return False
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and

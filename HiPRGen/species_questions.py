@@ -97,38 +97,11 @@ def add_unbroken_fragment(width, mol):
     if mol.formula in m_formulas:
         return False
 
-    neighborhood_hashes = {}
-
-    for i in mol.non_metal_atoms:
-        hash_list = []
-        for d in range(width):
-            neighborhood = nx.generators.ego.ego_graph(
-                mol.covalent_graph,
-                i,
-                d,
-                undirected=True)
-
-            neighborhood_hash = weisfeiler_lehman_graph_hash(
-                neighborhood,
-                node_attr='specie')
-
-            hash_list.append(neighborhood_hash)
-
-        neighborhood_hashes[i] = hash(tuple(hash_list))
-
-    fragment = Fragment(
-        mol.covalent_hash,
-        mol.non_metal_atoms,
-        neighborhood_hashes,
-        mol.covalent_graph,
-        []
-    )
-
     fragment_complex = FragmentComplex(
-        1,
-        0,
-        [],
-        [fragment])
+         1,
+         0,
+         [],
+         [mol.covalent_hash])
 
     mol.fragment_data.append(fragment_complex)
 
@@ -156,33 +129,7 @@ def add_single_bond_fragments(width, mol):
                 node_attr='specie')
 
 
-            neighborhood_hashes = {}
-            for i in c:
-                hash_list = []
-                for d in range(width):
-                    neighborhood = nx.generators.ego.ego_graph(
-                        subgraph,
-                        i,
-                        d,
-                        undirected=True)
-
-                    neighborhood_hash = weisfeiler_lehman_graph_hash(
-                        neighborhood,
-                        node_attr='specie')
-
-                    hash_list.append(neighborhood_hash)
-
-                neighborhood_hashes[i] = hash(tuple(hash_list))
-
-            fragment = Fragment(
-                fragment_hash,
-                c,
-                neighborhood_hashes,
-                subgraph,
-                [i for i in c if i in edge[0:2]]
-            )
-
-            fragments.append(fragment)
+            fragments.append(fragment_hash)
 
         fragment_complex = FragmentComplex(
             len(fragments),
