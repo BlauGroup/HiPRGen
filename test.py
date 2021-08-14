@@ -142,7 +142,7 @@ def mg_test():
 
 
 
-    if network_loader.number_of_reactions == 713:
+    if network_loader.number_of_reactions == 734:
         print(bcolors.PASS +
               "mg_test: correct number of reactions" +
               bcolors.ENDC)
@@ -264,7 +264,7 @@ def li_test():
 
 
 
-    if network_loader.number_of_reactions == 5009:
+    if network_loader.number_of_reactions == 5074:
         print(bcolors.PASS +
               "li_test: correct number of reactions" +
               bcolors.ENDC)
