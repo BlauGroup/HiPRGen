@@ -384,7 +384,11 @@ def mg_set_solvation_free_energy(
     mol.solvation_free_energy =  correction + mol.free_energy
     return False
 
-
+def no_bare_mg(mol):
+    if mol.formula in m_formulas:
+        return True
+    else:
+        return False
 
 def default_true(mol):
     return True
@@ -395,7 +399,7 @@ fragment_neighborhood_width = 5
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
-li_species_decision_tree = [
+li_ec_species_decision_tree = [
     (partial(li_set_solvation_free_energy,
              li_ec), Terminal.KEEP),
 
@@ -418,6 +422,7 @@ mg_g2_species_decision_tree = [
     (partial(mg_set_solvation_free_energy,
              mg_g2), Terminal.KEEP),
 
+    (no_bare_mg, Terminal.DISCARD),
     (mg_fix_hydrogen_bonding, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),
@@ -433,4 +438,4 @@ mg_g2_species_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
-standard_species_logging_decision_tree = Terminal.KEEP
+standard_species_logging_decision_tree = Terminal.DISCARD

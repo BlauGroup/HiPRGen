@@ -19,3 +19,17 @@ reaction = {
     'products' : [36]
 }
 
+mgg2_redox = {
+    'number_of_reactants' : 1,
+    'number_of_products' : 1,
+    'reactants' : [37],
+    'products' : [36]
+}
+
+
+mg_redox = {
+    'number_of_reactants' : 1,
+    'number_of_products' : 1,
+    'reactants' : [90],
+    'products' : [89]
+}

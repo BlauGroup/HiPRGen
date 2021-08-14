@@ -35,7 +35,8 @@ def mg_test():
     folder = './scratch/mg_test'
     mol_json = './data/sam_G2.json'
     species_decision_tree = mg_g2_species_decision_tree
-    reaction_decision_tree = 'reaction_center_decision_tree'
+    reaction_decision_tree = 'mg_g2_reaction_decision_tree'
+
     electron_free_energy = "-2.06"
 
     database_entries = loadfn(mol_json)
@@ -129,7 +130,7 @@ def mg_test():
     species_report(network_loader, folder + '/species_report.tex')
 
     tests_passed = True
-    if network_loader.number_of_species == 87:
+    if network_loader.number_of_species == 90:
         print(bcolors.PASS +
               "mg_test: correct number of species" +
               bcolors.ENDC)
@@ -141,7 +142,7 @@ def mg_test():
 
 
 
-    if network_loader.number_of_reactions == 721:
+    if network_loader.number_of_reactions == 713:
         print(bcolors.PASS +
               "mg_test: correct number of reactions" +
               bcolors.ENDC)
@@ -158,8 +159,8 @@ def li_test():
 
     folder = './scratch/li_test'
     mol_json = './data/ronald_LIBE.json'
-    species_decision_tree = li_species_decision_tree
-    reaction_decision_tree = 'reaction_center_decision_tree'
+    species_decision_tree = li_ec_species_decision_tree
+    reaction_decision_tree = 'li_ec_reaction_decision_tree'
     electron_free_energy = "-1.4"
 
     database_entries = loadfn(mol_json)
@@ -277,7 +278,7 @@ def li_test():
 
 tests = [
     mg_test,
-#    li_test,
+    li_test,
 ]
 
 for test in tests:
