@@ -45,9 +45,7 @@ def mg_test():
         folder + '/mol_entries.pickle',
         folder + '/unfiltered_species_report.tex',
         species_decision_tree,
-        lambda mol: mol.solvation_free_energy,
-        species_logging_decision_tree=Terminal.KEEP,
-        generate_unfiltered_mol_pictures=True
+        lambda mol: mol.solvation_free_energy
     )
 
     bucket(mol_entries, folder + '/buckets.sqlite')

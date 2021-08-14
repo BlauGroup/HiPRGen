@@ -93,7 +93,7 @@ def add_star_hashes(mol):
 
     return False
 
-def add_unbroken_fragment(width, mol):
+def add_unbroken_fragment(mol):
     if mol.formula in m_formulas:
         return False
 
@@ -108,7 +108,7 @@ def add_unbroken_fragment(width, mol):
     return False
 
 
-def add_single_bond_fragments(width, mol):
+def add_single_bond_fragments(mol):
 
     if mol.formula in m_formulas:
         return False
@@ -341,7 +341,6 @@ def default_true(mol):
     return True
 
 
-fragment_neighborhood_width = 5
 
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
@@ -357,10 +356,8 @@ li_ec_species_decision_tree = [
     (metal_complex, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
 
-    (partial(add_unbroken_fragment,
-             fragment_neighborhood_width), Terminal.KEEP),
-    (partial(add_single_bond_fragments,
-             fragment_neighborhood_width), Terminal.KEEP),
+    (add_unbroken_fragment, Terminal.KEEP),
+    (add_single_bond_fragments, Terminal.KEEP),
 
     (default_true, Terminal.KEEP)
     ]
@@ -377,10 +374,9 @@ mg_g2_species_decision_tree = [
     (metal_complex, Terminal.DISCARD),
     (add_star_hashes, Terminal.KEEP),
 
-    (partial(add_unbroken_fragment,
-             fragment_neighborhood_width), Terminal.KEEP),
-    (partial(add_single_bond_fragments,
-             fragment_neighborhood_width), Terminal.KEEP),
+    (add_unbroken_fragment, Terminal.KEEP),
+    (add_single_bond_fragments, Terminal.KEEP),
+
 
     (default_true, Terminal.KEEP)
     ]
