@@ -503,11 +503,50 @@ mg_g2_reaction_decision_tree = [
     (default_true, Terminal.DISCARD)
     ]
 
+mg_thf_reaction_decision_tree = [
+
+    # redox branch
+    (is_redox_reaction, [
+
+        (partial(dG_above_threshold,
+                 0.5,
+                 lambda mol: mol.free_energy), Terminal.DISCARD),
+
+        (too_many_reactants_or_products, Terminal.DISCARD),
+        (dcharge_too_large, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)
+    ]),
+
+    (partial(dG_above_threshold,
+             0.5,
+             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+
+    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
+
+    (reaction_is_covalent_decomposable, Terminal.DISCARD),
+
+    (concerted_metal_coordination, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_product, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_reactant, Terminal.DISCARD),
+
+    (metal_coordination_passthrough, Terminal.KEEP),
+
+    (fragment_matching_found, Terminal.KEEP),
+
+    (default_true, Terminal.DISCARD)
+    ]
+
+
+
 
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
 decision_tree_dict = {
     'li_ec_reaction_decision_tree' : li_ec_reaction_decision_tree,
     'mg_g2_reaction_decision_tree' : mg_g2_reaction_decision_tree,
+    'mg_thf_reaction_decision_tree' : mg_thf_reaction_decision_tree
 }
 
 params_dict = {

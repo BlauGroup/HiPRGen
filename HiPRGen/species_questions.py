@@ -381,4 +381,25 @@ mg_g2_species_decision_tree = [
     (default_true, Terminal.KEEP)
     ]
 
+mg_thf_species_decision_tree = [
+    (partial(mg_set_solvation_free_energy,
+             mg_thf), Terminal.KEEP),
+
+    (no_bare_mg, Terminal.DISCARD),
+    (mg_fix_hydrogen_bonding, Terminal.KEEP),
+    (metal_ion_filter, Terminal.DISCARD),
+    (bad_metal_coordination, Terminal.DISCARD),
+    (mol_not_connected, Terminal.DISCARD),
+    (metal_complex, Terminal.DISCARD),
+    (add_star_hashes, Terminal.KEEP),
+
+    (add_unbroken_fragment, Terminal.KEEP),
+    (add_single_bond_fragments, Terminal.KEEP),
+
+
+    (default_true, Terminal.KEEP)
+    ]
+
+
+
 standard_species_logging_decision_tree = Terminal.DISCARD
