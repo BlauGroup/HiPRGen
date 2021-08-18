@@ -3,6 +3,8 @@ from HiPRGen.mol_entry import *
 from functools import partial
 import itertools
 from HiPRGen.constants import *
+import networkx as nx
+from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 
 """
 The reaction decision tree:
@@ -46,6 +48,13 @@ Once a Terminal node is reached, it tells us whether to keep or discard the reac
 logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
 
 """
+
+hydrogen_graph = nx.MultiGraph()
+hydrogen_graph.add_node(0, specie='H')
+hydrogen_hash = weisfeiler_lehman_graph_hash(
+    hydrogen_graph,
+    node_attr='specie')
+
 
 def run_decision_tree(
         reaction,
@@ -359,10 +368,22 @@ def fragment_matching_found(reaction, mols, params):
             if reactant_hashes == product_hashes:
                 reaction['reactant_bonds_broken'] = reactant_bonds_broken
                 reaction['product_bonds_broken'] = product_bonds_broken
+                reaction['hashes'] = reactant_hashes
+
                 return True
 
     return False
 
+def single_reactant_single_product_not_hydrogen_transfer(reaction, mols, params):
+    if (reaction['number_of_reactants'] == 1 and
+        reaction['number_of_products'] == 1 and
+        len(reaction['reactant_bonds_broken']) == 1 and
+        len(reaction['product_bonds_broken']) == 1 and
+        hydrogen_hash not in reaction['hashes']):
+
+        return True
+
+    return False
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
@@ -461,7 +482,10 @@ li_ec_reaction_decision_tree = [
 
     (metal_coordination_passthrough, Terminal.KEEP),
 
-    (fragment_matching_found, Terminal.KEEP),
+    (fragment_matching_found, [
+        (single_reactant_single_product_not_hydrogen_transfer, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)]
+    ),
 
     (default_true, Terminal.DISCARD)
     ]
@@ -498,7 +522,10 @@ mg_g2_reaction_decision_tree = [
 
     (metal_coordination_passthrough, Terminal.KEEP),
 
-    (fragment_matching_found, Terminal.KEEP),
+    (fragment_matching_found, [
+        (single_reactant_single_product_not_hydrogen_transfer, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)]
+    ),
 
     (default_true, Terminal.DISCARD)
     ]
@@ -534,7 +561,10 @@ mg_thf_reaction_decision_tree = [
 
     (metal_coordination_passthrough, Terminal.KEEP),
 
-    (fragment_matching_found, Terminal.KEEP),
+    (fragment_matching_found, [
+        (single_reactant_single_product_not_hydrogen_transfer, Terminal.DISCARD),
+        (default_true, Terminal.KEEP)]
+    ),
 
     (default_true, Terminal.DISCARD)
     ]
