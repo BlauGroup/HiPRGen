@@ -112,7 +112,7 @@ def dispatcher(
         commit_freq=1000,
         factor_zero=1.0,
         factor_two=1.0,
-        factor_duplicate=1.0,
+        factor_duplicate=0.5,
         checkpoint_interval = 10
 ):
 
