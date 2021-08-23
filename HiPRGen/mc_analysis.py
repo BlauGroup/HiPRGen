@@ -277,7 +277,11 @@ def sink_report(
         rebuild_mol_pictures=False)
 
     for species_index, (c,p,r,e) in sink_data:
-        if c[0] + p[0] > 0:
+        if (c[0] + p[0] > 0 and
+            network_loader.mol_entries[species_index].charge >= 0 and
+            r > 1.5 and
+            e > 0.1
+        ):
             report_generator.emit_text("ratio: " + str(r))
             report_generator.emit_text("expected val: " + str(e))
             report_generator.emit_text("produced: " + str(p[0]))
@@ -288,15 +292,16 @@ def sink_report(
             report_generator.emit_newline()
 
 
-    counter = 0
-    report_generator.emit_newpage()
-    report_generator.emit_text("species not produced")
-    for species_index, (c,p,r,e) in sink_data:
-        if c[0] + p[0] == 0:
-            counter += 1
-            report_generator.emit_molecule(species_index)
-            if counter % 4 == 0:
-                report_generator.emit_newline()
+    # code for printing species which wern't produced
+    # counter = 0
+    # report_generator.emit_newpage()
+    # report_generator.emit_text("species not produced")
+    # for species_index, (c,p,r,e) in sink_data:
+    #     if c[0] + p[0] == 0:
+    #         counter += 1
+    #         report_generator.emit_molecule(species_index)
+    #         if counter % 4 == 0:
+    #             report_generator.emit_newline()
 
 
     report_generator.finished()

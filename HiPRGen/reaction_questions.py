@@ -585,6 +585,11 @@ params_dict = {
         'electron_free_energy' : -1.4
     },
 
+    "-1.9" : {
+        'temperature' : ROOM_TEMP,
+        'electron_free_energy' : -1.9
+    },
+
     "-2.06" : {
         'temperature' : ROOM_TEMP,
         'electron_free_energy' : -2.06
