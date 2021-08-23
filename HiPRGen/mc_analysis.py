@@ -268,7 +268,7 @@ def sink_report(
             produced_dict,
             ratio_dict,
             final_state_accumulator))),
-        key=lambda item: -item[1][3])
+        key=lambda item: -item[1][2])
 
 
     report_generator = ReportGenerator(
