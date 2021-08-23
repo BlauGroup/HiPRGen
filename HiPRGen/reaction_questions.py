@@ -365,10 +365,13 @@ def fragment_matching_found(reaction, mols, params):
                 product_fragment_count == 2):
                 continue
 
+
             if reactant_hashes == product_hashes:
                 reaction['reactant_bonds_broken'] = reactant_bonds_broken
                 reaction['product_bonds_broken'] = product_bonds_broken
                 reaction['hashes'] = reactant_hashes
+                reaction['reactant_fragment_count'] = reactant_fragment_count
+                reaction['product_fragment_count'] = product_fragment_count
 
                 return True
 
@@ -384,6 +387,19 @@ def single_reactant_single_product_not_hydrogen_transfer(reaction, mols, params)
         return True
 
     return False
+
+def single_reactant_double_product_ring_close(reaction, mols, params):
+    if (reaction['number_of_reactants'] == 1 and
+        reaction['number_of_products'] == 2 and
+        len(reaction['reactant_bonds_broken']) == 1 and
+        len(reaction['product_bonds_broken']) == 1 and
+        reaction['product_fragment_count'] == 2):
+
+        return True
+
+    return False
+
+
 
 def concerted_metal_coordination(reaction, mols, params):
     if (reaction['number_of_reactants'] == 2 and
@@ -484,6 +500,7 @@ li_ec_reaction_decision_tree = [
 
     (fragment_matching_found, [
         (single_reactant_single_product_not_hydrogen_transfer, Terminal.DISCARD),
+        (single_reactant_double_product_ring_close, Terminal.DISCARD),
         (default_true, Terminal.KEEP)]
     ),
 
