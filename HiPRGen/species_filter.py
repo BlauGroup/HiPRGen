@@ -148,8 +148,18 @@ def species_filter(
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
 
+    # when we choose a coordimer, we also keep track of the energies of all
+    # the others so we can use them to compute rates for redox reactions
     def collapse_isomorphism_group(g):
-        return min(g,key=coordimer_weight)
+        lowest_energy_coordimer = min(g,key=coordimer_weight)
+        coordimer_energies = {}
+
+        for m in g:
+            coordimer_energies[m.total_hash] = coordimer_weight(m)
+
+        lowest_energy_coordimer.coordimer_energies = coordimer_energies
+
+        return lowest_energy_coordimer
 
 
     mol_entries = []
