@@ -182,6 +182,34 @@ def dcharge_too_large(reaction, mol_entries, params):
     else:
         return False
 
+
+def set_redox_rate(get_free_energy, reaction, mol_entries, params):
+    # we already know there is a single reactant and product and they are
+    # covalent isomorphic.
+    # Regardless of whether you are gaining or loosing an electron,
+    # the charge change happens instantly, and then you recoordinate.
+    # we return true if you can't reduce without recoordinating, in which
+    # case the reaction gets passed to a Terminal.DISCARD in the
+    # standard lithium decision tree
+
+    reactant_index = reaction['reactants'][0]
+    reactant = mol_entries[reactant_index]
+
+    product_index = reaction['products'][0]
+    product = mol_entries[product_index]
+
+    if reactant.total_hash in product.coordimer_energies:
+        transition_state_energy = product.coordimer_energies[reactant.total_hash]
+        dG1 = transition_state_energy - get_free_energy(reactant)
+        reaction['rate'] = default_rate(dG1, params)
+        return False
+    else:
+        return True
+
+
+
+
+
 def reactant_and_product_not_isomorphic(reaction, mols, params):
     reactant = mols[reaction['reactants'][0]]
     product = mols[reaction['products'][0]]
@@ -473,6 +501,8 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 
 
 li_ec_reaction_decision_tree = [
+
+
     (partial(dG_above_threshold,
              0.5,
              lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
@@ -483,6 +513,8 @@ li_ec_reaction_decision_tree = [
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (partial(set_redox_rate,
+                 lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
 

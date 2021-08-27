@@ -242,8 +242,7 @@ def dispatcher(
             reaction = data[0]
             decision_path = data[1]
 
-            report_generator.emit_verbatim(
-                '\n'.join([str(f) for f in decision_path]))
+            report_generator.emit_verbatim(decision_path)
             report_generator.emit_reaction(reaction)
             report_generator.emit_bond_breakage(reaction)
             report_generator.emit_newline()
@@ -355,6 +354,9 @@ def worker(
                                  logging_decision_tree):
 
                 comm.send(
-                    (reaction, decision_pathway),
+                    (reaction,
+                     '\n'.join([str(f) for f in decision_pathway])
+                     ),
+
                     dest=DISPATCHER_RANK,
                     tag=NEW_REACTION_LOGGING)
