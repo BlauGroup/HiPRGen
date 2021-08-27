@@ -341,6 +341,19 @@ def default_true(mol):
     return True
 
 
+def compute_graph_hashes(mol):
+    mol.total_hash = weisfeiler_lehman_graph_hash(
+        mol.graph,
+        node_attr='specie')
+
+    mol.covalent_hash = weisfeiler_lehman_graph_hash(
+        mol.covalent_graph,
+        node_attr='specie')
+
+    return False
+
+
+
 
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
@@ -350,6 +363,7 @@ li_ec_species_decision_tree = [
              li_ec), Terminal.KEEP),
 
     (li_fix_hydrogen_bonding, Terminal.KEEP),
+    (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),
     (mol_not_connected, Terminal.DISCARD),
@@ -368,6 +382,7 @@ mg_g2_species_decision_tree = [
 
     (no_bare_mg, Terminal.DISCARD),
     (mg_fix_hydrogen_bonding, Terminal.KEEP),
+    (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),
     (mol_not_connected, Terminal.DISCARD),
@@ -387,6 +402,7 @@ mg_thf_species_decision_tree = [
 
     (no_bare_mg, Terminal.DISCARD),
     (mg_fix_hydrogen_bonding, Terminal.KEEP),
+    (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),
     (mol_not_connected, Terminal.DISCARD),

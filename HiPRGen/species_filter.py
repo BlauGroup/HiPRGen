@@ -23,12 +23,7 @@ def sort_into_tags(mols):
     isomorphism_buckets = {}
     for mol in mols:
 
-        mol_hash = weisfeiler_lehman_graph_hash(
-            mol.covalent_graph,
-            node_attr='specie'
-        )
-
-        tag = (mol.charge, mol.formula, mol_hash)
+        tag = (mol.charge, mol.formula, mol.covalent_hash)
 
         if tag in isomorphism_buckets:
             isomorphism_buckets[tag].append(mol)

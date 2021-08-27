@@ -262,7 +262,7 @@ def li_test():
 
 
 
-    if network_loader.number_of_reactions == 4999:
+    if network_loader.number_of_reactions == 5000:
         print(bcolors.PASS +
               "li_test: correct number of reactions" +
               bcolors.ENDC)

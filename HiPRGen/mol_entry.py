@@ -85,15 +85,6 @@ class MoleculeEntry(MSONable):
         self.covalent_graph.remove_nodes_from(self.m_inds)
 
 
-        self.total_hash = weisfeiler_lehman_graph_hash(
-                self.graph,
-                node_attr='specie')
-
-        self.covalent_hash = weisfeiler_lehman_graph_hash(
-                self.covalent_graph,
-                node_attr='specie')
-
-
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
         self.num_atoms = len(self.molecule)
