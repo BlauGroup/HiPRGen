@@ -15,7 +15,7 @@ let
             ps.openbabel-bindings
             ps.pygraphviz
             ps.mpi4py
-#            HiPRGen
+            HiPRGen
           ]);
 
 in mkShell {
