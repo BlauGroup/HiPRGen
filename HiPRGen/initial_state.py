@@ -32,6 +32,15 @@ def find_mol_entry_from_xyz_and_charge(mol_entries, xyz_file_path, charge):
     else:
         return None
 
+def find_mol_entry_by_entry_id(mol_entries, entry_id):
+    """
+    given an entry_id, return the corresponding mol enentry index
+    """
+
+    for m in mol_entries:
+        if m.entry_id = entry_id:
+            return m.ind
+
 create_initial_state_table = """
     CREATE TABLE initial_state (
             species_id             INTEGER NOT NULL PRIMARY KEY,
