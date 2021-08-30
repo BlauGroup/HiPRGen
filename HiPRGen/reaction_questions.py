@@ -621,6 +621,28 @@ mg_thf_reaction_decision_tree = [
 
 standard_logging_decision_tree = Terminal.DISCARD
 
+li_ec_redox_logging_decision_tree = [
+
+    (partial(dG_above_threshold,
+             0.5,
+             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+
+    # redox branch
+    (is_redox_reaction, [
+
+        (too_many_reactants_or_products, Terminal.DISCARD),
+        (dcharge_too_large, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (partial(set_redox_rate,
+                 lambda mol: mol.solvation_free_energy), Terminal.KEEP),
+        (default_true, Terminal.DISCARD)
+    ]),
+
+    (default_true, Terminal.DISCARD)
+    ]
+
+
+
 
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
 reaction_decision_tree_dict = {
@@ -630,7 +652,8 @@ reaction_decision_tree_dict = {
 }
 
 logging_decision_tree_dict = {
-    'standard_logging_decision_tree' : standard_logging_decision_tree
+    'standard_logging_decision_tree' : standard_logging_decision_tree,
+    'li_ec_redox_logging_decision_tree' : li_ec_redox_logging_decision_tree
     }
 
 params_dict = {

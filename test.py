@@ -160,7 +160,7 @@ def li_test():
     mol_json = './data/ronald_LIBE.json'
     species_decision_tree = li_ec_species_decision_tree
     reaction_decision_tree = 'li_ec_reaction_decision_tree'
-    logging_decision_tree = 'standard_logging_decision_tree'
+    logging_decision_tree = 'li_ec_redox_logging_decision_tree'
     electron_free_energy = "-1.4"
 
     database_entries = loadfn(mol_json)
