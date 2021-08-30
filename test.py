@@ -201,7 +201,7 @@ def li_test():
     # run pdflatex LEDC_pathways.tex to see all the ways that LEDC was
     # produced in the simulations of our lithium test network. Note that this
     # network has ~5000 reactions. Our production networks have
-    # between 50-100 million.
+    # between 50-100 million reactions.
 
     pathfinding = Pathfinding(network_loader)
     pathfinding.generate_pathway_report(
