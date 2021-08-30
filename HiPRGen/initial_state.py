@@ -38,7 +38,7 @@ def find_mol_entry_by_entry_id(mol_entries, entry_id):
     """
 
     for m in mol_entries:
-        if m.entry_id = entry_id:
+        if m.entry_id == entry_id:
             return m.ind
 
 create_initial_state_table = """
