@@ -72,22 +72,46 @@ def li_test():
     # through the a species decision tree to discard molecules. This happens
     # here rather than further complicating the DFT pipelines which generate the
     # input data for HiPRGen.
-
-    # there is one non local part of species filtering: we consider two molecules
-    # to be equivalent of they have the same covalent bonds and we choose one such
-    # molecule in each coordimer class.
     species_decision_tree = li_ec_species_decision_tree
+
+
+    # there is one non local part of species filtering: we consider two
+    # molecules to be equivalent of they have the same covalent bonds
+    # and we choose one such molecule in each coordimer class using the
+    # coodimer weight function.  Since most of our logging later on is
+    # defined in terms of a fixed molecule set, logging for the species
+    # filtering phase is messy, so ignore the species_report argument for
+    # now. The second argument is where we store a pickle of the
+    # filtered molecule entries for use in later phases.
+
     mol_entries = species_filter(
         database_entries,
-        folder + '/mol_entries.pickle',
-        folder + '/unfiltered_species_report.tex',
-        species_decision_tree,
-        lambda mol: mol.solvation_free_energy
+        mol_entries_pickle_location=folder + '/mol_entries.pickle',
+        species_report=folder + '/unfiltered_species_report.tex',
+        species_decision_tree=species_decision_tree,
+        coordimer_weight=lambda mol: mol.solvation_free_energy
     )
 
+
+    # once we have generated our molecule list, we generate the bucket database
+    # which is how we break up the reaction filtering amoungst all avaliable workers.
+    # it gets stored in the buckets.sqlite database.
     bucket(mol_entries, folder + '/buckets.sqlite')
 
 
+    # reaction filtering is paralellized using MPI, so we need to spawn
+    # an MPI instance to run it. That is why we can't just start
+    # reaction filtering by calling a python function. We pass the
+    # reaction decision tree, the logging decision tree and the electron
+    # free energy as strings across this barrier. Every possible
+    # reaction gets passed through both the reaction decision tree and
+    # the logging decision tree.  if a reaction passes the reaction
+    # decision tree, it gets written to the network.  if a reaction
+    # passes the logging decision tree, it gets logged to the reaction
+    # report along with what happened to it in reaction_decision_tree.
+
+    # the reaction decision trees are constructed in
+    # HiPRGen.reaction_questions
 
     reaction_decision_tree = 'li_ec_reaction_decision_tree'
     logging_decision_tree = 'li_ec_redox_logging_decision_tree'
@@ -109,6 +133,10 @@ def li_test():
     ])
 
 
+    # after we have generated the mol_entries, we refer to molecules by
+    # their index. The function find_mol_entry_from_xyz_and_charge is able
+    # to find a mol entry just from the xyz positions of its atoms, although
+    # it isn't 100% reliable.
     Li_plus_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,
         './xyz_files/Li.xyz',
@@ -124,6 +152,10 @@ def li_test():
         './xyz_files/LEDC.xyz',
         0)
 
+
+    # after generating a reaction network, it is stored in rn.sqlite. We want
+    # to use Monte Carlo simulation to better understand the network, and for that
+    # we need to insert an initial condition.
     initial_state = {
         Li_plus_id : 30,
         EC_id : 30
@@ -131,6 +163,9 @@ def li_test():
 
     insert_initial_state(initial_state, mol_entries, folder + '/rn.sqlite')
 
+
+    # RNMC is a high performance reaction network monte carlo simulator:
+    # https://github.com/BlauGroup/RNMC
     subprocess.run([
         'RNMC',
         '--database=' + folder + '/rn.sqlite',
@@ -139,13 +174,19 @@ def li_test():
         '--thread_count=' + number_of_threads,
         '--step_cutoff=200'])
 
-
+    # the network loader builds a python object around a reaction network
+    # and the molecules to make it easier to use them.
     network_loader = NetworkLoader(
         folder + '/rn.sqlite',
         folder + '/mol_entries.pickle'
         )
 
+    # HiPRGen has analysis tools to understand what happened in our simulation.
+    # the output files are written into the same folder as where the reaction
+    # network is stored.
 
+    # this report is empty, but we use it to generate the molecule pictures.
+    # this is an expensive operation, so we only want do do it once.
     report_generator = ReportGenerator(
         network_loader.mol_entries,
         folder + '/dummy.tex',
@@ -155,6 +196,12 @@ def li_test():
         network_loader,
         folder + '/reaction_tally.tex'
     )
+
+    # pathfinding is the main goal of HiPRGen / RNMC.
+    # run pdflatex LEDC_pathways.tex to see all the ways that LEDC was
+    # produced in the simulations of our lithium test network. Note that this
+    # network has ~5000 reactions. Our production networks have
+    # between 50-100 million.
 
     pathfinding = Pathfinding(network_loader)
     pathfinding.generate_pathway_report(
