@@ -3,33 +3,6 @@ from HiPRGen.reaction_questions import *
 from HiPRGen.mc_analysis import *
 
 network_loader = NetworkLoader(
-    './scratch/mg_test/rn.sqlite',
-    './scratch/mg_test/mol_entries.pickle'
+    './scratch/li_test/rn.sqlite',
+    './scratch/li_test/mol_entries.pickle'
     )
-
-params={
-    'temperature' : ROOM_TEMP,
-    'electron_free_energy' : -2.06
-    }
-
-reaction = {
-    'number_of_reactants' : 2,
-    'number_of_products' : 1,
-    'reactants' : [43,89],
-    'products' : [36]
-}
-
-mgg2_redox = {
-    'number_of_reactants' : 1,
-    'number_of_products' : 1,
-    'reactants' : [37],
-    'products' : [36]
-}
-
-
-mg_redox = {
-    'number_of_reactants' : 1,
-    'number_of_products' : 1,
-    'reactants' : [90],
-    'products' : [89]
-}

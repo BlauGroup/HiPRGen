@@ -12,7 +12,7 @@ If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, 
 
 ### Tests
 
-Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads. The working directories of the tests are in `scratch`.
+Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads (you should use as many as your machine has). The working directories for the tests are in `scratch`. After the tests have finished, run `python -i repl.py` and inspect the `network_loader` object. This is the test Lithium / Ethylene Carbonate network.
 
 ### Design
 
