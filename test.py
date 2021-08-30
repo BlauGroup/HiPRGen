@@ -36,7 +36,7 @@ def mg_test():
     mol_json = './data/sam_G2.json'
     species_decision_tree = mg_g2_species_decision_tree
     reaction_decision_tree = 'mg_g2_reaction_decision_tree'
-
+    logging_decision_tree = 'standard_logging_decision_tree'
     electron_free_energy = "-2.06"
 
     database_entries = loadfn(mol_json)
@@ -62,6 +62,7 @@ def mg_test():
         folder + '/rn.sqlite',
         folder + '/reaction_report.tex',
         reaction_decision_tree,
+        logging_decision_tree,
         electron_free_energy
     ])
 
@@ -159,6 +160,7 @@ def li_test():
     mol_json = './data/ronald_LIBE.json'
     species_decision_tree = li_ec_species_decision_tree
     reaction_decision_tree = 'li_ec_reaction_decision_tree'
+    logging_decision_tree = 'standard_logging_decision_tree'
     electron_free_energy = "-1.4"
 
     database_entries = loadfn(mol_json)
@@ -184,6 +186,7 @@ def li_test():
         folder + '/rn.sqlite',
         folder + '/reaction_report.tex',
         reaction_decision_tree,
+        logging_decision_tree,
         electron_free_energy
     ])
 

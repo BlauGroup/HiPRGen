@@ -619,14 +619,19 @@ mg_thf_reaction_decision_tree = [
     ]
 
 
+standard_logging_decision_tree = Terminal.DISCARD
 
 
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
-decision_tree_dict = {
+reaction_decision_tree_dict = {
     'li_ec_reaction_decision_tree' : li_ec_reaction_decision_tree,
     'mg_g2_reaction_decision_tree' : mg_g2_reaction_decision_tree,
     'mg_thf_reaction_decision_tree' : mg_thf_reaction_decision_tree
 }
+
+logging_decision_tree_dict = {
+    'standard_logging_decision_tree' : standard_logging_decision_tree
+    }
 
 params_dict = {
     "-1.4" : {
@@ -645,4 +650,3 @@ params_dict = {
     }
 }
 
-standard_logging_decision_tree = Terminal.DISCARD
