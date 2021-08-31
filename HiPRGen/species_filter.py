@@ -1,9 +1,13 @@
-from HiPRGen.mol_entry import *
+from HiPRGen.mol_entry import MoleculeEntry
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
-from HiPRGen.species_questions import *
+from HiPRGen.species_questions import (
+    run_decision_tree,
+    standard_species_logging_decision_tree
+)
+import networkx as nx
 from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import networkx.algorithms.isomorphism as iso

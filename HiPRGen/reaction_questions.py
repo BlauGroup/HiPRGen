@@ -1,10 +1,11 @@
 import math
-from HiPRGen.mol_entry import *
+from HiPRGen.mol_entry import MoleculeEntry
 from functools import partial
 import itertools
-from HiPRGen.constants import *
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
+from HiPRGen.constants import Terminal, ROOM_TEMP, KB, PLANCK, m_formulas
+
 
 """
 The reaction decision tree:

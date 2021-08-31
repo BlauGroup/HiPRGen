@@ -3,16 +3,29 @@ import sys
 import subprocess
 import sqlite3
 import pickle
-from HiPRGen.mc_analysis import *
-from HiPRGen.network_loader import *
+
+
+from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.initial_state import find_mol_entry_from_xyz_and_charge
 from monty.serialization import loadfn
-from HiPRGen.species_filter import *
-from HiPRGen.bucketing import *
-from HiPRGen.report_generator import *
-from HiPRGen.initial_state import *
+from HiPRGen.species_filter import species_filter
+from HiPRGen.bucketing import bucket
+from HiPRGen.report_generator import ReportGenerator
+from HiPRGen.initial_state import insert_initial_state
 
+from HiPRGen.species_questions import (
+    standard_species_logging_decision_tree,
+    mg_g2_species_decision_tree,
+    li_ec_species_decision_tree
+)
 
+from HiPRGen.mc_analysis import (
+    reaction_tally_report,
+    species_report,
+    Pathfinding,
+    sink_report,
+    consumption_report
+)
 
 # Since HiPRGen uses an end-to-end testing approach rather than testing
 # each individual function, we have decided to use the tests as

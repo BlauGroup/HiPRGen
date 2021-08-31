@@ -1,9 +1,18 @@
 import sys
-from HiPRGen.reaction_filter import *
 import pickle
 from mpi4py import MPI
-from HiPRGen.constants import *
-from HiPRGen.reaction_questions import reaction_decision_tree_dict, logging_decision_tree_dict
+
+from HiPRGen.reaction_filter import (
+    dispatcher,
+    worker,
+    DISPATCHER_RANK
+)
+
+from HiPRGen.reaction_questions import (
+    reaction_decision_tree_dict,
+    logging_decision_tree_dict,
+    params_dict
+)
 
 
 # python run_network_generation.py mol_entries_pickle_file bucket_db_file rn_db_location generation_report_location reaction_decision_tree_name logging_decision_tree_name electron_free_energy

@@ -3,10 +3,13 @@ from itertools import permutations, product
 from HiPRGen.report_generator import ReportGenerator
 import sqlite3
 from time import localtime, strftime, time
-from HiPRGen.reaction_questions import *
-from HiPRGen.constants import *
 from enum import Enum
 from math import floor
+
+from HiPRGen.reaction_questions import (
+    standard_logging_decision_tree,
+    run_decision_tree
+)
 
 """
 Phases 3 & 4 run in paralell using MPI

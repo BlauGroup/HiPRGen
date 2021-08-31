@@ -1,6 +1,6 @@
-from HiPRGen.report_generator import *
-from HiPRGen.network_loader import *
-from HiPRGen.constants import *
+from HiPRGen.report_generator import ReportGenerator
+from HiPRGen.network_loader import NetworkLoader
+from HiPRGen.constants import ROOM_TEMP, KB
 import math
 import numpy as np
 

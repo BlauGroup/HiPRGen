@@ -1,9 +1,10 @@
-from HiPRGen.mol_entry import *
+from HiPRGen.mol_entry import MoleculeEntry, FragmentComplex
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import copy
 from functools import partial
-from HiPRGen.constants import *
+from HiPRGen.constants import li_ec, Terminal, mg_g2, mg_thf, m_formulas, metals
+import numpy as np
 
 
 """

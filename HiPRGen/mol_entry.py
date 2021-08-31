@@ -8,7 +8,7 @@ from pymatgen.analysis.graphs import MoleculeGraph, MolGraphSplitError
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Molecule
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
-from HiPRGen.constants import *
+from HiPRGen.constants import ROOM_TEMP, metals
 from itertools import permutations, product
 
 
