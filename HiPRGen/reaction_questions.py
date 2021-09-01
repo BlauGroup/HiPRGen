@@ -209,6 +209,7 @@ def set_redox_rate(get_free_energy, reaction, mol_entries, params):
         dG1 = transition_state_energy - get_free_energy(reactant)
         dG1 += dCharge * params['electron_free_energy']
         reaction['rate'] = default_rate(dG1, params)
+        reaction['dG1'] = dG1
         return False
     else:
         return True
