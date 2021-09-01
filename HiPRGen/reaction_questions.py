@@ -193,15 +193,21 @@ def set_redox_rate(get_free_energy, reaction, mol_entries, params):
     # case the reaction gets passed to a Terminal.DISCARD in the
     # standard lithium decision tree
 
+    dCharge = 0.0
+
     reactant_index = reaction['reactants'][0]
     reactant = mol_entries[reactant_index]
+    dCharge -= reactant.charge
 
     product_index = reaction['products'][0]
     product = mol_entries[product_index]
+    dCharge += product.charge
+
 
     if reactant.total_hash in product.coordimer_energies:
         transition_state_energy = product.coordimer_energies[reactant.total_hash]
         dG1 = transition_state_energy - get_free_energy(reactant)
+        dG1 += dCharge * params['electron_free_energy']
         reaction['rate'] = default_rate(dG1, params)
         return False
     else:
