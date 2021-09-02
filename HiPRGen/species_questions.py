@@ -266,6 +266,8 @@ def li_set_solvation_free_energy(
                     < radius ** 2 and (
                         mol.partial_charges_resp[j] < 0 or
                         mol.partial_charges_mulliken[j] < 0)):
+                    if not mol.graph.has_edge(i,j):
+                        mol.graph.add_edge(i,j)
                     coordination_partners.append(j)
 
 
@@ -360,10 +362,10 @@ def compute_graph_hashes(mol):
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
 li_ec_species_decision_tree = [
+    (li_fix_hydrogen_bonding, Terminal.KEEP),
     (partial(li_set_solvation_free_energy,
              li_ec), Terminal.KEEP),
 
-    (li_fix_hydrogen_bonding, Terminal.KEEP),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),
