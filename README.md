@@ -4,11 +4,11 @@ HiPRGen is a python module for constructing reaction networks by running hundred
 
 ### Installation
 
-The most consistent way to get HiPRGen running (especially on macos, where the conda version of MPI doesn't work consistently) is using the [nix package manager](https://nixos.org/). Instructions for installing nix can be found [here](https://nixos.org/download.html). The installation requires root to create the directory `/nix`. If you don't want to give a shell script from the internet root access, first create `/nix` and make yourself the owner. To uninstall nix, run `rm -rf /nix`.
+The most consistent way to get HiPRGen running (especially on macos, where the conda version of MPI doesn't work consistently) is using the [nix package manager](https://nixos.org/). Instructions for installing nix can be found [here](https://nixos.org/download.html). If you are using macos >= 10.15, see [here](https://nixos.org/manual/nix/stable/#sect-macos-installation).
 
 Once nix is installed, running `nix-shell` in the HiPRGen directory will launch a shell in which HiPRen is installed.
 
-If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz` and `mpi4py`. Create a conda environment where these are installed and then run `pip -e install .` from the HiPRGen directory.
+If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz` and `mpi4py`. Create a conda environment where these are installed and then run `pip -e install .` from the HiPRGen directory. Again, on macos, conda and MPI don't work well together.
 
 ### Tests
 
