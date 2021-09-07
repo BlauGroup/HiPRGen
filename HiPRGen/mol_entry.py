@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
-from monty.json import MSONable
 from pymatgen.analysis.graphs import MoleculeGraph, MolGraphSplitError
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Molecule
@@ -28,7 +27,7 @@ class FragmentComplex:
 
 
 
-class MoleculeEntry(MSONable):
+class MoleculeEntry:
     """
     A molecule entry class to provide easy access to Molecule properties.
 

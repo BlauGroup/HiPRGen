@@ -5,7 +5,7 @@ import itertools
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 from HiPRGen.constants import Terminal, ROOM_TEMP, KB, PLANCK, m_formulas
-
+from monty.json import MSONable
 
 """
 The reaction decision tree:
@@ -111,14 +111,24 @@ def default_rate(dG, params):
 
     return rate
 
-class dG_above_threshold:
+class dG_above_threshold(MSONable):
 
-    def __init__(self, threshold, get_free_energy):
+    def __init__(self, threshold, free_energy_type):
 
         self.threshold = threshold
-        self.get_free_energy = get_free_energy
+        self.free_energy_type = free_energy_type
+
+        if free_energy_type == 'free_energy':
+            self.get_free_energy = lambda mol: mol.free_energy
+        elif free_energy_type == 'solvation_free_energy':
+            self.get_free_energy = lambda mol: mol.solvation_free_energy
+        else:
+            raise Exception("unrecognized free energy type")
+
 
     def __call__(self, reaction, mol_entries, params):
+
+
         dG = 0.0
 
         # positive dCharge means electrons are lost
@@ -520,9 +530,7 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 li_ec_reaction_decision_tree = [
 
 
-    (dG_above_threshold(
-             0.5,
-             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+    (dG_above_threshold(0.5, "solvation_free_energy"), Terminal.DISCARD),
 
     # redox branch
     (is_redox_reaction, [
@@ -562,9 +570,7 @@ mg_g2_reaction_decision_tree = [
     # redox branch
     (is_redox_reaction, [
 
-        (dG_above_threshold(
-                 0.5,
-                 lambda mol: mol.free_energy), Terminal.DISCARD),
+        (dG_above_threshold(0.5, "free_energy"), Terminal.DISCARD),
 
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
@@ -573,8 +579,7 @@ mg_g2_reaction_decision_tree = [
     ]),
 
     (dG_above_threshold(
-             0.5,
-             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+             0.5, "solvation_free_energy"), Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
@@ -603,7 +608,7 @@ mg_thf_reaction_decision_tree = [
 
         (dG_above_threshold(
                  0.5,
-                 lambda mol: mol.free_energy), Terminal.DISCARD),
+                 "free_energy"), Terminal.DISCARD),
 
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
@@ -613,7 +618,7 @@ mg_thf_reaction_decision_tree = [
 
     (dG_above_threshold(
              0.5,
-             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+             "solvation_free_energy"), Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
@@ -641,8 +646,7 @@ standard_logging_decision_tree = Terminal.DISCARD
 li_ec_redox_logging_decision_tree = [
 
     (dG_above_threshold(
-             0.5,
-             lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+             0.5, "solvation_free_energy"), Terminal.DISCARD),
 
     # redox branch
     (is_redox_reaction, [
