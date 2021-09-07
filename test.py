@@ -174,25 +174,32 @@ def li_test():
         EC_id : 30
     }
 
-    insert_initial_state(initial_state, mol_entries, folder + '/rn.sqlite')
+    insert_initial_state(initial_state, mol_entries, folder + '/initial_state.sqlite')
 
 
     # RNMC is a high performance reaction network monte carlo simulator:
     # https://github.com/BlauGroup/RNMC
     subprocess.run([
         'RNMC',
-        '--database=' + folder + '/rn.sqlite',
+        '--reaction_database=' + folder + '/rn.sqlite',
+        '--initial_state_database=' + folder + '/initial_state.sqlite',
         '--number_of_simulations=1000',
         '--base_seed=1000',
         '--thread_count=' + number_of_threads,
-        '--step_cutoff=200'])
+        '--step_cutoff=200',
+        '--gc_interval=3600',
+        '--gc_threshold=1'
+    ])
 
     # the network loader builds a python object around a reaction network
     # and the molecules to make it easier to use them.
     network_loader = NetworkLoader(
         folder + '/rn.sqlite',
-        folder + '/mol_entries.pickle'
+        folder + '/mol_entries.pickle',
+        folder + '/initial_state.sqlite'
         )
+
+
 
     # HiPRGen has analysis tools to understand what happened in our simulation.
     # the output files are written into the same folder as where the reaction
@@ -313,20 +320,28 @@ def mg_test():
         mg_g2_plus_plus_id : 30
     }
 
-    insert_initial_state(initial_state, mol_entries, folder + '/rn.sqlite')
+
+    insert_initial_state(initial_state, mol_entries, folder + '/initial_state.sqlite')
+
 
     subprocess.run([
         'RNMC',
-        '--database=' + folder + '/rn.sqlite',
+        '--reaction_database=' + folder + '/rn.sqlite',
+        '--initial_state_database=' + folder + '/initial_state.sqlite',
         '--number_of_simulations=1000',
         '--base_seed=1000',
         '--thread_count=' + number_of_threads,
-        '--step_cutoff=200'])
+        '--step_cutoff=200',
+        '--gc_interval=3600',
+        '--gc_threshold=1'
+    ])
+
 
 
     network_loader = NetworkLoader(
         folder + '/rn.sqlite',
-        folder + '/mol_entries.pickle'
+        folder + '/mol_entries.pickle',
+        folder + '/initial_state.sqlite'
         )
 
     report_generator = ReportGenerator(

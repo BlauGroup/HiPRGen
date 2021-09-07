@@ -56,14 +56,6 @@ create_reactions_table = """
     );
 """
 
-create_trajectories_table = """
-    CREATE TABLE trajectories (
-            seed         INTEGER NOT NULL,
-            step         INTEGER NOT NULL,
-            reaction_id  INTEGER NOT NULL,
-            time         REAL NOT NULL
-    );
-"""
 
 insert_reaction = """
     INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -141,7 +133,6 @@ def dispatcher(
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
-    rn_cur.execute(create_trajectories_table)
     rn_con.commit()
 
     log_message("initializing report generator")

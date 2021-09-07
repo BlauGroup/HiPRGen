@@ -48,17 +48,25 @@ create_initial_state_table = """
     );
 """
 
+create_trajectories_table = """
+    CREATE TABLE trajectories (
+            seed         INTEGER NOT NULL,
+            step         INTEGER NOT NULL,
+            reaction_id  INTEGER NOT NULL,
+            time         REAL NOT NULL
+    );
+"""
 
 
-
-def insert_initial_state(initial_state, mol_entries, rn_db):
+def insert_initial_state(initial_state, mol_entries, initial_state_db):
     """
     initial state is a dict mapping species ids to counts.
     """
 
-    rn_con = sqlite3.connect(rn_db)
+    rn_con = sqlite3.connect(initial_state_db)
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_initial_state_table)
+    rn_cur.execute(create_trajectories_table)
     rn_con.commit()
 
     num_species = len(mol_entries)

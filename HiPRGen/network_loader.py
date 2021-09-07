@@ -23,22 +23,26 @@ class NetworkLoader:
     def __init__(
             self,
             network_database,
-            mol_entries_pickle):
+            mol_entries_pickle,
+            initial_state_database=None
+    ):
 
 
-        self.con = sqlite3.connect(network_database)
+        self.rn_con = sqlite3.connect(network_database)
 
         with open(mol_entries_pickle, 'rb') as f:
             self.mol_entries = pickle.load(f)
 
-        cur = self.con.cursor()
+        cur = self.rn_con.cursor()
         metadata = list(cur.execute("SELECT * FROM metadata"))[0]
         self.number_of_species = metadata[0]
         self.number_of_reactions = metadata[1]
 
 
-        self.load_trajectories()
-        self.load_initial_state()
+        if initial_state_database:
+            self.initial_state_con = sqlite3.connect(initial_state_database)
+            self.load_trajectories()
+            self.load_initial_state()
 
         self.reactions = {}
 
@@ -55,7 +59,7 @@ class NetworkLoader:
 
         else:
             print("fetching data for reaction", reaction_index)
-            cur = self.con.cursor()
+            cur = self.rn_con.cursor()
             res = list(
                 cur.execute(sql_get_reaction, (int(reaction_index),))
             )[0]
@@ -71,7 +75,7 @@ class NetworkLoader:
 
     def load_trajectories(self):
 
-        cur = self.con.cursor()
+        cur = self.initial_state_con.cursor()
 
         # trajectories[seed][step] = (reaction_id, time)
         trajectories = {}
@@ -91,7 +95,7 @@ class NetworkLoader:
 
     def load_initial_state(self):
 
-        cur = self.con.cursor()
+        cur = self.initial_state_con.cursor()
         initial_state_dict = {}
 
         for row in cur.execute(sql_get_initial_state):
