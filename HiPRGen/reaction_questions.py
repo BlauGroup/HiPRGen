@@ -157,24 +157,29 @@ class dG_above_threshold(MSONable):
 
 
 
-def is_redox_reaction(reaction, mol_entries, params):
-    # positive dCharge means electrons are lost
-    dCharge = 0.0
+class is_redox_reaction(MSONable):
 
-    for i in range(reaction['number_of_reactants']):
-        reactant_index = reaction['reactants'][i]
-        mol = mol_entries[reactant_index]
-        dCharge -= mol.charge
+    def __init__(self):
+        pass
 
-    for j in range(reaction['number_of_products']):
-        product_index = reaction['products'][j]
-        mol = mol_entries[product_index]
-        dCharge += mol.charge
+    def __call__(self, reaction, mol_entries, params):
+        # positive dCharge means electrons are lost
+        dCharge = 0.0
 
-    if dCharge == 0:
-        return False
-    else:
-        return True
+        for i in range(reaction['number_of_reactants']):
+            reactant_index = reaction['reactants'][i]
+            mol = mol_entries[reactant_index]
+            dCharge -= mol.charge
+
+        for j in range(reaction['number_of_products']):
+            product_index = reaction['products'][j]
+            mol = mol_entries[product_index]
+            dCharge += mol.charge
+
+        if dCharge == 0:
+            return False
+        else:
+            return True
 
 
 def too_many_reactants_or_products(reaction, mols, params):
@@ -533,7 +538,7 @@ li_ec_reaction_decision_tree = [
     (dG_above_threshold(0.5, "solvation_free_energy"), Terminal.DISCARD),
 
     # redox branch
-    (is_redox_reaction, [
+    (is_redox_reaction(), [
 
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
@@ -568,7 +573,7 @@ li_ec_reaction_decision_tree = [
 mg_g2_reaction_decision_tree = [
 
     # redox branch
-    (is_redox_reaction, [
+    (is_redox_reaction(), [
 
         (dG_above_threshold(0.5, "free_energy"), Terminal.DISCARD),
 
@@ -604,7 +609,7 @@ mg_g2_reaction_decision_tree = [
 mg_thf_reaction_decision_tree = [
 
     # redox branch
-    (is_redox_reaction, [
+    (is_redox_reaction(), [
 
         (dG_above_threshold(
                  0.5,
@@ -649,7 +654,7 @@ li_ec_redox_logging_decision_tree = [
              0.5, "solvation_free_energy"), Terminal.DISCARD),
 
     # redox branch
-    (is_redox_reaction, [
+    (is_redox_reaction(), [
 
         (too_many_reactants_or_products, Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
