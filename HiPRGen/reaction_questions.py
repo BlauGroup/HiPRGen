@@ -182,12 +182,20 @@ class is_redox_reaction(MSONable):
             return True
 
 
-def too_many_reactants_or_products(reaction, mols, params):
-    if (reaction['number_of_reactants'] != 1 or
-        reaction['number_of_products'] != 1):
-        return True
-    else:
-        return False
+class too_many_reactants_or_products(MSONable):
+    def __init__(self):
+        pass
+
+
+    def __call__(self, reaction, mols, params):
+        if (reaction['number_of_reactants'] != 1 or
+            reaction['number_of_products'] != 1):
+            return True
+        else:
+            return False
+
+
+
 
 def dcharge_too_large(reaction, mol_entries, params):
     dCharge = 0.0
@@ -540,7 +548,7 @@ li_ec_reaction_decision_tree = [
     # redox branch
     (is_redox_reaction(), [
 
-        (too_many_reactants_or_products, Terminal.DISCARD),
+        (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (partial(set_redox_rate,
@@ -577,7 +585,7 @@ mg_g2_reaction_decision_tree = [
 
         (dG_above_threshold(0.5, "free_energy"), Terminal.DISCARD),
 
-        (too_many_reactants_or_products, Terminal.DISCARD),
+        (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)
@@ -615,7 +623,7 @@ mg_thf_reaction_decision_tree = [
                  0.5,
                  "free_energy"), Terminal.DISCARD),
 
-        (too_many_reactants_or_products, Terminal.DISCARD),
+        (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)
@@ -656,7 +664,7 @@ li_ec_redox_logging_decision_tree = [
     # redox branch
     (is_redox_reaction(), [
 
-        (too_many_reactants_or_products, Terminal.DISCARD),
+        (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large, Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (partial(set_redox_rate,
