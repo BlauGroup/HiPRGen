@@ -269,15 +269,18 @@ class set_redox_rate(MSONable):
 
 
 
+class reactant_and_product_not_isomorphic(MSONable):
 
+    def __init__(self):
+        pass
 
-def reactant_and_product_not_isomorphic(reaction, mols, params):
-    reactant = mols[reaction['reactants'][0]]
-    product = mols[reaction['products'][0]]
-    if reactant.covalent_hash != product.covalent_hash:
-        return True
-    else:
-        return False
+    def __call__(self, reaction, mols, params):
+        reactant = mols[reaction['reactants'][0]]
+        product = mols[reaction['products'][0]]
+        if reactant.covalent_hash != product.covalent_hash:
+            return True
+        else:
+            return False
 
 def default_true(reaction, mols, params):
     return True
@@ -571,7 +574,7 @@ li_ec_reaction_decision_tree = [
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
         (set_redox_rate("solvation_free_energy"), Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
@@ -607,7 +610,7 @@ mg_g2_reaction_decision_tree = [
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
 
@@ -645,7 +648,7 @@ mg_thf_reaction_decision_tree = [
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
 
@@ -686,7 +689,7 @@ li_ec_redox_logging_decision_tree = [
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic, Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
         (set_redox_rate("solvation_free_energy"), Terminal.KEEP),
         (default_true, Terminal.DISCARD)
     ]),
