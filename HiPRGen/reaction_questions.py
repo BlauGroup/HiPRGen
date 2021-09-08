@@ -197,54 +197,75 @@ class too_many_reactants_or_products(MSONable):
 
 
 
-def dcharge_too_large(reaction, mol_entries, params):
-    dCharge = 0.0
+class dcharge_too_large(MSONable):
+    def __init__(self):
+        pass
 
-    for i in range(reaction['number_of_reactants']):
-        reactant_index = reaction['reactants'][i]
-        mol = mol_entries[reactant_index]
-        dCharge -= mol.charge
+    def __call__(self, reaction, mol_entries, params):
+        dCharge = 0.0
 
-    for j in range(reaction['number_of_products']):
-        product_index = reaction['products'][j]
-        mol = mol_entries[product_index]
-        dCharge += mol.charge
+        for i in range(reaction['number_of_reactants']):
+            reactant_index = reaction['reactants'][i]
+            mol = mol_entries[reactant_index]
+            dCharge -= mol.charge
 
-    if abs(dCharge) > 1:
-        return True
-    else:
-        return False
+        for j in range(reaction['number_of_products']):
+            product_index = reaction['products'][j]
+            mol = mol_entries[product_index]
+            dCharge += mol.charge
 
-
-def set_redox_rate(get_free_energy, reaction, mol_entries, params):
-    # we already know there is a single reactant and product and they are
-    # covalent isomorphic.
-    # Regardless of whether you are gaining or loosing an electron,
-    # the charge change happens instantly, and then you recoordinate.
-    # we return true if you can't reduce without recoordinating, in which
-    # case the reaction gets passed to a Terminal.DISCARD in the
-    # standard lithium decision tree
-
-    dCharge = 0.0
-
-    reactant_index = reaction['reactants'][0]
-    reactant = mol_entries[reactant_index]
-    dCharge -= reactant.charge
-
-    product_index = reaction['products'][0]
-    product = mol_entries[product_index]
-    dCharge += product.charge
+        if abs(dCharge) > 1:
+            return True
+        else:
+            return False
 
 
-    if reactant.total_hash in product.coordimer_energies:
-        transition_state_energy = product.coordimer_energies[reactant.total_hash]
-        dG1 = transition_state_energy - get_free_energy(reactant)
-        dG1 += dCharge * params['electron_free_energy']
-        reaction['rate'] = default_rate(dG1, params)
-        reaction['dG1'] = dG1
-        return False
-    else:
-        return True
+
+class set_redox_rate(MSONable):
+
+    def __init__(self, free_energy_type):
+
+        self.free_energy_type = free_energy_type
+
+        if free_energy_type == 'free_energy':
+            self.get_free_energy = lambda mol: mol.free_energy
+        elif free_energy_type == 'solvation_free_energy':
+            self.get_free_energy = lambda mol: mol.solvation_free_energy
+        else:
+            raise Exception("unrecognized free energy type")
+
+
+
+    def __call__(self, reaction, mol_entries, params):
+        # we already know there is a single reactant and product and they are
+        # covalent isomorphic.
+        # Regardless of whether you are gaining or loosing an electron,
+        # the charge change happens instantly, and then you recoordinate.
+        # we return true if you can't reduce without recoordinating, in which
+        # case the reaction gets passed to a Terminal.DISCARD in the
+        # standard lithium decision tree
+
+        dCharge = 0.0
+
+        reactant_index = reaction['reactants'][0]
+        reactant = mol_entries[reactant_index]
+        dCharge -= reactant.charge
+
+        product_index = reaction['products'][0]
+        product = mol_entries[product_index]
+        dCharge += product.charge
+
+
+        if reactant.total_hash in product.coordimer_energies:
+            transition_state_energy = product.coordimer_energies[reactant.total_hash]
+            dG1 = transition_state_energy - self.get_free_energy(reactant)
+            dG1 += dCharge * params['electron_free_energy']
+            reaction['rate'] = default_rate(dG1, params)
+            reaction['dG1'] = dG1
+            return False
+        else:
+            return True
+
 
 
 
@@ -549,10 +570,9 @@ li_ec_reaction_decision_tree = [
     (is_redox_reaction(), [
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large, Terminal.DISCARD),
+        (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
-        (partial(set_redox_rate,
-                 lambda mol: mol.solvation_free_energy), Terminal.DISCARD),
+        (set_redox_rate("solvation_free_energy"), Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
 
@@ -586,7 +606,7 @@ mg_g2_reaction_decision_tree = [
         (dG_above_threshold(0.5, "free_energy"), Terminal.DISCARD),
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large, Terminal.DISCARD),
+        (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
@@ -624,7 +644,7 @@ mg_thf_reaction_decision_tree = [
                  "free_energy"), Terminal.DISCARD),
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large, Terminal.DISCARD),
+        (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
@@ -665,10 +685,9 @@ li_ec_redox_logging_decision_tree = [
     (is_redox_reaction(), [
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large, Terminal.DISCARD),
+        (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic, Terminal.DISCARD),
-        (partial(set_redox_rate,
-                 lambda mol: mol.solvation_free_energy), Terminal.KEEP),
+        (set_redox_rate("solvation_free_energy"), Terminal.KEEP),
         (default_true, Terminal.DISCARD)
     ]),
 

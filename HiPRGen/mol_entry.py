@@ -164,7 +164,7 @@ class MoleculeEntry:
             partial_charges_resp = doc['partial_charges']['resp']
             partial_charges_mulliken = doc['partial_charges']['mulliken']
         except KeyError as e:
-            raise MoleculeEntryError(
+            raise Exception(
                 "Unable to construct molecule entry from molecule document; missing "
                 f"attribute {e} in `doc`."
             )
@@ -230,11 +230,3 @@ class MoleculeEntry:
             return str(self) == str(other)
         else:
             return False
-
-
-
-
-class MoleculeEntryError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-        self.message = message
