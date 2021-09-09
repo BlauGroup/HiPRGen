@@ -163,7 +163,10 @@ class ReportGenerator:
 
         if 'dG' in reaction:
             self.f.write(
-                "\\xrightarrow{" + ("%.2f" % reaction["dG"]) + "}\n")
+                "\\xrightarrow["
+                + ("%.2f" % reaction["dG_barrier"]) +
+                "]{" +
+                ("%.2f" % reaction["dG"]) + "}\n")
         else:
             self.f.write(
                 "\\xrightarrow{}\n")

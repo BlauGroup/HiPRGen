@@ -52,13 +52,14 @@ create_reactions_table = """
             product_1           INTEGER NOT NULL,
             product_2           INTEGER NOT NULL,
             rate                REAL NOT NULL,
-            dG                  REAL NOT NULL
+            dG                  REAL NOT NULL,
+            dG_barrier          REAL NOT NULL
     );
 """
 
 
 insert_reaction = """
-    INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO reactions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 get_complex_group_sql = """
@@ -223,7 +224,8 @@ def dispatcher(
                  reaction['products'][0],
                  reaction['products'][1],
                  reaction['rate'],
-                 reaction['dG']
+                 reaction['dG'],
+                 reaction['dG_barrier']
                  ))
 
             reaction_index += 1

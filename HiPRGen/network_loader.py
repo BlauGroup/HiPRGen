@@ -70,6 +70,7 @@ class NetworkLoader:
             reaction['products'] = res[5:7]
             reaction['rate'] = res[7]
             reaction['dG'] = res[8]
+            reaction['dG_barrier'] = res[9]
             self.reactions[reaction_index] = reaction
             return reaction
 
