@@ -376,11 +376,11 @@ class li0_filter(MSONable):
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
 li_ec_species_decision_tree = [
-    (li0_filter(), Terminal.DISCARD),
     (li_fix_hydrogen_bonding, Terminal.KEEP),
     (partial(li_set_solvation_free_energy,
              li_ec), Terminal.KEEP),
 
+    (li0_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter, Terminal.DISCARD),
     (bad_metal_coordination, Terminal.DISCARD),

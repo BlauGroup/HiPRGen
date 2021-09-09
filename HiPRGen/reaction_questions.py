@@ -297,7 +297,7 @@ class set_redox_rate(MSONable):
 
         reaction['rate'] = default_rate(dG_barrier, params)
         reaction['dG_barrier'] = dG_barrier
-        reaction['dG'] = product.free_energy - reactant.free_energy
+        reaction['dG'] = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
         return False
 
 
