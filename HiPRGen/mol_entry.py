@@ -42,18 +42,23 @@ class MoleculeEntry:
 
     def __init__(
         self,
-        molecule: Molecule,
-        energy: float,
-        enthalpy: Optional[float] = None,
-        entropy: Optional[float] = None,
-        entry_id: Optional[Any] = None,
-        mol_graph: Optional[MoleculeGraph] = None,
-        partial_charges_resp: Optional[list] = None,
-        partial_charges_mulliken: Optional[list] = None
+        molecule,
+        energy,
+        enthalpy,
+        entropy,
+        entry_id,
+        mol_graph,
+        partial_charges_resp,
+        partial_charges_mulliken,
+        partial_charges_nbo,
+        electron_affinity,
+        ionization_energy
     ):
         self.energy = energy
         self.enthalpy = enthalpy
         self.entropy = entropy
+        self.electron_affinity = electron_affinity
+        self.ionization_energy = ionization_energy
 
 
         self.ind = None
@@ -71,6 +76,8 @@ class MoleculeEntry:
 
         self.partial_charges_resp = partial_charges_resp
         self.partial_charges_mulliken = partial_charges_mulliken
+        self.partial_charges_nbo = partial_charges_nbo
+
         self.molecule = self.mol_graph.molecule
         self.graph = self.mol_graph.graph.to_undirected()
         self.species = [str(s) for s in self.molecule.species]
@@ -163,6 +170,21 @@ class MoleculeEntry:
 
             partial_charges_resp = doc['partial_charges']['resp']
             partial_charges_mulliken = doc['partial_charges']['mulliken']
+
+            if 'nbo' in doc['partial_charges']:
+                partial_charges_nbo = doc['partial_charges']['nbo']
+            else:
+                partial_charges_nbo = None
+
+            electron_affinity_eV = None
+            ionization_energy_eV = None
+            if 'redox' in doc:
+                if 'electron_affinity_eV' in doc['redox']:
+                    electron_affinity_eV = doc['redox']['electron_affinity_eV']
+
+                if 'ionization_energy_eV' in doc['redox']:
+                    ionization_energy_eV = doc['redox']['ionization_energy_eV']
+
         except KeyError as e:
             raise Exception(
                 "Unable to construct molecule entry from molecule document; missing "
@@ -179,7 +201,10 @@ class MoleculeEntry:
             entry_id=entry_id,
             mol_graph=mol_graph,
             partial_charges_resp=partial_charges_resp,
-            partial_charges_mulliken=partial_charges_mulliken
+            partial_charges_mulliken=partial_charges_mulliken,
+            partial_charges_nbo=partial_charges_nbo,
+            electron_affinity=electron_affinity_eV,
+            ionization_energy=ionization_energy_eV
         )
 
 

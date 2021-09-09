@@ -5,7 +5,7 @@ import copy
 from functools import partial
 from HiPRGen.constants import li_ec, Terminal, mg_g2, mg_thf, m_formulas, metals
 import numpy as np
-
+from monty.json import MSONable
 
 """
 species decision tree:
@@ -356,12 +356,27 @@ def compute_graph_hashes(mol):
     return False
 
 
+class li0_filter(MSONable):
+    def __init__(self):
+        pass
 
+    def __call__(self, mol):
+        # some molecules don't have NBO data
+        if not mol.partial_charges_nbo:
+            return False
+
+        for i in mol.m_inds:
+            if (mol.species[i] == 'Li' and
+                mol.partial_charges_nbo[i] < 0.1):
+                return True
+
+        return False
 
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
 li_ec_species_decision_tree = [
+    (li0_filter(), Terminal.DISCARD),
     (li_fix_hydrogen_bonding, Terminal.KEEP),
     (partial(li_set_solvation_free_energy,
              li_ec), Terminal.KEEP),

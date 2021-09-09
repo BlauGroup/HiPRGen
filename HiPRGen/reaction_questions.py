@@ -222,29 +222,30 @@ class dcharge_too_large(MSONable):
 
 
 class set_redox_rate(MSONable):
+    """
+        Okay, so Marcus Theory.The math works out like so.∆G* = λ/4 (1 +
+    ∆G / λ)^2 ∆G is the Gibbs free energy of the reaction, ∆G* is the
+    energy barrier, and λ is the “reorganization energy” (basically the
+    energy penalty for reorganizing the solvent environment to accommodate
+    the change in local charge).The reorganization energy can be broken up
+    into two terms, an inner term (“i”) representing the contribution from
+    the first solvation shell and an outer term (“o”) representing the
+    contribution from the bulk solvent: λ = λi + λoλo = ∆e/(8 pi ε0) (1/r
+    - 1/R) (1/n^2 - 1/ε) where ∆e is the change in charge in terms of
+    fundamental charge (1.602 * 10 ^-19 C), ε0 is the vacuum permittivity
+    (8.854 * 10 ^-12 F/m), r is the first solvation shell radius (I
+    usually just pick a constant, say 6 Angstrom), R is the distance to
+    the electrode (again, for these purposes, just pick something - say
+    7.5 Angstrom), n is the index of refraction (1.415 for EC) and ε is
+    the relative dielectric (18.5 for EC/EMC).
+    """
 
-    def __init__(self, free_energy_type):
-
-        self.free_energy_type = free_energy_type
-
-        if free_energy_type == 'free_energy':
-            self.get_free_energy = lambda mol: mol.free_energy
-        elif free_energy_type == 'solvation_free_energy':
-            self.get_free_energy = lambda mol: mol.solvation_free_energy
-        else:
-            raise Exception("unrecognized free energy type")
+    def __init__(self):
+        pass
 
 
 
     def __call__(self, reaction, mol_entries, params):
-        # we already know there is a single reactant and product and they are
-        # covalent isomorphic.
-        # Regardless of whether you are gaining or loosing an electron,
-        # the charge change happens instantly, and then you recoordinate.
-        # we return true if you can't reduce without recoordinating, in which
-        # case the reaction gets passed to a Terminal.DISCARD in the
-        # standard lithium decision tree
-
         dCharge = 0.0
 
         reactant_index = reaction['reactants'][0]
@@ -255,18 +256,43 @@ class set_redox_rate(MSONable):
         product = mol_entries[product_index]
         dCharge += product.charge
 
+        dG_barrier = float("inf")
 
-        if reactant.total_hash in product.coordimer_energies:
-            transition_state_energy = product.coordimer_energies[reactant.total_hash]
-            dG1 = transition_state_energy - self.get_free_energy(reactant)
-            dG1 += dCharge * params['electron_free_energy']
-            reaction['rate'] = default_rate(dG1, params)
-            reaction['dG1'] = dG1
-            return False
-        else:
-            return True
+        for m1 in reactant.coordimers.values():
+            for m2 in product.coordimers.values():
 
+                n = 1.415  # index of refraction; variable
+                eps = 18.5  # dielectric constant; variable
 
+                r = 6.0  # in Angstrom
+                R = 7.5  # in Angstrom
+
+                eps_0 = 8.85419 * 10 ** -12  # vacuum permittivity
+                e = 1.602 * 10 ** -19  # fundamental charge
+
+                l_outer = e / (8 * math.pi * eps_0)
+                l_outer *= (1 / r - 1/(2 * R)) * 10 ** 10  # Converting to SI units; factor of 2 is because of different definitions of the distance to electrode
+                l_outer *= (1 / n ** 2 - 1 / eps)
+
+                if dCharge == -1:
+                    vals = [m1.electron_affinity, m2.ionization_energy]
+                    vals_filtered = [v for v in vals if v is not None]
+                    l_inner = sum(vals_filtered) / len(vals_filtered)
+
+                if dCharge == 1:
+                    vals = [m1.ionization_energy, m2.electron_affinity]
+                    vals_filtered = [v for v in vals if v is not None]
+                    l_inner = sum(vals_filtered) / len(vals_filtered)
+
+                l = l_inner + l_outer
+
+                dG_temp = m2.free_energy - m1.free_energy
+                dG_barrier_temp = l / 4 * (1 + dG_temp / l) ** 2
+
+                dG_barrier = min(dG_barrier, dG_barrier_temp)
+
+        reaction['rate'] = default_rate(dG_barrier, params)
+        return False
 
 
 class reactant_and_product_not_isomorphic(MSONable):
@@ -575,7 +601,7 @@ li_ec_reaction_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (set_redox_rate("solvation_free_energy"), Terminal.DISCARD),
+        (set_redox_rate(), Terminal.DISCARD),
         (default_true, Terminal.KEEP)
     ]),
 
@@ -679,24 +705,7 @@ mg_thf_reaction_decision_tree = [
 
 standard_logging_decision_tree = Terminal.DISCARD
 
-li_ec_redox_logging_decision_tree = [
-
-    (dG_above_threshold(
-             0.5, "solvation_free_energy"), Terminal.DISCARD),
-
-    # redox branch
-    (is_redox_reaction(), [
-
-        (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (set_redox_rate("solvation_free_energy"), Terminal.KEEP),
-        (default_true, Terminal.DISCARD)
-    ]),
-
-    (default_true, Terminal.DISCARD)
-    ]
-
+li_ec_redox_logging_decision_tree = Terminal.DISCARD
 
 
 
