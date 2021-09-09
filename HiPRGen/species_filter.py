@@ -179,6 +179,17 @@ def species_filter(
     for i, e in enumerate(mol_entries):
         e.ind = i
 
+    # python doesn't have shared memory. That means that every worker during
+    # reaction filtering must maintain its own copy of the molecules.
+    # for this reason, it is good to remove attributes that are only used
+    # during species filtering.
+    log_message("clearing unneeded attributes")
+    for m in mol_entries:
+        m.partial_charges_resp = None
+        m.partial_charges_mulliken = None
+        m.partial_charges_nbo = None
+        m.atom_locations = None
+
 
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json

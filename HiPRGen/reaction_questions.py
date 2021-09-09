@@ -295,9 +295,20 @@ class set_redox_rate(MSONable):
 
                 dG_barrier = min(dG_barrier, dG_barrier_temp)
 
-        reaction['rate'] = default_rate(dG_barrier, params)
-        reaction['dG_barrier'] = dG_barrier
-        reaction['dG'] = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
+
+        # reaction['dG'] = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
+        # reaction['rate'] = default_rate(dG_barrier, params)
+        # reaction['dG_barrier'] = dG_barrier
+
+        dG = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
+        reaction['dG'] = dG
+        if dG < 0:
+            reaction['dG_barrier'] = 0
+        else:
+            reaction['dG_barrier'] = dG
+        reaction['rate'] = default_rate(dG, params)
+
+
         return False
 
 
@@ -603,9 +614,6 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 
 li_ec_reaction_decision_tree = [
 
-
-    (dG_above_threshold(0.5, "solvation_free_energy"), Terminal.DISCARD),
-
     # redox branch
     (is_redox_reaction(), [
 
@@ -615,6 +623,9 @@ li_ec_reaction_decision_tree = [
         (set_redox_rate(), Terminal.DISCARD),
         (default_true(), Terminal.KEEP)
     ]),
+
+
+    (dG_above_threshold(0.5, "solvation_free_energy"), Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
