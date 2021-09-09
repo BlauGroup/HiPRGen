@@ -308,8 +308,10 @@ class set_redox_rate(MSONable):
             reaction['dG_barrier'] = dG
         reaction['rate'] = default_rate(dG, params)
 
-
-        return False
+        if dG > 0.5:
+            return True
+        else:
+            return False
 
 
 class reactant_and_product_not_isomorphic(MSONable):
