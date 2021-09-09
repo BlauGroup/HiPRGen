@@ -12,7 +12,6 @@ from HiPRGen.species_filter import species_filter
 from HiPRGen.bucketing import bucket
 from HiPRGen.report_generator import ReportGenerator
 from HiPRGen.initial_state import insert_initial_state
-from HiPRGen.species_questions import *
 
 from HiPRGen.species_questions import (
     standard_species_logging_decision_tree,
@@ -103,10 +102,6 @@ def li_test():
         mol_entries_pickle_location=folder + '/mol_entries.pickle',
         species_report=folder + '/unfiltered_species_report.tex',
         species_decision_tree=species_decision_tree,
-        species_logging_decision_tree= [
-            (li0_filter(), Terminal.KEEP),
-            (default_true, Terminal.DISCARD)],
-        generate_unfiltered_mol_pictures=True,
         coordimer_weight=lambda mol: mol.solvation_free_energy
     )
 
