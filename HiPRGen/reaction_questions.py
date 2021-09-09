@@ -100,9 +100,10 @@ def run_decision_tree(
 
 
 
-def default_rate(dG, params):
+def default_rate(dG, params, constant_barrier = 0.0):
     kT = KB * params['temperature']
     max_rate = kT / PLANCK
+    max_rate *= max_rate * math.exp(-constant_barrier / kT)
 
     if dG < 0:
         rate = max_rate
@@ -113,10 +114,11 @@ def default_rate(dG, params):
 
 class dG_above_threshold(MSONable):
 
-    def __init__(self, threshold, free_energy_type):
+    def __init__(self, threshold, free_energy_type, constant_barrier):
 
         self.threshold = threshold
         self.free_energy_type = free_energy_type
+        self.constant_barrier = constant_barrier
 
         if free_energy_type == 'free_energy':
             self.get_free_energy = lambda mol: mol.free_energy
@@ -156,7 +158,7 @@ class dG_above_threshold(MSONable):
                 reaction['dG_barrier'] = 0
             else:
                 reaction['dG_barrier'] = dG
-            reaction['rate'] = default_rate(dG, params)
+            reaction['rate'] = default_rate(dG, params, self.constant_barrier)
             return False
 
 
@@ -225,7 +227,7 @@ class dcharge_too_large(MSONable):
 
 
 
-class set_redox_rate(MSONable):
+class set_redox_rate_markus_theory(MSONable):
     """
         Okay, so Marcus Theory.The math works out like so.∆G* = λ/4 (1 +
     ∆G / λ)^2 ∆G is the Gibbs free energy of the reaction, ∆G* is the
@@ -262,51 +264,55 @@ class set_redox_rate(MSONable):
 
         dG_barrier = float("inf")
 
-        for m1 in reactant.coordimers.values():
-            for m2 in product.coordimers.values():
-
-                n = 1.415  # index of refraction; variable
-                eps = 18.5  # dielectric constant; variable
-
-                r = 6.0  # in Angstrom
-                R = 7.5  # in Angstrom
-
-                eps_0 = 8.85419 * 10 ** -12  # vacuum permittivity
-                e = 1.602 * 10 ** -19  # fundamental charge
-
-                l_outer = e / (8 * math.pi * eps_0)
-                l_outer *= (1 / r - 1/(2 * R)) * 10 ** 10  # Converting to SI units; factor of 2 is because of different definitions of the distance to electrode
-                l_outer *= (1 / n ** 2 - 1 / eps)
-
-                if dCharge == -1:
-                    vals = [m1.electron_affinity, m2.ionization_energy]
-                    vals_filtered = [v for v in vals if v is not None]
-                    l_inner = sum(vals_filtered) / len(vals_filtered)
-
-                if dCharge == 1:
-                    vals = [m1.ionization_energy, m2.electron_affinity]
-                    vals_filtered = [v for v in vals if v is not None]
-                    l_inner = sum(vals_filtered) / len(vals_filtered)
-
-                l = l_inner + l_outer
-
-                dG_temp = m2.free_energy - m1.free_energy
-                dG_barrier_temp = l / 4 * (1 + dG_temp / l) ** 2
-
-                dG_barrier = min(dG_barrier, dG_barrier_temp)
+        try:
+            product_coordimers = product.coordimers.values()
+        except:
+            product_coordimers = [product]
 
 
-        # reaction['dG'] = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
-        # reaction['rate'] = default_rate(dG_barrier, params)
-        # reaction['dG_barrier'] = dG_barrier
+
+        for m in product_coordimers:
+
+            n = 1.415  # index of refraction; variable
+            eps = 18.5  # dielectric constant; variable
+
+            r = 6.0  # in Angstrom
+            R = 7.5  # in Angstrom
+
+            eps_0 = 8.85419 * 10 ** -12  # vacuum permittivity
+            e = 1.602 * 10 ** -19  # fundamental charge
+
+            l_outer = e / (8 * math.pi * eps_0)
+            l_outer *= (1 / r - 1/(2 * R)) * 10 ** 10  # Converting to SI units; factor of 2 is because of different definitions of the distance to electrode
+            l_outer *= (1 / n ** 2 - 1 / eps)
+
+            if dCharge == -1:
+                vals = [reactant.electron_affinity, m.ionization_energy]
+                vals_filtered = [v for v in vals if v is not None]
+                l_inner = sum(vals_filtered) / len(vals_filtered)
+
+            if dCharge == 1:
+                vals = [reactant.ionization_energy, m.electron_affinity]
+                vals_filtered = [v for v in vals if v is not None]
+                l_inner = sum(vals_filtered) / len(vals_filtered)
+
+
+            if l_inner < 0:
+                l_inner = 0
+
+            l = l_inner + l_outer
+
+
+            dG_temp = m.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
+            dG_barrier_temp = l / 4 * (1 + dG_temp / l) ** 2
+
+            dG_barrier = min(dG_barrier, dG_barrier_temp)
+
 
         dG = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
         reaction['dG'] = dG
-        if dG < 0:
-            reaction['dG_barrier'] = 0
-        else:
-            reaction['dG_barrier'] = dG
-        reaction['rate'] = default_rate(dG, params)
+        reaction['rate'] = default_rate(dG_barrier, params)
+        reaction['dG_barrier'] = dG_barrier
 
         if dG > 0.5:
             return True
@@ -622,12 +628,12 @@ li_ec_reaction_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (set_redox_rate(), Terminal.DISCARD),
+        (set_redox_rate_markus_theory(), Terminal.DISCARD),
         (default_true(), Terminal.KEEP)
     ]),
 
 
-    (dG_above_threshold(0.5, "solvation_free_energy"), Terminal.DISCARD),
+    (dG_above_threshold(0.5, "solvation_free_energy", 0.2), Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
@@ -656,7 +662,7 @@ mg_g2_reaction_decision_tree = [
     # redox branch
     (is_redox_reaction(), [
 
-        (dG_above_threshold(0.5, "free_energy"), Terminal.DISCARD),
+        (dG_above_threshold(0.5, "free_energy", 0), Terminal.DISCARD),
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
@@ -665,7 +671,7 @@ mg_g2_reaction_decision_tree = [
     ]),
 
     (dG_above_threshold(
-             0.5, "solvation_free_energy"), Terminal.DISCARD),
+             0.5, "solvation_free_energy", 0), Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 
@@ -694,7 +700,7 @@ mg_thf_reaction_decision_tree = [
 
         (dG_above_threshold(
                  0.5,
-                 "free_energy"), Terminal.DISCARD),
+                 "free_energy", 0), Terminal.DISCARD),
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
@@ -704,7 +710,7 @@ mg_thf_reaction_decision_tree = [
 
     (dG_above_threshold(
              0.5,
-             "solvation_free_energy"), Terminal.DISCARD),
+             "solvation_free_energy", 0), Terminal.DISCARD),
 
     (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
 

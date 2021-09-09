@@ -8,4 +8,4 @@ network_loader = NetworkLoader(
     './scratch/li_test/initial_state.sqlite'
     )
 
-reaction = {'number_of_reactants': 1, 'number_of_products': 1, 'reactants': (110, -1), 'products': (98, -1)}
+reaction = {'number_of_reactants': 1, 'number_of_products': 1, 'reactants': (134, -1), 'products': (133, -1)}

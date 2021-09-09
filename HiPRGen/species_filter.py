@@ -149,6 +149,18 @@ def species_filter(
 
     report_generator.finished()
 
+
+    # python doesn't have shared memory. That means that every worker during
+    # reaction filtering must maintain its own copy of the molecules.
+    # for this reason, it is good to remove attributes that are only used
+    # during species filtering.
+    log_message("clearing unneeded attributes")
+    for m in mol_entries_filtered:
+        m.partial_charges_resp = None
+        m.partial_charges_mulliken = None
+        m.partial_charges_nbo = None
+        m.atom_locations = None
+
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
 
@@ -156,12 +168,15 @@ def species_filter(
     # so we can use them to compute redox rates
     def collapse_isomorphism_group(g):
         lowest_energy_coordimer = min(g,key=coordimer_weight)
-        coordimers = {}
 
-        for m in g:
-            coordimers[m.total_hash] = m
 
-        lowest_energy_coordimer.coordimers = coordimers
+        if len(lowest_energy_coordimer.m_inds) > 0:
+            coordimers = {}
+
+            for m in g:
+                coordimers[m.total_hash] = m
+
+            lowest_energy_coordimer.coordimers = coordimers
 
         return lowest_energy_coordimer
 
@@ -178,17 +193,6 @@ def species_filter(
 
     for i, e in enumerate(mol_entries):
         e.ind = i
-
-    # python doesn't have shared memory. That means that every worker during
-    # reaction filtering must maintain its own copy of the molecules.
-    # for this reason, it is good to remove attributes that are only used
-    # during species filtering.
-    log_message("clearing unneeded attributes")
-    for m in mol_entries:
-        m.partial_charges_resp = None
-        m.partial_charges_mulliken = None
-        m.partial_charges_nbo = None
-        m.atom_locations = None
 
 
     log_message("creating molecule entry pickle")
