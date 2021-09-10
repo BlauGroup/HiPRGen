@@ -242,7 +242,8 @@ class set_redox_rate_markus_theory(MSONable):
     the relative dielectric (18.5 for EC/EMC).
     """
 
-    def __init__(self):
+    def __init__(self, threshold):
+        self.threshold = threshold
         pass
 
 
@@ -314,7 +315,7 @@ class set_redox_rate_markus_theory(MSONable):
         reaction['dG_barrier'] = dG_barrier
         reaction['rate'] = default_rate(dG_barrier, params)
 
-        if dG > 0.5:
+        if dG > self.threshold:
             return True
         else:
             return False
@@ -620,7 +621,7 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 
 
 
-li_ec_reaction_decision_tree = [
+li_ec_reaction_markus_theory_decision_tree = [
 
     # redox branch
     (is_redox_reaction(), [
@@ -628,7 +629,7 @@ li_ec_reaction_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (set_redox_rate_markus_theory(), Terminal.DISCARD),
+        (set_redox_rate_markus_theory(0.5), Terminal.DISCARD),
         (default_true(), Terminal.KEEP)
     ]),
 
@@ -655,6 +656,44 @@ li_ec_reaction_decision_tree = [
 
     (default_true(), Terminal.DISCARD)
     ]
+
+
+li_ec_reaction_decision_tree = [
+
+    # redox branch
+    (is_redox_reaction(), [
+
+        (too_many_reactants_or_products(), Terminal.DISCARD),
+        (dcharge_too_large(), Terminal.DISCARD),
+        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+        (dG_above_threshold(0.5, "free_energy", 0.0), Terminal.DISCARD),
+        (default_true(), Terminal.KEEP)
+    ]),
+
+
+    (dG_above_threshold(0.5, "solvation_free_energy", 0.0), Terminal.DISCARD),
+
+    (partial(star_count_diff_above_threshold, 4), Terminal.DISCARD),
+
+    (reaction_is_covalent_decomposable, Terminal.DISCARD),
+
+    (concerted_metal_coordination, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_product, Terminal.DISCARD),
+
+    (concerted_metal_coordination_one_reactant, Terminal.DISCARD),
+
+    (metal_coordination_passthrough, Terminal.KEEP),
+
+    (fragment_matching_found, [
+        (single_reactant_single_product_not_hydrogen_transfer, Terminal.DISCARD),
+        (single_reactant_double_product_ring_close, Terminal.DISCARD),
+        (default_true(), Terminal.KEEP)]
+    ),
+
+    (default_true(), Terminal.DISCARD)
+    ]
+
 
 
 mg_g2_reaction_decision_tree = [
@@ -742,6 +781,7 @@ li_ec_redox_logging_decision_tree = Terminal.DISCARD
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
 reaction_decision_tree_dict = {
     'li_ec_reaction_decision_tree' : li_ec_reaction_decision_tree,
+    'li_ec_reaction_markus_theory_decision_tree' : li_ec_reaction_markus_theory_decision_tree,
     'mg_g2_reaction_decision_tree' : mg_g2_reaction_decision_tree,
     'mg_thf_reaction_decision_tree' : mg_thf_reaction_decision_tree
 }
