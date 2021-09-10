@@ -160,7 +160,7 @@ class dG_above_threshold(MSONable):
                 barrier = dG + self.constant_barrier
 
             reaction['dG_barrier'] = barrier
-            reaction['rate'] = default_rate(dG, params, self.constant_barrier)
+            reaction['rate'] = default_rate(barrier, params)
             return False
 
 
