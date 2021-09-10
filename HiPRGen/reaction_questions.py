@@ -223,7 +223,7 @@ class dcharge_too_large(MSONable):
 
 
 
-class set_redox_rate_markus_theory(MSONable):
+class set_redox_rate_marcus_theory(MSONable):
     """
         Okay, so Marcus Theory.The math works out like so.∆G* = λ/4 (1 +
     ∆G / λ)^2 ∆G is the Gibbs free energy of the reaction, ∆G* is the
@@ -621,7 +621,7 @@ def concerted_metal_coordination_one_reactant(reaction, mols, params):
 
 
 
-li_ec_reaction_markus_theory_decision_tree = [
+li_ec_reaction_marcus_theory_decision_tree = [
 
     # redox branch
     (is_redox_reaction(), [
@@ -629,7 +629,7 @@ li_ec_reaction_markus_theory_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (set_redox_rate_markus_theory(0.5), Terminal.DISCARD),
+        (set_redox_rate_marcus_theory(0.5), Terminal.DISCARD),
         (default_true(), Terminal.KEEP)
     ]),
 
@@ -781,7 +781,7 @@ li_ec_redox_logging_decision_tree = Terminal.DISCARD
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
 reaction_decision_tree_dict = {
     'li_ec_reaction_decision_tree' : li_ec_reaction_decision_tree,
-    'li_ec_reaction_markus_theory_decision_tree' : li_ec_reaction_markus_theory_decision_tree,
+    'li_ec_reaction_marcus_theory_decision_tree' : li_ec_reaction_marcus_theory_decision_tree,
     'mg_g2_reaction_decision_tree' : mg_g2_reaction_decision_tree,
     'mg_thf_reaction_decision_tree' : mg_thf_reaction_decision_tree
 }
