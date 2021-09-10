@@ -100,16 +100,11 @@ def run_decision_tree(
 
 
 
-def default_rate(dG, params):
+def default_rate(dG_barrier, params):
     kT = KB * params['temperature']
     max_rate = kT / PLANCK
-    max_rate *= max_rate 
-
-    if dG < 0:
-        rate = max_rate
-    else:
-        rate = max_rate * math.exp(- dG / kT)
-
+    max_rate *= max_rate
+    rate = max_rate * math.exp(- dG_barrier / kT)
     return rate
 
 class dG_above_threshold(MSONable):
