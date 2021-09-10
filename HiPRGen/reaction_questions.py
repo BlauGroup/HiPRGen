@@ -100,10 +100,10 @@ def run_decision_tree(
 
 
 
-def default_rate(dG, params, constant_barrier = 0.0):
+def default_rate(dG, params):
     kT = KB * params['temperature']
     max_rate = kT / PLANCK
-    max_rate *= max_rate * math.exp(-constant_barrier / kT)
+    max_rate *= max_rate 
 
     if dG < 0:
         rate = max_rate
@@ -155,9 +155,11 @@ class dG_above_threshold(MSONable):
         else:
             reaction['dG'] = dG
             if dG < 0:
-                reaction['dG_barrier'] = 0
+                barrier = self.constant_barrier
             else:
-                reaction['dG_barrier'] = dG
+                barrier = dG + self.constant_barrier
+
+            reaction['dG_barrier'] = barrier
             reaction['rate'] = default_rate(dG, params, self.constant_barrier)
             return False
 
