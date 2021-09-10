@@ -305,10 +305,14 @@ class set_redox_rate_markus_theory(MSONable):
             dG_barrier = min(dG_barrier, dG_barrier_temp)
 
 
+        if dG_barrier < 0:
+            dG_barrier = 0
+
         dG = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
+
         reaction['dG'] = dG
-        reaction['rate'] = default_rate(dG_barrier, params)
         reaction['dG_barrier'] = dG_barrier
+        reaction['rate'] = default_rate(dG_barrier, params)
 
         if dG > 0.5:
             return True
