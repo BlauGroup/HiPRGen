@@ -3,6 +3,7 @@
 
 
 from enum import Enum
+from monty.json import MSONable
 
 # Basic constants
 
@@ -15,7 +16,7 @@ KB = 8.617333262 * 10 ** -5
 # Planck constant in eV * s
 PLANCK = 4.135667696 * 10 ** -15
 
-class Terminal(Enum):
+class Terminal(MSONable, Enum):
     KEEP = 1
     DISCARD = -1
 
