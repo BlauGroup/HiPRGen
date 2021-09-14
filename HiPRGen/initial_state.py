@@ -57,8 +57,23 @@ create_trajectories_table = """
     );
 """
 
+create_factors_table = """
+    CREATE TABLE factors (
+            factor_zero      REAL NOT NULL,
+            factor_two       REAL NOT NULL,
+            factor_duplicate REAL NOT NULL
+    );
+"""
 
-def insert_initial_state(initial_state, mol_entries, initial_state_db):
+
+def insert_initial_state(
+        initial_state,
+        mol_entries,
+        initial_state_db,
+        factor_zero = 1.0,
+        factor_two = 1.0,
+        factor_duplicate = 0.5
+):
     """
     initial state is a dict mapping species ids to counts.
     """
@@ -67,9 +82,15 @@ def insert_initial_state(initial_state, mol_entries, initial_state_db):
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_initial_state_table)
     rn_cur.execute(create_trajectories_table)
+    rn_cur.execute(create_factors_table)
     rn_con.commit()
 
+    rn_cur.execute(
+        "INSERT INTO factors VALUES (?,?,?)",
+        (factor_zero, factor_two, factor_duplicate))
+
     num_species = len(mol_entries)
+
 
     for i in range(num_species):
         rn_cur.execute(

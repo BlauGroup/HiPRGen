@@ -31,17 +31,16 @@ the code in this file is designed to run on a compute cluster using MPI.
 create_metadata_table = """
     CREATE TABLE metadata (
             number_of_species   INTEGER NOT NULL,
-            number_of_reactions INTEGER NOT NULL,
-            factor_zero         REAL NOT NULL,
-            factor_two          REAL NOT NULL,
-            factor_duplicate    REAL NOT NULL
+            number_of_reactions INTEGER NOT NULL
     );
 """
 
 insert_metadata = """
-    INSERT INTO metadata VALUES (?, ?, ?, ?, ?)
+    INSERT INTO metadata VALUES (?, ?)
 """
 
+# it is important that reaction_id is the primary key
+# otherwise the network loader will be extremely slow.
 create_reactions_table = """
     CREATE TABLE reactions (
             reaction_id         INTEGER NOT NULL PRIMARY KEY,
@@ -106,9 +105,6 @@ def dispatcher(
         rn_db,
         generation_report_path,
         commit_freq=1000,
-        factor_zero=1.0,
-        factor_two=1.0,
-        factor_duplicate=0.5,
         checkpoint_interval = 10
 ):
 
@@ -249,10 +245,7 @@ def dispatcher(
     rn_cur.execute(
         insert_metadata,
         (len(mol_entries),
-         reaction_index,
-        factor_zero,
-        factor_two,
-        factor_duplicate)
+         reaction_index)
     )
 
 

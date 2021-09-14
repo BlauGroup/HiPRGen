@@ -187,8 +187,7 @@ def li_test():
         '--base_seed=1000',
         '--thread_count=' + number_of_threads,
         '--step_cutoff=200',
-        '--gc_interval=3600',
-        '--gc_threshold=1'
+        '--dependency_threshold=1'
     ])
 
     # the network loader builds a python object around a reaction network
@@ -332,8 +331,7 @@ def mg_test():
         '--base_seed=1000',
         '--thread_count=' + number_of_threads,
         '--step_cutoff=200',
-        '--gc_interval=3600',
-        '--gc_threshold=1'
+        '--dependency_threshold=1'
     ])
 
 
