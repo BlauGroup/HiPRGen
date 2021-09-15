@@ -348,6 +348,9 @@ class star_count_diff_above_threshold(MSONable):
     def __init__(self, threshold):
         self.threshold = threshold
 
+    def __str__(self):
+        return "star count diff above threshold=" + str(self.threshold)
+
     def __call__(self, reaction, mols, params):
         reactant_stars = {}
         product_stars = {}
@@ -387,6 +390,8 @@ class reaction_is_covalent_decomposable(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "reaction is covalent decomposable"
 
     def __call__(self, reaction, mols, params):
         if (reaction['number_of_reactants'] == 2 and
@@ -584,6 +589,9 @@ class concerted_metal_coordination(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "concerted metal coordination"
+
     def __call__(self, reaction, mols, params):
 
         if (reaction['number_of_reactants'] == 2 and
@@ -609,6 +617,11 @@ class concerted_metal_coordination(MSONable):
 class concerted_metal_coordination_one_product(MSONable):
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "concerted metal coordination one product"
+
+
 
     def __call__(self, reaction, mols, params):
 
@@ -636,6 +649,11 @@ class concerted_metal_coordination_one_product(MSONable):
 class concerted_metal_coordination_one_reactant(MSONable):
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "concerted metal coordination one reactant"
+
+
 
     def __call__(self, reaction, mols, params):
 
@@ -697,7 +715,6 @@ li_ec_reaction_marcus_theory_decision_tree = [
 
     (default_true(), Terminal.DISCARD)
     ]
-
 
 li_ec_reaction_decision_tree = [
 
@@ -815,8 +832,8 @@ mg_thf_reaction_decision_tree = [
 
 standard_logging_decision_tree = Terminal.DISCARD
 
-li_ec_redox_logging_decision_tree = Terminal.DISCARD
 
+li_ec_redox_logging_decision_tree = Terminal.DISCARD
 
 
 # this dictionary exists so that we can pass a decision tree argument to mpiexec
