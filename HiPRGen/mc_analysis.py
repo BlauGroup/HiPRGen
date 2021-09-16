@@ -293,17 +293,16 @@ def sink_report(
 
 
     # code for printing species which wern't produced
-    # counter = 0
-    # report_generator.emit_newpage()
-    # report_generator.emit_text("species not produced")
-    # for species_index, (c,p,r,e) in sink_data:
-    #     if c[0] + p[0] == 0:
-    #         counter += 1
-    #         report_generator.emit_molecule(species_index)
-    #         if counter % 4 == 0:
-    #             report_generator.emit_newline()
+    report_generator.emit_newpage()
+    report_generator.emit_text("species not produced")
+    for species_index, (c,p,r,e) in sink_data:
+        if c[0] + p[0] == 0:
+            report_generator.emit_molecule(species_index)
+            report_generator.emit_text(
+                network_loader.mol_entries[species_index].entry_id)
 
-
+            report_generator.emit_newline()
+            report_generator.emit_newline()
     report_generator.finished()
 
 

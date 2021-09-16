@@ -1,6 +1,13 @@
 from monty.json import MSONable
 
 class DispatcherPayload(MSONable):
+    """
+    class for storing all the arguments required by the reaction
+    filter dispatcher. We do this instead of passing arguments
+    directly because it makes it easier to pass arguments through the
+    MPI barrier.
+    """
+
     def __init__(
             self,
             bucket_db_file,
@@ -17,6 +24,10 @@ class DispatcherPayload(MSONable):
 
 
 class WorkerPayload(MSONable):
+    """
+    class for storing all the arguments required by the reaction
+    filter dispatcher.
+    """
     def __init__(
             self,
             bucket_db_file,
