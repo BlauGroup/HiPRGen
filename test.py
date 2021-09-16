@@ -7,16 +7,27 @@ import pickle
 
 from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.initial_state import find_mol_entry_from_xyz_and_charge
-from monty.serialization import loadfn
+from monty.serialization import loadfn, dumpfn
 from HiPRGen.species_filter import species_filter
 from HiPRGen.bucketing import bucket
 from HiPRGen.report_generator import ReportGenerator
 from HiPRGen.initial_state import insert_initial_state
+from HiPRGen.constants import ROOM_TEMP, Terminal
+from HiPRGen.reaction_filter_payloads import (
+    DispatcherPayload,
+    WorkerPayload
+)
 
 from HiPRGen.species_questions import (
     standard_species_logging_decision_tree,
     mg_g2_species_decision_tree,
     li_ec_species_decision_tree
+)
+
+from HiPRGen.reaction_questions import (
+    li_ec_reaction_decision_tree,
+    mg_g2_reaction_decision_tree,
+
 )
 
 from HiPRGen.mc_analysis import (
@@ -126,25 +137,39 @@ def li_test():
     # the reaction decision trees are constructed in
     # HiPRGen.reaction_questions
 
-    reaction_decision_tree = 'li_ec_reaction_decision_tree'
-    logging_decision_tree = 'li_ec_redox_logging_decision_tree'
-    electron_free_energy = "-1.4"
-    subprocess.run([
-        'mpiexec',
-        '--use-hwthread-cpus',
-        '-n',
-        number_of_threads,
-        'python',
-        'run_network_generation.py',
-        folder + '/mol_entries.pickle',
+    dispatcher_payload = DispatcherPayload(
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
-        folder + '/reaction_report.tex',
-        reaction_decision_tree,
-        logging_decision_tree,
-        electron_free_energy
-    ])
+        folder + '/reaction_report.tex'
+    )
 
+    worker_payload = WorkerPayload(
+        folder + '/buckets.sqlite',
+        li_ec_reaction_decision_tree,
+        {
+            'temperature' : ROOM_TEMP,
+            'electron_free_energy' : -1.4
+        },
+        Terminal.DISCARD
+    )
+
+
+    dumpfn(dispatcher_payload, folder + '/dispatcher_payload.json')
+    dumpfn(worker_payload, folder + '/worker_payload.json')
+
+    subprocess.run(
+        [
+            'mpiexec',
+            '--use-hwthread-cpus',
+            '-n',
+            number_of_threads,
+            'python',
+            'run_network_generation.py',
+            folder + '/mol_entries.pickle',
+            folder + '/dispatcher_payload.json',
+            folder + '/worker_payload.json'
+        ]
+    )
 
     # after we have generated the mol_entries, we refer to molecules by
     # their index. The function find_mol_entry_from_xyz_and_charge is able
@@ -269,9 +294,6 @@ def mg_test():
     folder = './scratch/mg_test'
     mol_json = './data/sam_G2.json'
     species_decision_tree = mg_g2_species_decision_tree
-    reaction_decision_tree = 'mg_g2_reaction_decision_tree'
-    logging_decision_tree = 'standard_logging_decision_tree'
-    electron_free_energy = "-2.06"
 
     database_entries = loadfn(mol_json)
     mol_entries = species_filter(
@@ -284,21 +306,41 @@ def mg_test():
 
     bucket(mol_entries, folder + '/buckets.sqlite')
 
-    subprocess.run([
-        'mpiexec',
-        '--use-hwthread-cpus',
-        '-n',
-        number_of_threads,
-        'python',
-        'run_network_generation.py',
-        folder + '/mol_entries.pickle',
+
+    dispatcher_payload = DispatcherPayload(
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
-        folder + '/reaction_report.tex',
-        reaction_decision_tree,
-        logging_decision_tree,
-        electron_free_energy
-    ])
+        folder + '/reaction_report.tex'
+    )
+
+    worker_payload = WorkerPayload(
+        folder + '/buckets.sqlite',
+        mg_g2_reaction_decision_tree,
+        {
+            'temperature' : ROOM_TEMP,
+            'electron_free_energy' : -2.06
+        },
+        Terminal.DISCARD
+    )
+
+
+    dumpfn(dispatcher_payload, folder + '/dispatcher_payload.json')
+    dumpfn(worker_payload, folder + '/worker_payload.json')
+
+    subprocess.run(
+        [
+            'mpiexec',
+            '--use-hwthread-cpus',
+            '-n',
+            number_of_threads,
+            'python',
+            'run_network_generation.py',
+            folder + '/mol_entries.pickle',
+            folder + '/dispatcher_payload.json',
+            folder + '/worker_payload.json'
+        ]
+    )
+
 
     mg_g2_plus_plus_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,

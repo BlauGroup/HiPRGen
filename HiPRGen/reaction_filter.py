@@ -5,6 +5,10 @@ import sqlite3
 from time import localtime, strftime, time
 from enum import Enum
 from math import floor
+from HiPRGen.reaction_filter_payloads import (
+    DispatcherPayload,
+    WorkerPayload
+)
 
 from HiPRGen.reaction_questions import (
     standard_logging_decision_tree,
@@ -99,19 +103,14 @@ def log_message(*args, **kwargs):
         '[' + strftime('%H:%M:%S', localtime()) + ']',
         *args, **kwargs)
 
-
 def dispatcher(
         mol_entries,
-        bucket_db,
-        rn_db,
-        generation_report_path,
-        commit_freq=1000,
-        checkpoint_interval = 10
+        dispatcher_payload
 ):
 
     comm = MPI.COMM_WORLD
     work_batch_list = []
-    bucket_con = sqlite3.connect(bucket_db)
+    bucket_con = sqlite3.connect(dispatcher_payload.bucket_db_file)
     bucket_cur = bucket_con.cursor()
     size_cur = bucket_con.cursor()
 
@@ -127,7 +126,7 @@ def dispatcher(
         composition_names[composition_id] = composition
 
     log_message("creating reaction network db")
-    rn_con = sqlite3.connect(rn_db)
+    rn_con = sqlite3.connect(dispatcher_payload.reaction_network_db_file)
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
@@ -139,7 +138,7 @@ def dispatcher(
     # spend a bunch of time generating molecule pictures
     report_generator = ReportGenerator(
         mol_entries,
-        generation_report_path,
+        dispatcher_payload.report_file,
         rebuild_mol_pictures=False
     )
 
@@ -169,7 +168,8 @@ def dispatcher(
 
         current_time = floor(time())
         time_diff = current_time - last_checkpoint_time
-        if ( current_time % checkpoint_interval == 0 and time_diff > 0):
+        if ( current_time % dispatcher_payload.checkpoint_interval == 0 and
+             time_diff > 0):
             batches_left_at_current_checkpoint = len(work_batch_list)
             batch_count_diff = (
                 batches_left_at_last_checkpoint -
@@ -227,7 +227,7 @@ def dispatcher(
                  ))
 
             reaction_index += 1
-            if reaction_index % commit_freq == 0:
+            if reaction_index % dispatcher_payload.commit_frequency == 0:
                 rn_con.commit()
 
 
@@ -259,14 +259,11 @@ def dispatcher(
 
 def worker(
         mol_entries,
-        bucket_db,
-        reaction_decision_tree,
-        params,
-        logging_decision_tree=standard_logging_decision_tree
+        worker_payload
 ):
 
     comm = MPI.COMM_WORLD
-    con = sqlite3.connect(bucket_db)
+    con = sqlite3.connect(worker_payload.bucket_db_file)
     cur = con.cursor()
 
 
@@ -328,8 +325,8 @@ def worker(
             decision_pathway = []
             if run_decision_tree(reaction,
                                  mol_entries,
-                                 params,
-                                 reaction_decision_tree,
+                                 worker_payload.params,
+                                 worker_payload.reaction_decision_tree,
                                  decision_pathway
                                  ):
 
@@ -341,8 +338,8 @@ def worker(
 
             if run_decision_tree(reaction,
                                  mol_entries,
-                                 params,
-                                 logging_decision_tree):
+                                 worker_payload.params,
+                                 worker_payload.logging_decision_tree):
 
                 comm.send(
                     (reaction,
