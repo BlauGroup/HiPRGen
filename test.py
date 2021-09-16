@@ -154,6 +154,8 @@ def li_test():
     )
 
 
+    # the dispatcher and worker payloads are passed through the MPI barrier
+    # as json
     dumpfn(dispatcher_payload, folder + '/dispatcher_payload.json')
     dumpfn(worker_payload, folder + '/worker_payload.json')
 
