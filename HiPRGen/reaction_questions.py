@@ -225,7 +225,8 @@ class dcharge_too_large(MSONable):
 
 
 
-class set_redox_rate_marcus_theory(MSONable):
+def marcus_barrier(reaction, mols, params):
+
     """
         Okay, so Marcus Theory.The math works out like so.∆G* = λ/4 (1 +
     ∆G / λ)^2 ∆G is the Gibbs free energy of the reaction, ∆G* is the
@@ -244,84 +245,43 @@ class set_redox_rate_marcus_theory(MSONable):
     the relative dielectric (18.5 for EC/EMC).
     """
 
-    def __init__(self, threshold):
-        self.threshold = threshold
-        pass
+    reactant = mols[reaction['reactants'][0]]
+    product = mols[reaction['products'][0]]
+    dCharge = product.charge - reactant.charge
+    n = 1.415  # index of refraction; variable
+    eps = 18.5  # dielectric constant; variable
+
+    r = 6.0  # in Angstrom
+    R = 7.5  # in Angstrom
+
+    eps_0 = 8.85419 * 10 ** -12  # vacuum permittivity
+    e = 1.602 * 10 ** -19  # fundamental charge
+
+    l_outer = e / (8 * math.pi * eps_0)
+    l_outer *= (1 / r - 1/(2 * R)) * 10 ** 10  # Converting to SI units; factor of 2 is because of different definitions of the distance to electrode
+    l_outer *= (1 / n ** 2 - 1 / eps)
+
+    if dCharge == -1:
+        vals = [reactant.electron_affinity, product.ionization_energy]
+        vals_filtered = [v for v in vals if v is not None]
+        l_inner = sum(vals_filtered) / len(vals_filtered)
+
+    if dCharge == 1:
+        vals = [reactant.ionization_energy, product.electron_affinity]
+        vals_filtered = [v for v in vals if v is not None]
+        l_inner = sum(vals_filtered) / len(vals_filtered)
 
 
+    if l_inner < 0:
+        l_inner = 0
 
-    def __call__(self, reaction, mol_entries, params):
-        dCharge = 0.0
-
-        reactant_index = reaction['reactants'][0]
-        reactant = mol_entries[reactant_index]
-        dCharge -= reactant.charge
-
-        product_index = reaction['products'][0]
-        product = mol_entries[product_index]
-        dCharge += product.charge
-
-        dG_barrier = float("inf")
-
-        try:
-            product_coordimers = product.coordimers.values()
-        except:
-            product_coordimers = [product]
+    l = l_inner + l_outer
 
 
-
-        for m in product_coordimers:
-
-            n = 1.415  # index of refraction; variable
-            eps = 18.5  # dielectric constant; variable
-
-            r = 6.0  # in Angstrom
-            R = 7.5  # in Angstrom
-
-            eps_0 = 8.85419 * 10 ** -12  # vacuum permittivity
-            e = 1.602 * 10 ** -19  # fundamental charge
-
-            l_outer = e / (8 * math.pi * eps_0)
-            l_outer *= (1 / r - 1/(2 * R)) * 10 ** 10  # Converting to SI units; factor of 2 is because of different definitions of the distance to electrode
-            l_outer *= (1 / n ** 2 - 1 / eps)
-
-            if dCharge == -1:
-                vals = [reactant.electron_affinity, m.ionization_energy]
-                vals_filtered = [v for v in vals if v is not None]
-                l_inner = sum(vals_filtered) / len(vals_filtered)
-
-            if dCharge == 1:
-                vals = [reactant.ionization_energy, m.electron_affinity]
-                vals_filtered = [v for v in vals if v is not None]
-                l_inner = sum(vals_filtered) / len(vals_filtered)
-
-
-            if l_inner < 0:
-                l_inner = 0
-
-            l = l_inner + l_outer
-
-
-            dG_temp = m.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
-            dG_barrier_temp = l / 4 * (1 + dG_temp / l) ** 2
-
-            dG_barrier = min(dG_barrier, dG_barrier_temp)
-
-
-        if dG_barrier < 0:
-            dG_barrier = 0
-
-        dG = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
-
-        reaction['dG'] = dG
-        reaction['dG_barrier'] = dG_barrier
-        reaction['rate'] = default_rate(dG_barrier, params)
-
-        if dG > self.threshold:
-            return True
-        else:
-            return False
-
+    dG = product.free_energy - reactant.free_energy + dCharge * params['electron_free_energy']
+    dG_barrier = l / 4 * (1 + dG / l) ** 2
+    reaction['marcus_barrier'] = dG_barrier
+    return False
 
 class reactant_and_product_not_isomorphic(MSONable):
 

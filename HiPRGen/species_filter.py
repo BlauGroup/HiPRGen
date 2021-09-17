@@ -94,7 +94,9 @@ def species_filter(
         species_decision_tree,
         coordimer_weight,
         species_logging_decision_tree=standard_species_logging_decision_tree,
-        generate_unfiltered_mol_pictures=False):
+        generate_unfiltered_mol_pictures=False,
+        save_coordimers=False
+):
 
     """
     run each molecule through the species decision tree and then choose the lowest weight
@@ -179,14 +181,14 @@ def species_filter(
     def collapse_isomorphism_group(g):
         lowest_energy_coordimer = min(g,key=coordimer_weight)
 
+        if save_coordimers:
+            if len(lowest_energy_coordimer.m_inds) > 0:
+                coordimers = {}
 
-        if len(lowest_energy_coordimer.m_inds) > 0:
-            coordimers = {}
+                for m in g:
+                    coordimers[m.total_hash] = Coordimer(m)
 
-            for m in g:
-                coordimers[m.total_hash] = Coordimer(m)
-
-            lowest_energy_coordimer.coordimers = coordimers
+                lowest_energy_coordimer.coordimers = coordimers
 
         return lowest_energy_coordimer
 

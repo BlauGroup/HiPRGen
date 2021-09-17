@@ -10,6 +10,10 @@ sql_get_reaction = """
     SELECT * FROM reactions WHERE reaction_id = ?;
 """
 
+sql_get_redox = """
+    SELECT * FROM reactions WHERE is_redox = 1;
+"""
+
 sql_get_trajectory = """
     SELECT * FROM trajectories;
 """
@@ -45,6 +49,22 @@ class NetworkLoader:
             self.load_initial_state()
 
         self.reactions = {}
+
+    def get_all_redox_reactions(self):
+        redox_reactions = []
+        cur = self.rn_con.cursor()
+        for res in cur.execute(sql_get_redox):
+            reaction = {}
+            reaction['number_of_reactants'] = res[1]
+            reaction['number_of_products'] = res[2]
+            reaction['reactants'] = res[3:5]
+            reaction['products'] = res[5:7]
+            reaction['rate'] = res[7]
+            reaction['dG'] = res[8]
+            reaction['dG_barrier'] = res[9]
+            redox_reactions.append(reaction)
+
+        return redox_reactions
 
 
     def index_to_reaction(self, reaction_index):

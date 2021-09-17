@@ -35,7 +35,8 @@ from HiPRGen.mc_analysis import (
     species_report,
     Pathfinding,
     sink_report,
-    consumption_report
+    consumption_report,
+    redox_report
 )
 
 # Since HiPRGen uses an end-to-end testing approach rather than testing
@@ -137,6 +138,11 @@ def li_test():
     # the reaction decision trees are constructed in
     # HiPRGen.reaction_questions
 
+    params = {
+        'temperature' : ROOM_TEMP,
+        'electron_free_energy' : -1.4
+    }
+
     dispatcher_payload = DispatcherPayload(
         folder + '/buckets.sqlite',
         folder + '/rn.sqlite',
@@ -146,10 +152,7 @@ def li_test():
     worker_payload = WorkerPayload(
         folder + '/buckets.sqlite',
         li_ec_reaction_decision_tree,
-        {
-            'temperature' : ROOM_TEMP,
-            'electron_free_energy' : -1.4
-        },
+        params,
         Terminal.DISCARD
     )
 
@@ -248,6 +251,8 @@ def li_test():
     # produced in the simulations of our lithium test network. Note that this
     # network has ~5000 reactions. Our production networks have
     # between 50-100 million reactions.
+
+    redox_report(network_loader, folder + '/redox_report.tex', params)
 
     pathfinding = Pathfinding(network_loader)
     pathfinding.generate_pathway_report(

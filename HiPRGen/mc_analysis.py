@@ -1,12 +1,40 @@
 from HiPRGen.report_generator import ReportGenerator
 from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.constants import ROOM_TEMP, KB
+from HiPRGen.reaction_questions import marcus_barrier
 import math
 import numpy as np
 
 
 def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
+
+
+def redox_report(
+        network_loader,
+        redox_report_path,
+        params
+):
+
+    redox_reactions = network_loader.get_all_redox_reactions()
+
+    for r in redox_reactions:
+        marcus_barrier(r, network_loader.mol_entries, params)
+        r['dG_barrier'] = r['marcus_barrier']
+
+    redox_reactions = sorted(redox_reactions, key=lambda r: r['marcus_barrier'])
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        redox_report_path,
+        rebuild_mol_pictures=False)
+
+    report_generator.emit_text("redox report")
+    report_generator.emit_text("marcus barrier appears below the arrow")
+    for reaction in redox_reactions:
+        report_generator.emit_reaction(reaction)
+
+    report_generator.finished()
 
 
 def reaction_tally_report(
@@ -277,17 +305,18 @@ def sink_report(
         rebuild_mol_pictures=False)
 
     for species_index, (c,p,r,e) in sink_data:
-        if (c[0] + p[0] > 0 # and
-            # network_loader.mol_entries[species_index].charge >= 0 and
-            # r > 1.5 and
-            # e > 0.1
+        if (c[0] + p[0] > 0  and
+            r > 1.5 and
+            e > 0.1
         ):
             report_generator.emit_text("ratio: " + str(r))
             report_generator.emit_text("expected val: " + str(e))
             report_generator.emit_text("produced: " + str(p[0]))
-            report_generator.emit_text(str(len(p[1])) + " distinct producing reactions")
+            report_generator.emit_text(
+                str(len(p[1])) + " distinct producing reactions")
             report_generator.emit_text("consumed: " + str(c[0]))
-            report_generator.emit_text(str(len(c[1])) + " distinct consuming reactions")
+            report_generator.emit_text(
+                str(len(c[1])) + " distinct consuming reactions")
             report_generator.emit_molecule(species_index)
             report_generator.emit_newline()
 
