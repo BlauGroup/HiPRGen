@@ -305,9 +305,11 @@ def sink_report(
         rebuild_mol_pictures=False)
 
     for species_index, (c,p,r,e) in sink_data:
+        mol = network_loader.mol_entries[species_index]
         if (c[0] + p[0] > 0  and
             r > 1.5 and
-            e > 0.1
+            e > 0.1 and
+            mol.spin_multiplicity == 1
         ):
             report_generator.emit_text("ratio: " + str(r))
             report_generator.emit_text("expected val: " + str(e))

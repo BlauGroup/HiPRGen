@@ -92,7 +92,6 @@ def li_test():
     # dataset entries. We provide two examples in the data foloder.
     mol_json = './data/ronald_LIBE.json'
     database_entries = loadfn(mol_json)
-
     # the first step of the HiPRGen pipeline is passing the input molecules
     # through the a species decision tree to discard molecules. This happens
     # here rather than further complicating the DFT pipelines which generate the

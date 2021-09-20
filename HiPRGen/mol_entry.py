@@ -52,14 +52,15 @@ class MoleculeEntry:
         partial_charges_mulliken,
         partial_charges_nbo,
         electron_affinity,
-        ionization_energy
+        ionization_energy,
+        spin_multiplicity
     ):
         self.energy = energy
         self.enthalpy = enthalpy
         self.entropy = entropy
         self.electron_affinity = electron_affinity
         self.ionization_energy = ionization_energy
-
+        self.spin_multiplicity = spin_multiplicity
 
         self.ind = None
         self.entry_id = entry_id
@@ -170,6 +171,7 @@ class MoleculeEntry:
 
             partial_charges_resp = doc['partial_charges']['resp']
             partial_charges_mulliken = doc['partial_charges']['mulliken']
+            spin_multiplicity = doc['spin_multiplicity']
 
             if 'nbo' in doc['partial_charges']:
                 partial_charges_nbo = doc['partial_charges']['nbo']
@@ -204,7 +206,8 @@ class MoleculeEntry:
             partial_charges_mulliken=partial_charges_mulliken,
             partial_charges_nbo=partial_charges_nbo,
             electron_affinity=electron_affinity_eV,
-            ionization_energy=ionization_energy_eV
+            ionization_energy=ionization_energy_eV,
+            spin_multiplicity=spin_multiplicity
         )
 
 
