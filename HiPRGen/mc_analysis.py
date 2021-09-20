@@ -246,7 +246,8 @@ class Pathfinding:
 
 def sink_report(
         network_loader,
-        sink_report_path
+        sink_report_path,
+        verbose=False
 ):
 
 
@@ -306,10 +307,11 @@ def sink_report(
 
     for species_index, (c,p,r,e) in sink_data:
         mol = network_loader.mol_entries[species_index]
-        if (c[0] + p[0] > 0  and
+        if ((c[0] + p[0] > 0  and
             r > 1.5 and
             e > 0.1 and
-            mol.spin_multiplicity == 1
+            mol.spin_multiplicity == 1) or
+            (c[0] + p[0] > 0  and verbose)
         ):
             report_generator.emit_text("ratio: " + str(r))
             report_generator.emit_text("expected val: " + str(e))
