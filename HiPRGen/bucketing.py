@@ -3,10 +3,14 @@ from itertools import combinations_with_replacement
 import sqlite3
 
 """
-Phase 2: bucketing pairs of species
-input: filtered list of species with fixed indices
-output: buckets labeled by atom count containing individual species and pairs of species
-description: since each reaction conserves atom numbers, a concerted reaction only occurs between elements in a single bucket. There are tricks to reduce the number of pairs (like don't include (A,B) and (B,A)). If the number of species is 10,000, there are only 100 million such pairs which is within reach
+Phase 2: bucketing pairs of species input: filtered list of species
+with fixed indices output: buckets labeled by atom count containing
+individual species and pairs of species description: since each
+reaction conserves atom numbers, a concerted reaction only occurs
+between elements in a single bucket. There are tricks to reduce the
+number of pairs (like don't include (A,B) and (B,A)). If the number of
+species is 10,000, there are only 100 million such pairs which is
+within reach
 """
 
 
@@ -65,7 +69,12 @@ def bucket(
             composition_count += 1
 
 
-        data = (m1.ind, m2.ind, composition_ids[composition], group_counts[composition])
+        data = (
+            m1.ind,
+            m2.ind,
+            composition_ids[composition],
+            group_counts[composition])
+
         cur.execute("INSERT INTO complexes VALUES (?, ?, ?, ?)", data)
 
         commit_count += 1
