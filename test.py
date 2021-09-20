@@ -157,7 +157,7 @@ def li_test():
 
 
     # the dispatcher and worker payloads are passed through the MPI barrier
-    # as json
+    # as json blobs dispatcher_payload and worker_payload
     dumpfn(dispatcher_payload, folder + '/dispatcher_payload.json')
     dumpfn(worker_payload, folder + '/worker_payload.json')
 
@@ -203,6 +203,10 @@ def li_test():
         EC_id : 30
     }
 
+    # the initial state and trajectories (after simulation) are stored in
+    # a seperate database, in this case called initial_state.sqlite.
+    # This facilitates running multiple simulations of the same network
+    # with different initial conditions at the same time.
     insert_initial_state(initial_state, mol_entries, folder + '/initial_state.sqlite')
 
 
