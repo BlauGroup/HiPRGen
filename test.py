@@ -34,6 +34,7 @@ from HiPRGen.mc_analysis import (
     reaction_tally_report,
     species_report,
     Pathfinding,
+    SimulationReplayer,
     generate_pathway_report,
     sink_report,
     consumption_report,
@@ -267,8 +268,11 @@ def li_test():
     )
 
     species_report(network_loader, folder + '/species_report.tex')
-    sink_report(network_loader, folder + '/sink_report.tex')
-    consumption_report(network_loader,
+
+
+    simulation_replayer = SimulationReplayer(network_loader)
+    sink_report(simulation_replayer, folder + '/sink_report.tex')
+    consumption_report(simulation_replayer,
                        LEDC_id,
                        folder + '/LEDC_consumption_report.tex')
 

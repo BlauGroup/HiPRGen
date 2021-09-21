@@ -91,8 +91,6 @@ def species_report(network_loader, species_report_path):
     report_generator.finished()
 
 
-
-
 class Pathfinding:
     """
     Given a chemical system, we are interested in exploring the reaction
@@ -294,141 +292,73 @@ def generate_pathway_report(
     report_generator.finished()
 
 
+class SimulationReplayer:
+    """
+    class for rerunning through all the simulations. This is
+    relatively fast since we don't need to actually choose which
+    reactions fire / update reaction propensities.
+    """
+
+    def __init__(self, network_loader):
+        self.network_loader = network_loader
+        self.consuming_reactions = {}
+        self.producing_reactions = {}
+
+        for i in range(network_loader.number_of_species):
+            self.consuming_reactions[i] = {}
+            self.producing_reactions[i] = {}
+
+        self.expected_final_state = np.zeros(
+            network_loader.number_of_species,
+            dtype=int)
+
+        self.rerun_simulations()
 
 
+    def rerun_simulations(self):
+        for seed in self.network_loader.trajectories:
+            final_state = np.copy(self.network_loader.initial_state_array)
+            for step in self.network_loader.trajectories[seed]:
+                reaction_index = self.network_loader.trajectories[seed][step][0]
+                time = self.network_loader.trajectories[seed][step][1]
+                reaction = self.network_loader.index_to_reaction(reaction_index)
 
-def sink_report(
-        network_loader,
-        sink_report_path,
-        verbose=False
-):
-
-
-    consumed_dict = [[0,{}] for i in
-                     range(network_loader.number_of_species)]
-
-    produced_dict = [[0,{}] for i in
-                     range(network_loader.number_of_species)]
-
-    final_state_accumulator = np.zeros(network_loader.number_of_species, dtype=int)
-
-    for seed in network_loader.trajectories:
-        final_state = np.copy(network_loader.initial_state_array)
-        for step in network_loader.trajectories[seed]:
-            reaction_index = network_loader.trajectories[seed][step][0]
-
-            reaction = network_loader.index_to_reaction(reaction_index)
-
-            for i in range(reaction['number_of_reactants']):
-                reactant_index = reaction['reactants'][i]
-                final_state[reactant_index] -= 1
-                consumed_dict[reactant_index][0] += 1
-                consumed_dict[reactant_index][1][reaction_index] = True
-
-            for j in range(reaction['number_of_products']):
-                product_index = reaction['products'][j]
-                final_state[product_index] += 1
-                produced_dict[product_index][0] += 1
-                produced_dict[product_index][1][reaction_index] = True
-
-        final_state_accumulator += final_state
-
-    number_of_trajectories = len(network_loader.trajectories)
-    final_state_accumulator = final_state_accumulator / number_of_trajectories
-
-    max_ratio = 1e10
-    ratio_dict = [max_ratio] * network_loader.number_of_species
-
-    for i in range(network_loader.number_of_species):
-        if consumed_dict[i][0] != 0:
-            ratio_dict[i] = produced_dict[i][0] / consumed_dict[i][0]
+                for i in range(reaction['number_of_reactants']):
+                    reactant_index = reaction['reactants'][i]
+                    final_state[reactant_index] -= 1
+                    if reaction_index not in self.consuming_reactions[reactant_index]:
+                        self.consuming_reactions[reactant_index][reaction_index] = 1
+                    else:
+                        self.consuming_reactions[reactant_index][reaction_index] += 1
 
 
-    sink_data = sorted(
-        list(enumerate(zip(
-            consumed_dict,
-            produced_dict,
-            ratio_dict,
-            final_state_accumulator))),
-        key=lambda item: -item[1][2])
+                for j in range(reaction['number_of_products']):
+                    product_index = reaction['products'][j]
+                    final_state[product_index] += 1
+                    if reaction_index not in self.producing_reactions[product_index]:
+                        self.producing_reactions[product_index][reaction_index] = 1
+                    else:
+                        self.producing_reactions[product_index][reaction_index] += 1
 
 
-    report_generator = ReportGenerator(
-        network_loader.mol_entries,
-        sink_report_path,
-        rebuild_mol_pictures=False)
+            self.expected_final_state += final_state
 
-    for species_index, (c,p,r,e) in sink_data:
-        mol = network_loader.mol_entries[species_index]
-        if ((c[0] + p[0] > 0  and
-            r > 1.5 and
-            e > 0.1 and
-            mol.spin_multiplicity == 1) or
-            (c[0] + p[0] > 0  and verbose)
-        ):
-            report_generator.emit_text("ratio: " + str(r))
-            report_generator.emit_text("expected val: " + str(e))
-            report_generator.emit_text("produced: " + str(p[0]))
-            report_generator.emit_text(
-                str(len(p[1])) + " distinct producing reactions")
-            report_generator.emit_text("consumed: " + str(c[0]))
-            report_generator.emit_text(
-                str(len(c[1])) + " distinct consuming reactions")
-            report_generator.emit_molecule(species_index)
-            report_generator.emit_newline()
-
-
-    # code for printing species which wern't produced
-    report_generator.emit_newpage()
-    report_generator.emit_text("species not produced")
-    for species_index, (c,p,r,e) in sink_data:
-        if c[0] + p[0] == 0:
-            report_generator.emit_molecule(species_index)
-            report_generator.emit_text(
-                network_loader.mol_entries[species_index].entry_id)
-
-            report_generator.emit_newline()
-            report_generator.emit_newline()
-    report_generator.finished()
+        self.expected_final_state = (
+            self.expected_final_state / len(self.network_loader.trajectories))
 
 
 def consumption_report(
-        network_loader,
+        simulation_replayer,
         species_index,
         consumption_report_path
 ):
 
 
-    producing_reactions = {}
-    consuming_reactions = {}
-
-    for seed in network_loader.trajectories:
-        for step in network_loader.trajectories[seed]:
-            reaction_index = network_loader.trajectories[seed][step][0]
-
-            reaction = network_loader.index_to_reaction(reaction_index)
-
-            for i in range(reaction['number_of_reactants']):
-                reactant_index = reaction['reactants'][i]
-                if reactant_index == species_index:
-                    if reaction_index not in consuming_reactions:
-                        consuming_reactions[reaction_index] = 1
-                    else:
-                        consuming_reactions[reaction_index] += 1
-
-
-
-            for j in range(reaction['number_of_products']):
-                product_index = reaction['products'][j]
-                if product_index == species_index:
-                    if reaction_index not in producing_reactions:
-                        producing_reactions[reaction_index] = 1
-                    else:
-                        producing_reactions[reaction_index] += 1
-
+    producing_reactions = simulation_replayer.producing_reactions[species_index]
+    consuming_reactions = simulation_replayer.consuming_reactions[species_index]
 
     report_generator = ReportGenerator(
-        network_loader.mol_entries,
+        simulation_replayer.network_loader.mol_entries,
         consumption_report_path,
         rebuild_mol_pictures=False)
 
@@ -438,7 +368,8 @@ def consumption_report(
             consuming_reactions.items(),
             key=lambda item: -item[1]):
 
-        reaction = network_loader.index_to_reaction(reaction_index)
+        reaction = simulation_replayer.network_loader.index_to_reaction(
+            reaction_index)
         report_generator.emit_text(str(number) + " occourances:")
         report_generator.emit_reaction(reaction)
 
@@ -448,9 +379,96 @@ def consumption_report(
             producing_reactions.items(),
             key=lambda item: -item[1]):
 
-        reaction = network_loader.index_to_reaction(reaction_index)
+        reaction = simulation_replayer.network_loader.index_to_reaction(
+            reaction_index)
+
         report_generator.emit_text(str(number) + " occourances:")
         report_generator.emit_reaction(reaction)
 
+
+    report_generator.finished()
+
+
+
+def sink_report(
+        simulation_replayer,
+        sink_report_path,
+        verbose=False
+):
+
+    max_ratio = 1e10
+    sink_data = []
+
+    for i in range(simulation_replayer.network_loader.number_of_species):
+        number_of_consuming_reactions = sum(
+            simulation_replayer.consuming_reactions[i].values())
+        number_of_distinct_consuming_reactions = len(
+            simulation_replayer.consuming_reactions[i].keys())
+        number_of_producing_reactions = sum(
+            simulation_replayer.producing_reactions[i].values())
+        number_of_distinct_producing_reactions = len(
+            simulation_replayer.consuming_reactions[i].keys())
+
+        if number_of_consuming_reactions != 0:
+            ratio = number_of_producing_reactions / number_of_consuming_reactions
+        else:
+            ratio = max_ratio
+
+        expected_value = simulation_replayer.expected_final_state[i]
+
+        sink_data.append(
+            (i,
+             number_of_consuming_reactions,
+             number_of_distinct_consuming_reactions,
+             number_of_producing_reactions,
+             number_of_distinct_producing_reactions,
+             ratio,
+             expected_value))
+
+
+    sink_data = sorted(
+        sink_data,
+        key=lambda item: -item[5])
+
+
+    report_generator = ReportGenerator(
+        simulation_replayer.network_loader.mol_entries,
+        sink_report_path,
+        rebuild_mol_pictures=False)
+
+    for (species_index,
+         number_of_consuming_reactions,
+         number_of_distinct_consuming_reactions,
+         number_of_producing_reactions,
+         number_of_distinct_producing_reactions,
+         ratio,
+         expected_value) in sink_data:
+
+        mol = simulation_replayer.network_loader.mol_entries[species_index]
+        if ((number_of_consuming_reactions + number_of_producing_reactions > 0  and
+            ratio > 1.5 and
+            expected_value > 0.1 and
+            mol.spin_multiplicity == 1) or
+            (number_of_consuming_reactions + number_of_producing_reactions > 0 and
+             verbose)):
+
+            report_generator.emit_text("ratio: " + str(ratio))
+            report_generator.emit_text("expected val: " + str(expected_value))
+
+            report_generator.emit_text(
+                "produced: " + str(number_of_producing_reactions))
+
+            report_generator.emit_text(
+                str(number_of_distinct_producing_reactions) +
+                " distinct producing reactions")
+
+            report_generator.emit_text(
+                "consumed: " + str(number_of_consuming_reactions))
+
+            report_generator.emit_text(
+                str(number_of_distinct_consuming_reactions) +
+                " distinct consuming reactions")
+            report_generator.emit_molecule(species_index)
+            report_generator.emit_newline()
 
     report_generator.finished()
