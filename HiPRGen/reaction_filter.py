@@ -11,7 +11,6 @@ from HiPRGen.reaction_filter_payloads import (
 )
 
 from HiPRGen.reaction_questions import (
-    standard_logging_decision_tree,
     run_decision_tree
 )
 

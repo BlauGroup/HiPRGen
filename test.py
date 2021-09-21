@@ -19,7 +19,6 @@ from HiPRGen.reaction_filter_payloads import (
 )
 
 from HiPRGen.species_questions import (
-    standard_species_logging_decision_tree,
     mg_g2_species_decision_tree,
     li_ec_species_decision_tree
 )

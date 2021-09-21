@@ -461,7 +461,3 @@ mg_thf_species_decision_tree = [
     (add_single_bond_fragments(), Terminal.KEEP),
     (default_true(), Terminal.KEEP)
     ]
-
-
-
-standard_species_logging_decision_tree = Terminal.DISCARD
