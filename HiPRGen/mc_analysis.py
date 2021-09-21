@@ -94,6 +94,55 @@ def species_report(network_loader, species_report_path):
 
 
 class Pathfinding:
+    """
+    Given a chemical system, we are interested in exploring the reaction
+    pathways which produce species of interest. Reaction networks are a
+    useful tool for approaching the problem because they can be simulated
+    efficiently, even when the network has hundreds of millions of
+    reactions. Unfortunately, since we collapse all spacial aspects of the
+    system, identical molecules become indistinguishable (in reality,
+    identical molecules can be distinguished by their locations in
+    space). This creates the following problem: Suppose we are interested
+    in the production of species G from A and have the following
+    simulation trajectory:
+
+      A -> Z + F
+      F -> X
+      A -> B + F
+      A -> C + H
+      A -> D + H
+      C -> E
+      D -> E
+      E + F -> G
+
+    It is impossible to decide between the two pathways
+
+      A -> B + F    A -> C + H        C -> E        E + F -> G
+      A -> B + F    A -> D + H        D -> E        E + F -> G
+
+    If our model had a spacial aspect, we would be able to trace the
+    specific E used back to either a C or a D. Fundamentally, this
+    ambiguity is caused by sequence
+
+      A -> C + H        C -> E         E -> D        D + H -> A
+
+    which is called a deficiency loop. To avoid this problem, we extract a
+    pathway which produces the target in the following way: Take the first
+    reaction x which produces the target molecule. Then recursively, take
+    the first reactions which produced the reactants of x. If a reactant
+    is a starting molecule, then stop. Applying the procedure to the above
+    sequence gives the pathway
+
+    A -> C + H        C -> E         A -> Z + F        E + F -> G
+
+    Intuitively, this procedure is producing pathways which don't take
+    into account competition, since there is no guarantee that the first
+    molecule which is produced isn't immediately consumed by some
+    competing reaction. Since the focus of this software is monte carlo
+    simulation with thermodynamic rates, this isn't a problem as all
+    downhill reactions have the maximum possible rate constant, so
+    reactions sans competition are also likely to occour.
+    """
 
     def __init__(
             self,
@@ -179,70 +228,74 @@ class Pathfinding:
         return weight
 
 
-    def generate_pathway_report(
-            self,
-            species_id,
-            report_file_path,
-            number_of_pathways=100,
-            sort_by_frequency=True
-    ):
+def generate_pathway_report(
+        pathfinding,
+        species_id,
+        report_file_path,
+        number_of_pathways=100,
+        sort_by_frequency=True
+):
 
-        report_generator = ReportGenerator(
-            self.network_loader.mol_entries,
-            report_file_path,
-            rebuild_mol_pictures=False)
+    report_generator = ReportGenerator(
+        pathfinding.network_loader.mol_entries,
+        report_file_path,
+        rebuild_mol_pictures=False)
 
-        pathways = self.compute_pathways(species_id)
+    pathways = pathfinding.compute_pathways(species_id)
 
 
-        report_generator.emit_text("pathway report for")
-        report_generator.emit_molecule(species_id)
+    report_generator.emit_text("pathway report for")
+    report_generator.emit_molecule(species_id)
 
-        if sort_by_frequency:
-            report_generator.emit_text(
-                "top " +
-                str(number_of_pathways) +
-                " pathways sorted by frequency")
+    if sort_by_frequency:
+        report_generator.emit_text(
+            "top " +
+            str(number_of_pathways) +
+            " pathways sorted by frequency")
 
-        else:
-            report_generator.emit_text(
-                "top " +
-                str(number_of_pathways) +
-                " pathways sorted by cost")
+    else:
+        report_generator.emit_text(
+            "top " +
+            str(number_of_pathways) +
+            " pathways sorted by cost")
 
-        report_generator.emit_newline()
-        report_generator.emit_initial_state(self.network_loader.initial_state_dict)
+    report_generator.emit_newline()
+    report_generator.emit_initial_state(pathfinding.network_loader.initial_state_dict)
+    report_generator.emit_newpage()
+
+    if sort_by_frequency:
+        def sort_function(item):
+            return -item[1]["frequency"]
+
+    else:
+        def sort_function(item):
+            return item[1]["weight"]
+
+
+    count = 1
+    for _, unique_pathway in sorted(pathways.items(), key=sort_function):
+
+        frequency = unique_pathway["frequency"]
+        weight = unique_pathway["weight"]
+
+        report_generator.emit_text("pathway " + str(count))
+        report_generator.emit_text("path weight: " + str(weight))
+        report_generator.emit_text(str(frequency) + " occurrences:")
+
+        for reaction_index in unique_pathway["pathway"]:
+            reaction = pathfinding.network_loader.index_to_reaction(reaction_index)
+            report_generator.emit_reaction(reaction, label=str(reaction_index))
+
         report_generator.emit_newpage()
+        count += 1
+        if count > number_of_pathways:
+            break
 
-        if sort_by_frequency:
-            def sort_function(item):
-                return -item[1]["frequency"]
-
-        else:
-            def sort_function(item):
-                return item[1]["weight"]
+    report_generator.finished()
 
 
-        count = 1
-        for _, unique_pathway in sorted(pathways.items(), key=sort_function):
 
-            frequency = unique_pathway["frequency"]
-            weight = unique_pathway["weight"]
 
-            report_generator.emit_text("pathway " + str(count))
-            report_generator.emit_text("path weight: " + str(weight))
-            report_generator.emit_text(str(frequency) + " occurrences:")
-
-            for reaction_index in unique_pathway["pathway"]:
-                reaction = self.network_loader.index_to_reaction(reaction_index)
-                report_generator.emit_reaction(reaction, label=str(reaction_index))
-
-            report_generator.emit_newpage()
-            count += 1
-            if count > number_of_pathways:
-                break
-
-        report_generator.finished()
 
 def sink_report(
         network_loader,

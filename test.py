@@ -34,6 +34,7 @@ from HiPRGen.mc_analysis import (
     reaction_tally_report,
     species_report,
     Pathfinding,
+    generate_pathway_report,
     sink_report,
     consumption_report,
     redox_report
@@ -258,7 +259,8 @@ def li_test():
     redox_report(network_loader, folder + '/redox_report.tex', params)
 
     pathfinding = Pathfinding(network_loader)
-    pathfinding.generate_pathway_report(
+    generate_pathway_report(
+        pathfinding,
         LEDC_id,
         folder + '/LEDC_pathways.tex',
         sort_by_frequency=False
@@ -405,13 +407,16 @@ def mg_test():
     )
 
     pathfinding = Pathfinding(network_loader)
-    pathfinding.generate_pathway_report(
+
+    generate_pathway_report(
+        pathfinding,
         c2h6_id,
         folder + '/C2H6_pathways.tex',
         sort_by_frequency=False
     )
 
-    pathfinding.generate_pathway_report(
+    generate_pathway_report(
+        pathfinding,
         c2h4_id,
         folder + '/C2H4_pathways.tex',
         sort_by_frequency=False
