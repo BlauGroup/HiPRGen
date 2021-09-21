@@ -313,6 +313,7 @@ class SimulationReplayer:
             dtype=int)
 
         self.rerun_simulations()
+        self.compute_sink_data()
 
 
     def rerun_simulations(self):
@@ -349,7 +350,7 @@ class SimulationReplayer:
 
     def compute_sink_data(self):
         max_ratio = 1e10
-        sink_data = []
+        self.sink_data = {}
 
         for i in range(self.network_loader.number_of_species):
             number_of_consuming_reactions = sum(
@@ -368,20 +369,17 @@ class SimulationReplayer:
 
             expected_value = self.expected_final_state[i]
 
-            sink_data.append(
-                (i,
-                 number_of_consuming_reactions,
-                 number_of_distinct_consuming_reactions,
-                 number_of_producing_reactions,
-                 number_of_distinct_producing_reactions,
-                 ratio,
-                 expected_value))
-
-
-        self.sink_data = sorted(
-            sink_data,
-            key=lambda item: -item[5])
-
+            self.sink_data[i] = {
+                "species_index" : i,
+                "number_of_consuming_reactions" : number_of_consuming_reactions,
+                "number_of_distinct_consuming_reactions"
+                : number_of_distinct_consuming_reactions,
+                "number_of_producing_reactions" : number_of_producing_reactions,
+                "number_of_distinct_producing_reactions"
+                : number_of_distinct_producing_reactions,
+                "ratio" : ratio,
+                "expected_value" : expected_value
+            }
 
 
 def consumption_report(
@@ -390,6 +388,7 @@ def consumption_report(
         consumption_report_path
 ):
 
+    sink_data = simulation_replayer.sink_data[species_index]
 
     producing_reactions = simulation_replayer.producing_reactions[species_index]
     consuming_reactions = simulation_replayer.consuming_reactions[species_index]
@@ -400,6 +399,11 @@ def consumption_report(
         rebuild_mol_pictures=False)
 
 
+    report_generator.emit_text("P/C ratio: " +
+                               str(sink_data["ratio"]))
+    report_generator.emit_text("expected val: " +
+                               str(sink_data["expected_value"]))
+    report_generator.emit_newline()
     report_generator.emit_text("consuming reactions:")
     for (reaction_index, number) in sorted(
             consuming_reactions.items(),
@@ -433,20 +437,27 @@ def sink_report(
         verbose=False
 ):
 
-    simulation_replayer.compute_sink_data()
 
     report_generator = ReportGenerator(
         simulation_replayer.network_loader.mol_entries,
         sink_report_path,
         rebuild_mol_pictures=False)
 
-    for (species_index,
-         number_of_consuming_reactions,
-         number_of_distinct_consuming_reactions,
-         number_of_producing_reactions,
-         number_of_distinct_producing_reactions,
-         ratio,
-         expected_value) in simulation_replayer.sink_data:
+    sink_data_sorted = sorted(
+        simulation_replayer.sink_data.values(),
+        key= lambda item: -item["ratio"])
+
+    for sink_entry in sink_data_sorted:
+
+        species_index = sink_entry["species_index"]
+        number_of_consuming_reactions = sink_entry["number_of_consuming_reactions"]
+        number_of_distinct_consuming_reactions = sink_entry[
+            "number_of_distinct_consuming_reactions"]
+        number_of_producing_reactions = sink_entry["number_of_producing_reactions"]
+        number_of_distinct_producing_reactions = sink_entry[
+            "number_of_distinct_producing_reactions"]
+        ratio = sink_entry["ratio"]
+        expected_value = sink_entry["expected_value"]
 
         mol = simulation_replayer.network_loader.mol_entries[species_index]
         if ((number_of_consuming_reactions + number_of_producing_reactions > 0  and
@@ -456,7 +467,7 @@ def sink_report(
             (number_of_consuming_reactions + number_of_producing_reactions > 0 and
              verbose)):
 
-            report_generator.emit_text("ratio: " + str(ratio))
+            report_generator.emit_text("P/C ratio: " + str(ratio))
             report_generator.emit_text("expected val: " + str(expected_value))
 
             report_generator.emit_text(
