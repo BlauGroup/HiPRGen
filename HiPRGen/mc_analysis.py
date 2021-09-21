@@ -360,7 +360,8 @@ class SimulationReplayer:
             number_of_producing_reactions = sum(
                 self.producing_reactions[i].values())
             number_of_distinct_producing_reactions = len(
-                self.consuming_reactions[i].keys())
+                self.producing_reactions[i].keys())
+
 
             if number_of_consuming_reactions != 0:
                 ratio = number_of_producing_reactions / number_of_consuming_reactions
