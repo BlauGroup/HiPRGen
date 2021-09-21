@@ -347,6 +347,43 @@ class SimulationReplayer:
             self.expected_final_state / len(self.network_loader.trajectories))
 
 
+    def compute_sink_data(self):
+        max_ratio = 1e10
+        sink_data = []
+
+        for i in range(self.network_loader.number_of_species):
+            number_of_consuming_reactions = sum(
+                self.consuming_reactions[i].values())
+            number_of_distinct_consuming_reactions = len(
+                self.consuming_reactions[i].keys())
+            number_of_producing_reactions = sum(
+                self.producing_reactions[i].values())
+            number_of_distinct_producing_reactions = len(
+                self.consuming_reactions[i].keys())
+
+            if number_of_consuming_reactions != 0:
+                ratio = number_of_producing_reactions / number_of_consuming_reactions
+            else:
+                ratio = max_ratio
+
+            expected_value = self.expected_final_state[i]
+
+            sink_data.append(
+                (i,
+                 number_of_consuming_reactions,
+                 number_of_distinct_consuming_reactions,
+                 number_of_producing_reactions,
+                 number_of_distinct_producing_reactions,
+                 ratio,
+                 expected_value))
+
+
+        self.sink_data = sorted(
+            sink_data,
+            key=lambda item: -item[5])
+
+
+
 def consumption_report(
         simulation_replayer,
         species_index,
@@ -396,40 +433,7 @@ def sink_report(
         verbose=False
 ):
 
-    max_ratio = 1e10
-    sink_data = []
-
-    for i in range(simulation_replayer.network_loader.number_of_species):
-        number_of_consuming_reactions = sum(
-            simulation_replayer.consuming_reactions[i].values())
-        number_of_distinct_consuming_reactions = len(
-            simulation_replayer.consuming_reactions[i].keys())
-        number_of_producing_reactions = sum(
-            simulation_replayer.producing_reactions[i].values())
-        number_of_distinct_producing_reactions = len(
-            simulation_replayer.consuming_reactions[i].keys())
-
-        if number_of_consuming_reactions != 0:
-            ratio = number_of_producing_reactions / number_of_consuming_reactions
-        else:
-            ratio = max_ratio
-
-        expected_value = simulation_replayer.expected_final_state[i]
-
-        sink_data.append(
-            (i,
-             number_of_consuming_reactions,
-             number_of_distinct_consuming_reactions,
-             number_of_producing_reactions,
-             number_of_distinct_producing_reactions,
-             ratio,
-             expected_value))
-
-
-    sink_data = sorted(
-        sink_data,
-        key=lambda item: -item[5])
-
+    simulation_replayer.compute_sink_data()
 
     report_generator = ReportGenerator(
         simulation_replayer.network_loader.mol_entries,
@@ -442,7 +446,7 @@ def sink_report(
          number_of_producing_reactions,
          number_of_distinct_producing_reactions,
          ratio,
-         expected_value) in sink_data:
+         expected_value) in simulation_replayer.sink_data:
 
         mol = simulation_replayer.network_loader.mol_entries[species_index]
         if ((number_of_consuming_reactions + number_of_producing_reactions > 0  and
