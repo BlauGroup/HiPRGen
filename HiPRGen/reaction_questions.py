@@ -121,6 +121,11 @@ class dG_above_threshold(MSONable):
         else:
             raise Exception("unrecognized free energy type")
 
+    def __str__(self):
+        return (
+            self.free_energy_type +
+            " dG is above threshold=" +
+            str(self.threshold))
 
     def __call__(self, reaction, mol_entries, params):
 
@@ -164,6 +169,9 @@ class is_redox_reaction(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "is redox reaction"
+
     def __call__(self, reaction, mol_entries, params):
         # positive dCharge means electrons are lost
         dCharge = 0.0
@@ -189,6 +197,9 @@ class is_redox_reaction(MSONable):
 class too_many_reactants_or_products(MSONable):
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "too many reactants or products"
 
 
     def __call__(self, reaction, mols, params):
