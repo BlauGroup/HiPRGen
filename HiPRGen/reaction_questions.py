@@ -216,6 +216,9 @@ class dcharge_too_large(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "change in charge is too large"
+
     def __call__(self, reaction, mol_entries, params):
         dCharge = 0.0
 
@@ -299,6 +302,9 @@ class reactant_and_product_not_isomorphic(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "reactants and products are not covalent isomorphic"
+
     def __call__(self, reaction, mols, params):
         reactant = mols[reaction['reactants'][0]]
         product = mols[reaction['products'][0]]
@@ -312,6 +318,9 @@ class default_true(MSONable):
 
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "default true"
 
     def __call__(self, reaction, mols, params):
         return True
@@ -399,6 +408,8 @@ class metal_coordination_passthrough(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "metal coordination passthrough"
 
     def __call__(self, reaction, mols, params):
 
@@ -420,6 +431,9 @@ class metal_coordination_passthrough(MSONable):
 class fragment_matching_found(MSONable):
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "fragment matching found"
 
     def __call__(self, reaction, mols, params):
 
@@ -533,6 +547,9 @@ class single_reactant_single_product_not_hydrogen_transfer(MSONable):
     def __init__(self):
         pass
 
+    def __str__(self):
+        return "not hydrogen transfer"
+
     def __call__(self, reaction, mols, params):
         if (reaction['number_of_reactants'] == 1 and
             reaction['number_of_products'] == 1 and
@@ -547,6 +564,10 @@ class single_reactant_single_product_not_hydrogen_transfer(MSONable):
 class single_reactant_double_product_ring_close(MSONable):
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "ring close"
+
 
     def __call__(self, reaction, mols, params):
 
