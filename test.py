@@ -277,7 +277,7 @@ def li_test():
 
 
     tests_passed = True
-    if network_loader.number_of_species == 191:
+    if network_loader.number_of_species == 190:
         print(bcolors.PASS +
               "li_test: correct number of species" +
               bcolors.ENDC)
@@ -289,7 +289,7 @@ def li_test():
 
 
 
-    if network_loader.number_of_reactions == 4963:
+    if network_loader.number_of_reactions == 4918:
         print(bcolors.PASS +
               "li_test: correct number of reactions" +
               bcolors.ENDC)

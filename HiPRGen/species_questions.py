@@ -414,12 +414,24 @@ class li0_filter(MSONable):
 
         return False
 
+class charge_too_big(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, mol):
+        if mol.charge > 1 or mol.charge < -1:
+            return True
+
+        else:
+            return False
+
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
 li_ec_species_decision_tree = [
     (li_fix_hydrogen_bonding(), Terminal.KEEP),
     (li_set_solvation_free_energy(li_ec), Terminal.KEEP),
+    (charge_too_big(), Terminal.DISCARD),
     (li0_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),

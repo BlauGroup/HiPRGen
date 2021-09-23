@@ -170,10 +170,24 @@ class Pathfinding:
             pathway.append(reaction_id)
 
 
+            prefixes = []
             for i in range(reaction['number_of_reactants']):
                 reactant_id = reaction['reactants'][i]
                 if self.network_loader.initial_state_dict[reactant_id] == 0:
-                    pathway = self.compute_pathway(reactant_id, trajectory) + pathway
+                    prefix = self.compute_pathway(reactant_id, trajectory)
+                    prefixes.append(prefix)
+
+                    # early return if one of the final reaction in one
+                    # of the prefixes gives both of the reactants
+                    prefix_final_reaction = self.network_loader.index_to_reaction(
+                        prefix[-1])
+
+                    if (sorted(reaction['reactants']) ==
+                        sorted(prefix_final_reaction['products'])):
+                        return prefix + pathway
+
+            for prefix in prefixes:
+                pathway = prefix + pathway
 
 
         return pathway

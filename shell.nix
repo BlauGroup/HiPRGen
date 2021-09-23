@@ -22,6 +22,7 @@ in mkShell {
   buildInputs = [ pythonEnv
                   texlive.combined.scheme-small
                   mpi
+                  sqlite
                   (import ./RNMC.nix)
                 ];
 }
