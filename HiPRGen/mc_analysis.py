@@ -267,7 +267,7 @@ def generate_pathway_report(
         species_id,
         report_file_path,
         number_of_pathways=100,
-        sort_by_frequency=True
+        sort_by_frequency=False
 ):
 
     report_generator = ReportGenerator(
@@ -418,6 +418,14 @@ class SimulationReplayer:
                 "expected_value" : expected_value
             }
 
+def export_sinks_to_json(simulation_replayer, path):
+    sink_data = simulation_replayer.sink_data
+    sink_data_json = {}
+    for i in sink_data:
+        mol = simulation_replayer.network_loader.mol_entries[i]
+        sink_data_json[mol.entry_id] = sink_data[i]
+
+    dumpfn(sink_data_json, path)
 
 def consumption_report(
         simulation_replayer,
