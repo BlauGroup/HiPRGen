@@ -2,6 +2,7 @@ from HiPRGen.report_generator import ReportGenerator
 from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.constants import ROOM_TEMP, KB
 from HiPRGen.reaction_questions import marcus_barrier
+from monty.serialization import dumpfn
 import math
 import numpy as np
 
@@ -238,6 +239,27 @@ class Pathfinding:
             reaction = self.network_loader.index_to_reaction(reaction_index)
             weight += default_cost(reaction["dG"])
         return weight
+
+def export_pathways_to_json(pathfinding, species_id, path):
+    pathways = pathfinding.compute_pathways(species_id)
+    reactions = {}
+    for pathway in pathways:
+        for reaction_id in pathway:
+            db_reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
+            json_reactants = [ pathfinding.network_loader.mol_entries[i].entry_id
+                               for i in db_reaction['reactants'] if i != -1]
+            json_products = [ pathfinding.network_loader.mol_entries[i].entry_id
+                               for i in db_reaction['products'] if i != -1]
+            json_reaction = {
+                'reactants' : json_reactants,
+                'products' : json_products
+                }
+            reactions[reaction_id] = json_reaction
+
+    dumpfn({
+        'pathways' : list(pathways.values()),
+        'reactions' : reactions}, path)
+
 
 
 def generate_pathway_report(
