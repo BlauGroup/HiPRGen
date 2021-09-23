@@ -8,7 +8,7 @@ The most consistent way to get HiPRGen running (especially on macos, where the c
 
 Once nix is installed, running `nix-shell` in the HiPRGen directory will launch a shell in which HiPRen is installed.
 
-If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz` and `mpi4py`. Create a conda environment where these are installed and then run `pip -e install .` from the HiPRGen directory. Again, on macos, conda and MPI don't work well together.
+If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz` and `mpi4py`. Create a conda environment where these are installed and then run `pip install -e .` from the HiPRGen directory. Again, on macos, conda and MPI don't work well together.
 
 ### Tests
 
