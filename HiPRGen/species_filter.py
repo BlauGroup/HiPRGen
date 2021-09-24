@@ -137,7 +137,7 @@ def species_filter(
             report_generator.emit_verbatim(
                 '\n'.join([str(f) for f in decision_pathway]))
 
-
+            report_generator.emit_text("number: " + str(i))
             report_generator.emit_text("entry id: " + mol.entry_id)
             report_generator.emit_text("uncorrected free energy: " +
                                        str(mol.free_energy))
