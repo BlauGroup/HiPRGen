@@ -6,15 +6,15 @@ from pathlib import Path
 atom_colors = {
     "H": "gray",
     "C": "black",
-    "Li": "#cc80ff",
-    "B": "#ffb5b5",
-    "N": "#3050f8",
-    "O": "#ff0d0d",
-    "F": "#90e050",
-    "Mg": "#8aff00",
-    "P": "#ff8000",
-    "S": "#ffff30",
-    "Cl": "#1ff01f"
+    "Li": "purple",
+    "B": "orange",
+    "N": "blue",
+    "O": "red",
+    "F": "green4",
+    "Mg": "green",
+    "P": "darkorange",
+    "S": "yellow",
+    "Cl": "chartreuse"
 }
 
 def visualize_molecule_entry(molecule_entry, path):
