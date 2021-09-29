@@ -337,24 +337,21 @@ class SimulationReplayer:
 
     def __init__(self, network_loader):
         self.network_loader = network_loader
-        self.consuming_reactions = {}
-        self.producing_reactions = {}
 
-        for i in range(network_loader.number_of_species):
-            self.consuming_reactions[i] = {}
-            self.producing_reactions[i] = {}
 
-        self.expected_final_state = np.zeros(
-            network_loader.number_of_species,
-            dtype=int)
-
-        self.rerun_simulations()
+        self.compute_expected_final_state()
+        self.compute_production_consumption_info()
         self.compute_sink_data()
 
 
-    def rerun_simulations(self):
+    def compute_expected_final_state(self):
+        self.expected_final_state = np.zeros(
+            self.network_loader.number_of_species,
+            dtype=int
+        )
+
         for seed in self.network_loader.trajectories:
-            final_state = np.copy(self.network_loader.initial_state_array)
+            state = np.copy(self.network_loader.initial_state_array)
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
@@ -362,7 +359,33 @@ class SimulationReplayer:
 
                 for i in range(reaction['number_of_reactants']):
                     reactant_index = reaction['reactants'][i]
-                    final_state[reactant_index] -= 1
+                    state[reactant_index] -= 1
+
+                for j in range(reaction['number_of_products']):
+                    product_index = reaction['products'][j]
+                    state[product_index] += 1
+
+            self.expected_final_state += state
+
+        self.expected_final_state = (
+            self.expected_final_state / len(self.network_loader.trajectories))
+
+    def compute_production_consumption_info(self):
+        self.consuming_reactions = {}
+        self.producing_reactions = {}
+
+        for i in range(self.network_loader.number_of_species):
+            self.consuming_reactions[i] = {}
+            self.producing_reactions[i] = {}
+
+        for seed in self.network_loader.trajectories:
+            for step in self.network_loader.trajectories[seed]:
+                reaction_index = self.network_loader.trajectories[seed][step][0]
+                time = self.network_loader.trajectories[seed][step][1]
+                reaction = self.network_loader.index_to_reaction(reaction_index)
+
+                for i in range(reaction['number_of_reactants']):
+                    reactant_index = reaction['reactants'][i]
                     if reaction_index not in self.consuming_reactions[reactant_index]:
                         self.consuming_reactions[reactant_index][reaction_index] = 1
                     else:
@@ -371,17 +394,10 @@ class SimulationReplayer:
 
                 for j in range(reaction['number_of_products']):
                     product_index = reaction['products'][j]
-                    final_state[product_index] += 1
                     if reaction_index not in self.producing_reactions[product_index]:
                         self.producing_reactions[product_index][reaction_index] = 1
                     else:
                         self.producing_reactions[product_index][reaction_index] += 1
-
-
-            self.expected_final_state += final_state
-
-        self.expected_final_state = (
-            self.expected_final_state / len(self.network_loader.trajectories))
 
 
     def compute_sink_data(self):
@@ -417,6 +433,7 @@ class SimulationReplayer:
                 "ratio" : ratio,
                 "expected_value" : expected_value
             }
+
 
 def export_sinks_to_json(simulation_replayer, path):
     sink_data = simulation_replayer.sink_data
