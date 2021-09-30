@@ -5,6 +5,8 @@ from HiPRGen.reaction_questions import marcus_barrier
 from monty.serialization import dumpfn
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import make_interp_spline
 
 
 def default_cost(free_energy):
@@ -398,6 +400,63 @@ class SimulationReplayer:
                         self.producing_reactions[product_index][reaction_index] = 1
                     else:
                         self.producing_reactions[product_index][reaction_index] += 1
+
+    def compute_state_time_series(self, seed):
+        state_dimension_size = len(self.network_loader.initial_state_array)
+        step_dimension_size = len(self.network_loader.trajectories[seed])
+        time_series = np.zeros(
+            (step_dimension_size, state_dimension_size),
+            dtype=int)
+
+        state = np.copy(self.network_loader.initial_state_array)
+        for step in self.network_loader.trajectories[seed]:
+            reaction_index = self.network_loader.trajectories[seed][step][0]
+            time = self.network_loader.trajectories[seed][step][1]
+            reaction = self.network_loader.index_to_reaction(reaction_index)
+
+            for i in range(reaction['number_of_reactants']):
+                reactant_index = reaction['reactants'][i]
+                state[reactant_index] -= 1
+
+            for j in range(reaction['number_of_products']):
+                product_index = reaction['products'][j]
+                state[product_index] += 1
+
+            time_series[step] = state
+
+        return time_series
+
+    def time_series_graph(self, seed, path, number_of_interpolation_points=25):
+        fig = plt.figure()
+        ax = plt.axes()
+
+        total_time_series = self.compute_state_time_series(seed)
+
+        ax.set_ylim([0,total_time_series.max()+3])
+        ax.set_xlim([0,total_time_series.shape[0]])
+
+        for species_index in range(self.network_loader.number_of_species):
+            if sum(total_time_series[:,species_index]) == 0:
+                continue
+
+            steps = np.arange(
+                start=0,
+                stop=total_time_series.shape[0],
+                step=number_of_interpolation_points)
+
+            vals = np.zeros(shape=steps.shape, dtype=int)
+            for i, step in enumerate(steps):
+                vals[i] = total_time_series[step, species_index]
+
+            spline = make_interp_spline(steps, vals)
+
+            ticks = np.linspace(0, total_time_series.shape[0], 500)
+
+            ax.plot(ticks, spline(ticks))
+
+
+        fig.savefig(path)
+
 
 
     def compute_sink_data(self):
