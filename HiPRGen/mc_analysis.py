@@ -426,7 +426,13 @@ class SimulationReplayer:
 
         return time_series
 
-    def time_series_graph(self, seed, path, number_of_interpolation_points=25):
+    def time_series_graph(
+            self,
+            seed,
+            path,
+            number_of_interpolation_points=25,
+            number_of_species=15
+    ):
         fig = plt.figure()
         ax = plt.axes()
 
@@ -435,10 +441,16 @@ class SimulationReplayer:
         ax.set_ylim([0,total_time_series.max()+3])
         ax.set_xlim([0,total_time_series.shape[0]])
 
-        for species_index in range(self.network_loader.number_of_species):
-            if sum(total_time_series[:,species_index]) == 0:
-                continue
+        species_counting = {}
 
+        for species_index in range(self.network_loader.number_of_species):
+            species_counting[species_index] = sum(total_time_series[:,species_index])
+
+        species_list = sorted(
+            range(self.network_loader.number_of_species),
+            key=lambda i: - species_counting[i])
+
+        for species_index in species_list[0:number_of_species]:
             steps = np.arange(
                 start=0,
                 stop=total_time_series.shape[0],
