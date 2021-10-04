@@ -7,7 +7,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
-
+from itertools import chain
 
 def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
@@ -504,6 +504,30 @@ class SimulationReplayer:
                 "ratio" : ratio,
                 "expected_value" : expected_value
             }
+
+def export_consumption_to_json(simulation_replayer, species_index, path):
+    network_loader = simulation_replayer.network_loader
+    producing_reactions = simulation_replayer.producing_reactions[species_index]
+    consuming_reactions = simulation_replayer.consuming_reactions[species_index]
+    reactions = {}
+    for reaction_id in chain(producing_reactions, consuming_reactions) :
+        db_reaction = network_loader.index_to_reaction(reaction_id)
+        json_reactants = [ network_loader.mol_entries[i].entry_id
+                           for i in db_reaction['reactants'] if i != -1]
+        json_products = [ network_loader.mol_entries[i].entry_id
+                           for i in db_reaction['products'] if i != -1]
+        json_reaction = {
+            'reactants' : json_reactants,
+            'products' : json_products
+            }
+        reactions[reaction_id] = json_reaction
+
+        dumpfn({
+            'reactions' : reactions,
+            'producing_reactions' : producing_reactions,
+            'consuming_reactions' : consuming_reactions},
+               path)
+
 
 
 def export_sinks_to_json(simulation_replayer, path):
