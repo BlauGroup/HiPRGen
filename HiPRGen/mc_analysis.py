@@ -505,6 +505,27 @@ class SimulationReplayer:
                 "expected_value" : expected_value
             }
 
+    def sink_filter(self, species_index):
+        sink_data = self.sink_data[species_index]
+
+        number_of_consuming_reactions = sink_data["number_of_consuming_reactions"]
+        number_of_distinct_consuming_reactions = sink_data[
+            "number_of_distinct_consuming_reactions"]
+        number_of_producing_reactions = sink_data["number_of_producing_reactions"]
+        number_of_distinct_producing_reactions = sink_data[
+            "number_of_distinct_producing_reactions"]
+        ratio = sink_data["ratio"]
+        expected_value = sink_data["expected_value"]
+
+        mol = self.network_loader.mol_entries[species_index]
+        if (number_of_consuming_reactions + number_of_producing_reactions > 0  and
+            ratio > 1.5 and
+            expected_value > 0.1 and
+            mol.spin_multiplicity == 1):
+            return True
+        else:
+            return False
+
 def export_consumption_to_json(simulation_replayer, species_index, path):
     network_loader = simulation_replayer.network_loader
     producing_reactions = simulation_replayer.producing_reactions[species_index]
@@ -590,8 +611,7 @@ def consumption_report(
 
 def sink_report(
         simulation_replayer,
-        sink_report_path,
-        verbose=False
+        sink_report_path
 ):
 
 
@@ -607,22 +627,19 @@ def sink_report(
     for sink_entry in sink_data_sorted:
 
         species_index = sink_entry["species_index"]
-        number_of_consuming_reactions = sink_entry["number_of_consuming_reactions"]
-        number_of_distinct_consuming_reactions = sink_entry[
-            "number_of_distinct_consuming_reactions"]
-        number_of_producing_reactions = sink_entry["number_of_producing_reactions"]
-        number_of_distinct_producing_reactions = sink_entry[
-            "number_of_distinct_producing_reactions"]
-        ratio = sink_entry["ratio"]
-        expected_value = sink_entry["expected_value"]
+        if simulation_replayer.sink_filter(species_index):
 
-        mol = simulation_replayer.network_loader.mol_entries[species_index]
-        if ((number_of_consuming_reactions + number_of_producing_reactions > 0  and
-            ratio > 1.5 and
-            expected_value > 0.1 and
-            mol.spin_multiplicity == 1) or
-            (number_of_consuming_reactions + number_of_producing_reactions > 0 and
-             verbose)):
+            number_of_consuming_reactions = sink_entry[
+                "number_of_consuming_reactions"]
+            number_of_distinct_consuming_reactions = sink_entry[
+                "number_of_distinct_consuming_reactions"]
+            number_of_producing_reactions = sink_entry[
+                "number_of_producing_reactions"]
+            number_of_distinct_producing_reactions = sink_entry[
+                "number_of_distinct_producing_reactions"]
+            ratio = sink_entry["ratio"]
+            expected_value = sink_entry["expected_value"]
+
 
             report_generator.emit_text("P/C ratio: " + str(ratio))
             report_generator.emit_text("expected val: " + str(expected_value))
