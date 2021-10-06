@@ -560,6 +560,13 @@ def export_sinks_to_json(simulation_replayer, path):
 
     dumpfn(sink_data_json, path)
 
+def export_species_report_to_json(network_loader, path):
+    data = {}
+    for i in range(network_loader.number_of_species):
+        data[i] = network_loader.mol_entries[i].entry_id
+
+    dumpfn(data, path)
+
 def consumption_report(
         simulation_replayer,
         species_index,
