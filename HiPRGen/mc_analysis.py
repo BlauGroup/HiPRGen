@@ -472,9 +472,11 @@ class SimulationReplayer:
 
             ticks = np.linspace(0, total_time_series.shape[0], 500)
 
-            ax.plot(ticks, spline(ticks))
+            ax.plot(ticks, spline(ticks), label=str(species_index))
 
 
+
+        leg = ax.legend()
         fig.savefig(path)
 
 

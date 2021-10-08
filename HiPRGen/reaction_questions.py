@@ -14,39 +14,42 @@ A question is a function q(reaction, mol_entries, params) -> Bool
 
 reaction is a dict:
 
-        reaction = {
-            'reactants' : reactant indices
-            'products' : product indices,
-            'number_of_reactants',
-            'number_of_products'}
-
+        reaction = { 'reactants' : reactant indices,
+                     'products' : product indices,
+                     'number_of_reactants',
+                     'number_of_products'}
 params is a dict:
 
 
-        params = {
-           'temperature'
-           'electron_free_energy'
-        }
+        params = { 'temperature',
+                   'electron_free_energy' }
 
-The lists of reactant and product indices always have length two. We use -1 when there is a only a single reactant or product.
+The lists of reactant and product indices always have length two. We
+use -1 when there is a only a single reactant or product.
 
 The questions can also set reaction['rate'] and reaction['dG']
 
-Questions will be writable by hand, or we could have machine learning filters.
+Questions will be writable by hand, or we could have machine learning
+filters.
 
 A node is either a Terminal or a non empty list [(question, node)]
 
-class Terminal(Enum):
-    KEEP = 1
-    DISCARD = -1
+class Terminal(Enum): KEEP = 1 DISCARD = -1
 
-For the return value of a question, True means travel to this node and False means try next question in the list.
+For the return value of a question, True means travel to this node and
+False means try next question in the list.
 
-for non terminal nodes, it is an error if every question returns False. i.e getting stuck at a non terminal node is an error.
+for non terminal nodes, it is an error if every question returns
+False. i.e getting stuck at a non terminal node is an error.
 
-Once a Terminal node is reached, it tells us whether to keep or discard the reaction.
+Once a Terminal node is reached, it tells us whether to keep or
+discard the reaction.
 
-logging decision tree: The dispatcher takes a second decision tree as an argument, the logging decision tree. Reactions which return Terminal.KEEP from the logging decision tree will be logged in the generation report, with location specified by the argument generation_report_path
+logging decision tree: The dispatcher takes a second decision tree as
+an argument, the logging decision tree. Reactions which return
+Terminal.KEEP from the logging decision tree will be logged in the
+generation report, with location specified by the argument
+generation_report_path
 
 """
 
