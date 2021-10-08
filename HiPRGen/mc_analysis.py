@@ -426,36 +426,44 @@ class SimulationReplayer:
 
         return time_series
 
+
     def time_series_graph(
             self,
-            seed,
+            seeds,
+            species_list,
             path,
             number_of_interpolation_points=25,
-            number_of_species=15
     ):
         fig = plt.figure()
         ax = plt.axes()
 
-        total_time_series = self.compute_state_time_series(seed)
+        max_trajectory_length = 0
+        for seed in seeds:
+            max_trajectory_length = max(
+                max_trajectory_length,
+                len(self.network_loader.trajectories[seed]))
+
+        total_time_series = np.zeros(
+            (max_trajectory_length, self.network_loader.number_of_species),
+            dtype=int
+            )
+
+        for seed in seeds:
+            total_time_series += pad_time_series(
+                self.compute_state_time_series(seed),
+                max_trajectory_length)
+
+        total_time_series = total_time_series / len(seeds)
 
         ax.set_ylim([0,total_time_series.max()+3])
         ax.set_xlim([0,total_time_series.shape[0]])
 
-        species_counting = {}
+        steps = np.arange(
+            start=0,
+            stop=total_time_series.shape[0],
+            step=number_of_interpolation_points)
 
-        for species_index in range(self.network_loader.number_of_species):
-            species_counting[species_index] = sum(total_time_series[:,species_index])
-
-        species_list = sorted(
-            range(self.network_loader.number_of_species),
-            key=lambda i: - species_counting[i])
-
-        for species_index in species_list[0:number_of_species]:
-            steps = np.arange(
-                start=0,
-                stop=total_time_series.shape[0],
-                step=number_of_interpolation_points)
-
+        for species_index in species_list:
             vals = np.zeros(shape=steps.shape, dtype=int)
             for i, step in enumerate(steps):
                 vals[i] = total_time_series[step, species_index]
@@ -468,7 +476,6 @@ class SimulationReplayer:
 
 
         fig.savefig(path)
-
 
 
     def compute_sink_data(self):
@@ -505,6 +512,10 @@ class SimulationReplayer:
                 "expected_value" : expected_value
             }
 
+        self.sinks = [
+            i for i in range(self.network_loader.number_of_species)
+            if self.sink_filter(i)]
+
     def sink_filter(self, species_index):
         sink_data = self.sink_data[species_index]
 
@@ -525,6 +536,7 @@ class SimulationReplayer:
             return True
         else:
             return False
+
 
 def export_consumption_to_json(simulation_replayer, species_index, path):
     network_loader = simulation_replayer.network_loader
@@ -549,6 +561,21 @@ def export_consumption_to_json(simulation_replayer, species_index, path):
             'consuming_reactions' : consuming_reactions},
                path)
 
+def pad_time_series(time_series, max_number_of_steps):
+    num_steps = time_series.shape[0]
+    state_size = time_series.shape[1]
+    padded_time_series = np.zeros(
+        (max_number_of_steps, state_size),
+        dtype=int)
+
+    for step in range(max_number_of_steps):
+        if step < num_steps:
+            padded_time_series[step] = time_series[step]
+        else:
+            padded_time_series[step] = time_series[num_steps-1]
+
+    return padded_time_series
+
 
 
 def export_sinks_to_json(simulation_replayer, path):
@@ -566,6 +593,7 @@ def export_species_report_to_json(network_loader, path):
         data[i] = network_loader.mol_entries[i].entry_id
 
     dumpfn(data, path)
+
 
 def consumption_report(
         simulation_replayer,
@@ -615,7 +643,6 @@ def consumption_report(
     report_generator.finished()
 
 
-
 def sink_report(
         simulation_replayer,
         sink_report_path
@@ -627,44 +654,43 @@ def sink_report(
         sink_report_path,
         rebuild_mol_pictures=False)
 
-    sink_data_sorted = sorted(
-        simulation_replayer.sink_data.values(),
-        key= lambda item: -item["ratio"])
+    sinks_sorted = sorted(
+        simulation_replayer.sinks,
+        key = lambda i: -simulation_replayer.sink_data[i]["ratio"])
 
-    for sink_entry in sink_data_sorted:
+    for species_index in sinks_sorted:
 
-        species_index = sink_entry["species_index"]
-        if simulation_replayer.sink_filter(species_index):
+        sink_data = simulation_replayer.sink_data[species_index]
 
-            number_of_consuming_reactions = sink_entry[
-                "number_of_consuming_reactions"]
-            number_of_distinct_consuming_reactions = sink_entry[
-                "number_of_distinct_consuming_reactions"]
-            number_of_producing_reactions = sink_entry[
-                "number_of_producing_reactions"]
-            number_of_distinct_producing_reactions = sink_entry[
-                "number_of_distinct_producing_reactions"]
-            ratio = sink_entry["ratio"]
-            expected_value = sink_entry["expected_value"]
+        number_of_consuming_reactions = sink_data[
+            "number_of_consuming_reactions"]
+        number_of_distinct_consuming_reactions = sink_data[
+            "number_of_distinct_consuming_reactions"]
+        number_of_producing_reactions = sink_data[
+            "number_of_producing_reactions"]
+        number_of_distinct_producing_reactions = sink_data[
+            "number_of_distinct_producing_reactions"]
+        ratio = sink_data["ratio"]
+        expected_value = sink_data["expected_value"]
 
 
-            report_generator.emit_text("P/C ratio: " + str(ratio))
-            report_generator.emit_text("expected val: " + str(expected_value))
+        report_generator.emit_text("P/C ratio: " + str(ratio))
+        report_generator.emit_text("expected val: " + str(expected_value))
 
-            report_generator.emit_text(
-                "produced: " + str(number_of_producing_reactions))
+        report_generator.emit_text(
+            "produced: " + str(number_of_producing_reactions))
 
-            report_generator.emit_text(
-                str(number_of_distinct_producing_reactions) +
-                " distinct producing reactions")
+        report_generator.emit_text(
+            str(number_of_distinct_producing_reactions) +
+            " distinct producing reactions")
 
-            report_generator.emit_text(
-                "consumed: " + str(number_of_consuming_reactions))
+        report_generator.emit_text(
+            "consumed: " + str(number_of_consuming_reactions))
 
-            report_generator.emit_text(
-                str(number_of_distinct_consuming_reactions) +
-                " distinct consuming reactions")
-            report_generator.emit_molecule(species_index)
-            report_generator.emit_newline()
+        report_generator.emit_text(
+            str(number_of_distinct_consuming_reactions) +
+            " distinct consuming reactions")
+        report_generator.emit_molecule(species_index)
+        report_generator.emit_newline()
 
     report_generator.finished()
