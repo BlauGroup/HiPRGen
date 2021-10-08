@@ -455,7 +455,6 @@ class SimulationReplayer:
 
         total_time_series = total_time_series / len(seeds)
 
-        ax.set_ylim([0,total_time_series.max()+3])
         ax.set_xlim([0,total_time_series.shape[0]])
 
         steps = np.arange(
