@@ -7,7 +7,6 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from scipy.interpolate import make_interp_spline
 from itertools import chain
 
 def default_cost(free_energy):
@@ -434,8 +433,7 @@ class SimulationReplayer:
             species_list,
             path,
             colors = list(mcolors.TABLEAU_COLORS.values()),
-            styles = ['solid', 'dotted', 'dashed', 'dashdot'],
-            number_of_interpolation_points=25,
+            styles = ['solid', 'dotted', 'dashed', 'dashdot']
     ):
 
 
@@ -470,22 +468,12 @@ class SimulationReplayer:
 
         ax0.set_xlim([0,total_time_series.shape[0]])
 
-        steps = np.arange(
-            start=0,
-            stop=total_time_series.shape[0],
-            step=number_of_interpolation_points)
-
         for species_index in species_list:
-            vals = np.zeros(shape=steps.shape, dtype=int)
-            for i, step in enumerate(steps):
-                vals[i] = total_time_series[step, species_index]
 
-            spline = make_interp_spline(steps, vals)
-
-            ticks = np.linspace(0, total_time_series.shape[0], 500)
+            ticks = np.arange(0, total_time_series.shape[0])
 
             ax0.plot(ticks,
-                     spline(ticks),
+                     total_time_series[:, species_index],
                      color=line_dict[species_index][0],
                      linestyle=line_dict[species_index][1]
                      )
