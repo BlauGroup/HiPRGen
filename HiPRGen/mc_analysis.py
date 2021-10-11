@@ -434,7 +434,7 @@ class SimulationReplayer:
             species_list,
             path,
             colors = list(mcolors.TABLEAU_COLORS.values()),
-            styles = ['solid', 'dotted', 'dashed', 'dashhot'],
+            styles = ['solid', 'dotted', 'dashed', 'dashdot'],
             number_of_interpolation_points=25,
     ):
 
@@ -504,9 +504,9 @@ class SimulationReplayer:
             r = i % 10
             q = i // 10
             pos_x = [q * 0.2 + 0, q * 0.2 + 0.05]
-            pos_y = [r * 0.1, r * 0.1]
+            pos_y = [r * 0.1 + 0.05, r * 0.1 + 0.05]
             text_pos_x = q * 0.2 + 0.06
-            text_pos_y = r * 0.1
+            text_pos_y = r * 0.1 + 0.05
 
             ax1.plot(
                 pos_x, pos_y,
