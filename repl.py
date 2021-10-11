@@ -9,3 +9,6 @@ network_loader = NetworkLoader(
     )
 
 reaction = {'number_of_reactants': 1, 'number_of_products': 1, 'reactants': (185, -1), 'products': (184, -1)}
+
+sr = SimulationReplayer(network_loader)
+sr.time_series_graph(range(1000,2000), sr.sinks, '/tmp/avg.pdf')

@@ -6,6 +6,7 @@ from monty.serialization import dumpfn
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from scipy.interpolate import make_interp_spline
 from itertools import chain
 
@@ -432,10 +433,22 @@ class SimulationReplayer:
             seeds,
             species_list,
             path,
+            colors = list(mcolors.TABLEAU_COLORS.values()),
+            styles = ['solid', 'dotted', 'dashed', 'dashhot'],
             number_of_interpolation_points=25,
     ):
-        fig = plt.figure()
-        ax = plt.axes()
+
+
+        line_dict = {}
+        i = 0
+        for species_index in species_list:
+            r = i % len(colors)
+            q = i // len(colors)
+            line_dict[species_index] = (colors[r], styles[q])
+            i += 1
+
+
+        fig, (ax0, ax1) = plt.subplots(2)
 
         max_trajectory_length = 0
         for seed in seeds:
@@ -455,7 +468,7 @@ class SimulationReplayer:
 
         total_time_series = total_time_series / len(seeds)
 
-        ax.set_xlim([0,total_time_series.shape[0]])
+        ax0.set_xlim([0,total_time_series.shape[0]])
 
         steps = np.arange(
             start=0,
@@ -471,11 +484,42 @@ class SimulationReplayer:
 
             ticks = np.linspace(0, total_time_series.shape[0], 500)
 
-            ax.plot(ticks, spline(ticks), label=str(species_index))
+            ax0.plot(ticks,
+                     spline(ticks),
+                     color=line_dict[species_index][0],
+                     linestyle=line_dict[species_index][1]
+                     )
 
 
+        # creating a legend
+        ax1.yaxis.set_visible(False)
+        ax1.xaxis.set_visible(False)
+        ax1.set_axis_off()
+        ax1.set_xlim([0,1])
+        ax1.set_ylim([0,1])
 
-        leg = ax.legend()
+
+        i = 0
+        for species_index in species_list:
+            r = i % 10
+            q = i // 10
+            pos_x = [q * 0.2 + 0, q * 0.2 + 0.05]
+            pos_y = [r * 0.1, r * 0.1]
+            text_pos_x = q * 0.2 + 0.06
+            text_pos_y = r * 0.1
+
+            ax1.plot(
+                pos_x, pos_y,
+                color=line_dict[species_index][0],
+                linestyle=line_dict[species_index][1])
+
+            ax1.text(text_pos_x, text_pos_y,
+                     str(species_index),
+                     fontsize=8,
+                     horizontalalignment='left',
+                     verticalalignment='center')
+            i += 1
+
         fig.savefig(path)
 
 
