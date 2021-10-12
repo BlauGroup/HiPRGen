@@ -8,7 +8,8 @@ network_loader = NetworkLoader(
     './scratch/li_test/initial_state.sqlite'
     )
 
-reaction = {'number_of_reactants': 1, 'number_of_products': 1, 'reactants': (185, -1), 'products': (184, -1)}
 
-sr = SimulationReplayer(network_loader)
-sr.time_series_graph(range(1000,2000), sr.sinks, '/tmp/avg.pdf')
+simulation_replayer = SimulationReplayer(network_loader)
+simulation_replayer.time_series_graph(
+    network_loader.trajectories.keys(),
+    simulation_replayer.sinks, '/tmp/avg.pdf')
