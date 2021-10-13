@@ -428,12 +428,13 @@ class SimulationReplayer:
 
 
     def time_series_graph(
-        self,
-        seeds,
-        species_list,
-        path,
-        colors = list(mcolors.TABLEAU_COLORS.values()),
-        styles = ['solid', 'dotted', 'dashed', 'dashdot']
+            self,
+            seeds,
+            species_list,
+            path,
+            colors = list(mcolors.TABLEAU_COLORS.values()),
+            styles = ['solid', 'dotted', 'dashed', 'dashdot'],
+            internal_index_labels=True
     ):
 
 
@@ -510,11 +511,16 @@ class SimulationReplayer:
 
         i = 0
         for species_index in species_list:
+            if internal_index_labels:
+                label = str(species_index)
+            else:
+                label = self.network_loader.mol_entries[species_index].entry_id
+
             r = i % 10
             q = i // 10
-            pos_x = [q * 0.2 + 0, q * 0.2 + 0.05]
+            pos_x = [q * 0.3 + 0, q * 0.3 + 0.05]
             pos_y = [r * 0.1 + 0.05, r * 0.1 + 0.05]
-            text_pos_x = q * 0.2 + 0.06
+            text_pos_x = q * 0.3 + 0.06
             text_pos_y = r * 0.1 + 0.05
 
             ax2.plot(
@@ -523,7 +529,7 @@ class SimulationReplayer:
                 linestyle=line_dict[species_index][1])
 
             ax2.text(text_pos_x, text_pos_y,
-                     str(species_index),
+                     label,
                      fontsize=8,
                      horizontalalignment='left',
                      verticalalignment='center')
