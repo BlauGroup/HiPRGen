@@ -544,7 +544,7 @@ class SimulationReplayer:
                      verticalalignment='center')
             i += 1
 
-        fig.savefig(path)
+        fig.savefig(path, transparent=True)
 
 
     def compute_sink_data(self):

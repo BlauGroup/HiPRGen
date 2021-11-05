@@ -9,13 +9,11 @@ network_loader = NetworkLoader(
     './scratch/li_test/initial_state.sqlite'
     )
 
-colors = [hsv_to_rgb(( 0,0,i / 200 )) for i in [0,20,40,60,80,100,120,140,160,180,200]]
 
 
 simulation_replayer = SimulationReplayer(network_loader)
 simulation_replayer.time_series_graph(
     network_loader.trajectories.keys(),
-    None,
-    '/tmp/avg.pdf',
-    colors=colors
+    simulation_replayer.sinks,
+    '/tmp/avg.svg'
 )
