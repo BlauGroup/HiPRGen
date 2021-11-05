@@ -430,6 +430,7 @@ class SimulationReplayer:
     def time_series_graph(
             self,
             seeds,
+            # if species_list is none, an appropriate one will be computed.
             species_list,
             path,
             colors = list(mcolors.TABLEAU_COLORS.values()),
@@ -437,20 +438,6 @@ class SimulationReplayer:
             internal_index_labels=True
     ):
 
-
-        line_dict = {}
-        i = 0
-        for species_index in species_list:
-            r = i % len(colors)
-            q = i // len(colors)
-            line_dict[species_index] = (colors[r], styles[q])
-            i += 1
-
-
-        fig, (ax0, ax1, ax2) = plt.subplots(
-            3, 1,
-            figsize=(5,10),
-            gridspec_kw={'height_ratios':[2,2,1]})
 
         max_trajectory_length = 0
         for seed in seeds:
@@ -469,6 +456,28 @@ class SimulationReplayer:
                 max_trajectory_length)
 
         total_time_series = total_time_series / len(seeds)
+
+        if species_list is None:
+            species_list = set()
+            for index in range(self.network_loader.number_of_species):
+                for step in range(max_trajectory_length):
+                    if total_time_series[step,index] > 0.1:
+                        species_list.add(index)
+
+
+        line_dict = {}
+        i = 0
+        for species_index in species_list:
+            r = i % len(colors)
+            q = i // len(colors)
+            line_dict[species_index] = (colors[r], styles[q])
+            i += 1
+
+
+        fig, (ax0, ax1, ax2) = plt.subplots(
+            3, 1,
+            figsize=(5,10),
+            gridspec_kw={'height_ratios':[2,2,1]})
 
         y_max = 0
         for step in range(total_time_series.shape[0]):
