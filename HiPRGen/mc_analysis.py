@@ -430,8 +430,7 @@ class SimulationReplayer:
     def time_series_graph(
             self,
             seeds,
-            # if species_list is none, an appropriate one will be computed.
-            species_list,
+            species_of_interest,
             path,
             colors = list(mcolors.TABLEAU_COLORS.values()),
             styles = ['solid', 'dotted', 'dashed', 'dashdot'],
@@ -457,17 +456,17 @@ class SimulationReplayer:
 
         total_time_series = total_time_series / len(seeds)
 
-        if species_list is None:
-            species_list = set()
-            for index in range(self.network_loader.number_of_species):
-                for step in range(max_trajectory_length):
-                    if total_time_series[step,index] > 0.1:
-                        species_list.add(index)
+        background_species = set()
+        for index in range(self.network_loader.number_of_species):
+            for step in range(max_trajectory_length):
+                if (total_time_series[step,index] > 0.1 and
+                    index not in species_of_interest):
+                    background_species.add(index)
 
 
         line_dict = {}
         i = 0
-        for species_index in species_list:
+        for species_index in species_of_interest:
             r = i % len(colors)
             q = i // len(colors)
             line_dict[species_index] = (colors[r], styles[q])
@@ -481,7 +480,7 @@ class SimulationReplayer:
 
         y_max = 0
         for step in range(total_time_series.shape[0]):
-            for species_index in species_list:
+            for species_index in species_of_interest:
                 y_max = max(y_max, total_time_series[step,species_index])
 
         ax0.set_xlim([0,total_time_series.shape[0]])
@@ -491,10 +490,22 @@ class SimulationReplayer:
         ax1.set_ylim([0,(y_max+1)/10])
 
 
+        ticks = np.arange(0, total_time_series.shape[0])
+        for i, species_index in enumerate(background_species):
+            ax0.plot(ticks,
+                     total_time_series[:, species_index],
+                     color=mcolors.hsv_to_rgb((0,0,0.9))
+                     )
 
-        for species_index in species_list:
+            ax1.plot(ticks,
+                     total_time_series[:, species_index],
+                     color=mcolors.hsv_to_rgb((0,0,0.9))
+                     )
 
-            ticks = np.arange(0, total_time_series.shape[0])
+
+
+        for species_index in species_of_interest:
+
 
             ax0.plot(ticks,
                      total_time_series[:, species_index],
@@ -519,7 +530,7 @@ class SimulationReplayer:
 
 
         i = 0
-        for species_index in species_list:
+        for species_index in species_of_interest:
             if internal_index_labels:
                 label = str(species_index)
             else:

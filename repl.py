@@ -15,7 +15,7 @@ simulation_replayer = SimulationReplayer(network_loader)
 simulation_replayer.time_series_graph(
     network_loader.trajectories.keys(),
     simulation_replayer.sinks,
-    '/tmp/avg.svg'
+    '/tmp/avg.pdf'
 )
 
 network_renderer = NetworkRenderer(
