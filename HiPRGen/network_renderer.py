@@ -1,21 +1,46 @@
 from HiPRGen.network_loader import *
 import cairo
 
+class NetworkRenderer:
+
+    def __init__(
+            self,
+            network_loader,
+            species_of_interest,
+            reactions_of_interest,
+            output_file,
+            width=1024,
+            height=1024):
+        """
+        species of interest is a dict mapping species ids to
+        their canvas coordinates and styling.
+
+        reactions of interest is a dict mapping reaction ids
+        to their styling.
+        """
+
+        self.network_loader = network_loader
+        self.species_of_interest = species_of_interest
+        self.reactions_of_interest = reactions_of_interest
+        self.output_file = output_file
+        self.width = width
+        self.height = height
 
 
-with cairo.SVGSurface("/tmp/example.svg", 200, 200) as surface:
-    context = cairo.Context(surface)
-    x, y, x1, y1 = 0.1, 0.5, 0.4, 0.9
-    x2, y2, x3, y3 = 0.6, 0.1, 0.9, 0.5
-    context.scale(200, 200)
-    context.set_line_width(0.04)
-    context.move_to(x, y)
-    context.curve_to(x1, y1, x2, y2, x3, y3)
-    context.stroke()
-    context.set_source_rgba(1, 0.2, 0.2, 0.6)
-    context.set_line_width(0.02)
-    context.move_to(x, y)
-    context.line_to(x1, y1)
-    context.move_to(x2, y2)
-    context.line_to(x3, y3)
-    context.stroke()
+        self.surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
+        self.context = cairo.Context(self.surface)
+        self.context.scale(width, height)
+
+
+
+    def render(self):
+
+        context = self.context
+
+        x, y, x1, y1 = 0.5, 0.5, 0.1, 0.1
+        context.set_line_width(0.01)
+        context.move_to(x, y)
+        context.line_to(x1,y1)
+        context.stroke()
+        self.surface.write_to_png(self.output_file)
+

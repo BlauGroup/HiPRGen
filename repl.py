@@ -1,7 +1,7 @@
 from HiPRGen.network_loader import *
 from HiPRGen.reaction_questions import *
 from HiPRGen.mc_analysis import *
-from matplotlib.colors import hsv_to_rgb
+from HiPRGen.network_renderer import *
 
 network_loader = NetworkLoader(
     './scratch/li_test/rn.sqlite',
@@ -17,3 +17,11 @@ simulation_replayer.time_series_graph(
     simulation_replayer.sinks,
     '/tmp/avg.svg'
 )
+
+network_renderer = NetworkRenderer(
+    network_loader,
+    None,
+    None,
+    '/tmp/sick.png')
+
+network_renderer.render()
