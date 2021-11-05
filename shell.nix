@@ -15,6 +15,7 @@ let
             ps.openbabel-bindings
             ps.pygraphviz
             ps.mpi4py
+            ps.pycairo
             # HiPRGen
           ]);
 

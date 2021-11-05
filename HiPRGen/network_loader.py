@@ -10,6 +10,10 @@ sql_get_reaction = """
     SELECT * FROM reactions WHERE reaction_id = ?;
 """
 
+sql_get_reaction_range = """
+    SELECT * FROM reactions WHERE ? <= reaction_id AND reaction_id < ?;
+"""
+
 sql_get_redox = """
     SELECT * FROM reactions WHERE is_redox = 1;
 """
@@ -66,6 +70,27 @@ class NetworkLoader:
 
         return redox_reactions
 
+    def get_reactions_in_range(self, lower_bound, upper_bound):
+        """
+        get range of reactions from database but don't cache them
+        """
+        result = []
+        cur = self.rn_con.cursor()
+        for res in cur.execute(sql_get_reaction_range,
+                               (lower_bound, upper_bound)):
+            reaction = {}
+            reaction['reaction_id'] = res[0]
+            reaction['number_of_reactants'] = res[1]
+            reaction['number_of_products'] = res[2]
+            reaction['reactants'] = res[3:5]
+            reaction['products'] = res[5:7]
+            reaction['rate'] = res[7]
+            reaction['dG'] = res[8]
+            reaction['dG_barrier'] = res[9]
+            result.append(reaction)
+
+        return result
+
 
     def index_to_reaction(self, reaction_index):
 
@@ -81,7 +106,7 @@ class NetworkLoader:
             print("fetching data for reaction", reaction_index)
             cur = self.rn_con.cursor()
             res = list(
-                cur.execute(sql_get_reaction, (int(reaction_index),))
+                cur.execute(sql_get_reaction, (reaction_index,))
             )[0]
             reaction = {}
             reaction['number_of_reactants'] = res[1]

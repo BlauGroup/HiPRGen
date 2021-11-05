@@ -211,10 +211,10 @@ def li_test():
     insert_initial_state(initial_state, mol_entries, folder + '/initial_state.sqlite')
 
 
-    # RNMC is a high performance reaction network monte carlo simulator:
-    # https://github.com/BlauGroup/RNMC
+    # GMC is a high performance reaction network monte carlo simulator using the
+    # gillespie algorithm: https://github.com/BlauGroup/RNMC
     subprocess.run([
-        'RNMC',
+        'GMC',
         '--reaction_database=' + folder + '/rn.sqlite',
         '--initial_state_database=' + folder + '/initial_state.sqlite',
         '--number_of_simulations=1000',
@@ -250,7 +250,7 @@ def li_test():
         folder + '/reaction_tally.tex'
     )
 
-    # pathfinding is the main goal of HiPRGen / RNMC.
+    # pathfinding is the main goal of HiPRGen / GMC.
     # run pdflatex LEDC_pathways.tex to see all the ways that LEDC was
     # produced in the simulations of our lithium test network. Note that this
     # network has ~5000 reactions. Our production networks have
@@ -381,7 +381,7 @@ def mg_test():
 
 
     subprocess.run([
-        'RNMC',
+        'GMC',
         '--reaction_database=' + folder + '/rn.sqlite',
         '--initial_state_database=' + folder + '/initial_state.sqlite',
         '--number_of_simulations=1000',
