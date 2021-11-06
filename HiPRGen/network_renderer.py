@@ -1,5 +1,7 @@
 from HiPRGen.network_loader import *
+import numpy as np
 import cairo
+import math
 
 class NetworkRenderer:
 
@@ -10,7 +12,8 @@ class NetworkRenderer:
             reactions_of_interest,
             output_file,
             width=1024,
-            height=1024):
+            height=1024
+    ):
         """
         species of interest is a dict mapping species ids to
         their canvas coordinates and styling.
@@ -32,15 +35,32 @@ class NetworkRenderer:
         self.context.scale(width, height)
 
 
+        self.compute_species_locations()
+
+
+
+    def compute_species_locations(self):
+        rng = np.random.default_rng()
+        self.species_locations = rng.uniform(
+            0.1,
+            0.9,
+            self.network_loader.number_of_species * 2).reshape(
+                self.network_loader.number_of_species, 2)
+
 
     def render(self):
 
         context = self.context
 
-        x, y, x1, y1 = 0.5, 0.5, 0.1, 0.1
-        context.set_line_width(0.01)
-        context.move_to(x, y)
-        context.line_to(x1,y1)
-        context.stroke()
+        context.set_source_rgb(0,0,0)
+        for i in range(self.network_loader.number_of_species):
+            context.arc(self.species_locations[i,0],
+                        self.species_locations[i,1],
+                        0.002,
+                        0,
+                        2 * math.pi)
+
+            context.fill()
+
         self.surface.write_to_png(self.output_file)
 

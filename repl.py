@@ -18,10 +18,12 @@ simulation_replayer.time_series_graph(
     '/tmp/avg.pdf'
 )
 
+network_loader.number_of_species = 5000
+
 network_renderer = NetworkRenderer(
     network_loader,
     None,
     None,
-    '/tmp/sick.png')
+    '/tmp/rn.png')
 
 network_renderer.render()
