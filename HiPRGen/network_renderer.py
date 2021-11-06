@@ -3,6 +3,21 @@ import numpy as np
 import cairo
 import math
 
+class QuadTreeNode:
+    def __init__(self, x_min, x_max, y_min, y_max):
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
+        self.quad_1 = []
+        self.quad_2 = []
+        self.quad_3 = []
+        self.quad_4 = []
+
+    def branch(self):
+        pass
+
+
 class NetworkRenderer:
 
     def __init__(
@@ -38,7 +53,6 @@ class NetworkRenderer:
         self.compute_species_locations()
 
 
-
     def compute_species_locations(self):
         rng = np.random.default_rng()
         self.species_locations = rng.uniform(
@@ -61,6 +75,12 @@ class NetworkRenderer:
                         2 * math.pi)
 
             context.fill()
+
+            context.set_line_width(0.01)
+            context.move_to(0.5,0.5)
+            context.line_to(0.99,0.01)
+
+            context.stroke()
 
         self.surface.write_to_png(self.output_file)
 
