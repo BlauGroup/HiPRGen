@@ -3,61 +3,118 @@ import numpy as np
 import cairo
 import math
 
+
+
 class QuadTreeNode:
     """
     origin is at top left so to agree with
-    the cairo canvas coordinates
+    the cairo canvas coordinates.
+
+    Notice that this is a recursive initializer. It creates
+    1 + 4 + ... + 4^(depth) = O(4^(depth + 1)) QuadTreeNodes,
+    so don't go too deep!
     """
-    def __init__(self, x_min, x_max, y_min, y_max):
+    def __init__(self, depth, x_min, x_max, y_min, y_max):
+
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
 
-        # top left
-        self.quad_1 = []
+        # you either have quads or data
+        # if you have quads, you are non terminal
+        # if you have data you are terminal
+        self.quads = None
+        self.data = []
+        self.branch(depth)
 
-        # top right
-        self.quad_2 = []
 
-        # bottom left
-        self.quad_3 = []
+    def branch(self, depth):
+        """
+        break node into 4 nodes.
+        """
 
-        # bottom right
-        self.quad_4 = []
+        if depth > 0:
+            self.data = None
+            self.quads = [
+                None, # top left
+                None, # top right
+                None, # bottom left
+                None  # bottom right
+            ]
 
-    def branch(self):
-        self.x_mid = (self.x_min + self.x_max) / 2
-        self.x_mid = (self.y_min + self.y_max) / 2
+            self.x_mid = (self.x_min + self.x_max) / 2
+            self.y_mid = (self.y_min + self.y_max) / 2
 
-        # top left
-        self.quad_1 = QuadTreeNode(
-            self.x_min,
-            self.x_mid,
-            self.y_min,
-            self.y_mid)
+            # top left
+            self.quads[0] = QuadTreeNode(
+                depth - 1,
+                self.x_min,
+                self.x_mid,
+                self.y_min,
+                self.y_mid)
 
-        # top right
-        self.quad_2 = QuadTreeNode(
-            self.x_mid,
-            self.x_max,
-            self.y_min,
-            self.y_mid)
+            # top right
+            self.quads[1] = QuadTreeNode(
+                depth - 1,
+                self.x_mid,
+                self.x_max,
+                self.y_min,
+                self.y_mid)
 
-        # bottom left
-        self.quad_3 = QuadTreeNode(
-            self.x_min,
-            self.x_mid,
-            self.y_mid,
-            self.y_max)
+            # bottom left
+            self.quads[2] = QuadTreeNode(
+                depth - 1,
+                self.x_min,
+                self.x_mid,
+                self.y_mid,
+                self.y_max)
 
-        # bottom right
-        self.quad_4 = QuadTreeNode(
-            self.x_mid,
-            self.x_max,
-            self.y_mid,
-            self.y_max)
+            # bottom right
+            self.quads[3] = QuadTreeNode(
+                depth - 1,
+                self.x_mid,
+                self.x_max,
+                self.y_mid,
+                self.y_max)
 
+
+    def find_node(self, x, y):
+        """
+        find the terminal node so that
+        x_min <= x < x_max
+        y_min <= y < y_max
+        return None if there is no node
+
+        note: does check the terminal node twice,
+        but we would stack overflow before that ever posed
+        a performance problem.
+        """
+        if self.quads is not None:
+            for quad in self.quads:
+                if (quad.x_min <= x < quad.x_max and
+                    quad.y_min <= y < quad.y_max):
+                    return quad.find_node(x,y)
+                else:
+                    return None
+
+
+        elif self.data is not None:
+            if (self.x_min <= x < self.x_max and
+                self.y_min <= y < self.y_max):
+
+                return self
+            else:
+                return None
+
+    def __str__(self):
+        return (
+            "x : [" + str(self.x_min) + ", " + str(self.x_max) + ")  " +
+            "y : [" + str(self.y_min) + ", " + str(self.y_max) + ")"
+        )
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class NetworkRenderer:
