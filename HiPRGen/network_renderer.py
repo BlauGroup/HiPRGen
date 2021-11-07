@@ -78,6 +78,27 @@ class QuadTreeNode:
                 self.y_mid,
                 self.y_max)
 
+    def find_neighborhood(self,x,y):
+        """
+        find all nodes adjacent to our point
+        """
+        node = self.find_node(x,y)
+        x_diff = node.x_max - node.x_min
+        y_diff = node.y_max - node.y_min
+        maybe_adjacent_nodes = [
+            self.find_node(x + x_diff, y),
+            self.find_node(x - x_diff, y),
+            self.find_node(x, y + y_diff),
+            self.find_node(x, y - y_diff),
+            self.find_node(x + x_diff, y + y_diff),
+            self.find_node(x - x_diff, y + y_diff),
+            self.find_node(x + x_diff, y - y_diff),
+            self.find_node(x - x_diff, y - y_diff)
+        ]
+
+        adjacent_nodes = [n for n in maybe_adjacent_nodes if n is not None]
+        adjacent_nodes.append(node)
+        return adjacent_nodes
 
     def find_node(self, x, y):
         """
@@ -95,8 +116,8 @@ class QuadTreeNode:
                 if (quad.x_min <= x < quad.x_max and
                     quad.y_min <= y < quad.y_max):
                     return quad.find_node(x,y)
-                else:
-                    return None
+
+            return None
 
 
         elif self.data is not None:
@@ -105,7 +126,9 @@ class QuadTreeNode:
 
                 return self
             else:
+                breakpoint()
                 return None
+
 
     def __str__(self):
         return (
