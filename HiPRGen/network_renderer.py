@@ -106,10 +106,6 @@ class QuadTreeNode:
         x_min <= x < x_max
         y_min <= y < y_max
         return None if there is no node
-
-        note: does check the terminal node twice,
-        but we would stack overflow before that ever posed
-        a performance problem.
         """
         if self.quads is not None:
             for quad in self.quads:
@@ -119,16 +115,8 @@ class QuadTreeNode:
 
             return None
 
-
-        elif self.data is not None:
-            if (self.x_min <= x < self.x_max and
-                self.y_min <= y < self.y_max):
-
-                return self
-            else:
-                breakpoint()
-                return None
-
+        else:
+            return self
 
     def __str__(self):
         return (
