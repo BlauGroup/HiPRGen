@@ -4,18 +4,60 @@ import cairo
 import math
 
 class QuadTreeNode:
+    """
+    origin is at top left so to agree with
+    the cairo canvas coordinates
+    """
     def __init__(self, x_min, x_max, y_min, y_max):
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
+
+        # top left
         self.quad_1 = []
+
+        # top right
         self.quad_2 = []
+
+        # bottom left
         self.quad_3 = []
+
+        # bottom right
         self.quad_4 = []
 
     def branch(self):
-        pass
+        self.x_mid = (self.x_min + self.x_max) / 2
+        self.x_mid = (self.y_min + self.y_max) / 2
+
+        # top left
+        self.quad_1 = QuadTreeNode(
+            self.x_min,
+            self.x_mid,
+            self.y_min,
+            self.y_mid)
+
+        # top right
+        self.quad_2 = QuadTreeNode(
+            self.x_mid,
+            self.x_max,
+            self.y_min,
+            self.y_mid)
+
+        # bottom left
+        self.quad_3 = QuadTreeNode(
+            self.x_min,
+            self.x_mid,
+            self.y_mid,
+            self.y_max)
+
+        # bottom right
+        self.quad_4 = QuadTreeNode(
+            self.x_mid,
+            self.x_max,
+            self.y_mid,
+            self.y_max)
+
 
 
 class NetworkRenderer:
