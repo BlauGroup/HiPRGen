@@ -4,7 +4,6 @@ import cairo
 import math
 
 
-
 class QuadTreeNode:
     """
     origin is at top left so to agree with
@@ -127,6 +126,10 @@ class QuadTreeNode:
     def __repr__(self):
         return self.__str__()
 
+
+class RepulsiveSampler:
+    def __init__(self, rejection_radius, x_min, x_max, y_min, y_max, quad_tree_depth=7):
+        pass
 
 class NetworkRenderer:
 
