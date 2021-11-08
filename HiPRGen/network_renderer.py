@@ -239,6 +239,7 @@ class NetworkRenderer:
 
     def render(self):
 
+        local_sampler = random.Random(42)
         context = self.context
 
         context.set_source_rgb(0.5,0.5,0.5)
@@ -263,9 +264,11 @@ class NetworkRenderer:
                                  self.species_locations[product_index]))
 
             for edge in edges:
-                context.move_to(*edge[0])
-                context.line_to(*edge[1])
-                context.stroke()
+                # don't plot every edge
+                if (local_sampler.randint(0,5) == 0):
+                    context.move_to(*edge[0])
+                    context.line_to(*edge[1])
+                    context.stroke()
 
             current_base_reaction += self.reaction_batch_size
 
