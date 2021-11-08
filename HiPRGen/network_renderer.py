@@ -1,7 +1,7 @@
 from HiPRGen.network_loader import *
-import numpy as np
 import cairo
 import math
+import random
 
 
 class QuadTreeNode:
@@ -79,7 +79,8 @@ class QuadTreeNode:
 
     def find_neighborhood(self,x,y):
         """
-        find all nodes adjacent to our point
+        find all nodes adjacent to our point.
+        doesn't return the node actually containing our point.
         """
         node = self.find_node(x,y)
         x_diff = node.x_max - node.x_min
@@ -96,7 +97,6 @@ class QuadTreeNode:
         ]
 
         adjacent_nodes = [n for n in maybe_adjacent_nodes if n is not None]
-        adjacent_nodes.append(node)
         return adjacent_nodes
 
     def find_node(self, x, y):
@@ -104,7 +104,8 @@ class QuadTreeNode:
         find the terminal node so that
         x_min <= x < x_max
         y_min <= y < y_max
-        return None if there is no node
+        return None if there is no node.
+        Note: this gives the wrong answer if called from a terminal node.
         """
         if self.quads is not None:
             for quad in self.quads:
@@ -128,8 +129,44 @@ class QuadTreeNode:
 
 
 class RepulsiveSampler:
-    def __init__(self, rejection_radius, x_min, x_max, y_min, y_max, quad_tree_depth=7):
-        pass
+    def __init__(self, rejection_radius, x_min, x_max, y_min, y_max, quad_tree_depth=7, seed=42):
+
+        self.quad_tree = QuadTreeNode(quad_tree_depth, x_min, x_max, y_min, y_max)
+        self.rejection_radius = rejection_radius
+        self.internal_sampler = random.Random(seed)
+
+    def sample(self):
+        while (True):
+
+            x = self.internal_sampler.uniform(
+                self.quad_tree.x_min,
+                self.quad_tree.x_max)
+
+            y = self.internal_sampler.uniform(
+                self.quad_tree.y_min,
+                self.quad_tree.y_max)
+
+            node = self.quad_tree.find_node(x,y)
+            neighborhood = self.quad_tree.find_neighborhood(x,y)
+            neighborhood.append(node)
+
+            too_close = False
+            for adjacent_node in neighborhood:
+                for point in adjacent_node.data:
+                    if (point[0] - x)**2 + (point[1] - y)**2 < (self.rejection_radius **2):
+                        too_close = True
+                        break
+
+                if too_close:
+                    break
+
+            if (not too_close):
+                result = (x,y)
+                node.data.append(result)
+                return result
+
+
+
 
 class NetworkRenderer:
 
@@ -140,7 +177,9 @@ class NetworkRenderer:
             reactions_of_interest,
             output_file,
             width=1024,
-            height=1024
+            height=1024,
+            rejection_radius = 0.01,
+            node_radius = 0.002
     ):
         """
         species of interest is a dict mapping species ids to
@@ -156,6 +195,8 @@ class NetworkRenderer:
         self.output_file = output_file
         self.width = width
         self.height = height
+        self.repulsive_sampler = RepulsiveSampler(rejection_radius, 0, 1, 0, 1)
+        self.node_radius = node_radius
 
 
         self.surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
@@ -163,16 +204,9 @@ class NetworkRenderer:
         self.context.scale(width, height)
 
 
-        self.compute_species_locations()
-
-
-    def compute_species_locations(self):
-        rng = np.random.default_rng()
-        self.species_locations = rng.uniform(
-            0.1,
-            0.9,
-            self.network_loader.number_of_species * 2).reshape(
-                self.network_loader.number_of_species, 2)
+        self.species_locations = [
+            self.repulsive_sampler.sample()
+            for i in range(network_loader.number_of_species)]
 
 
     def render(self):
@@ -181,9 +215,9 @@ class NetworkRenderer:
 
         context.set_source_rgb(0,0,0)
         for i in range(self.network_loader.number_of_species):
-            context.arc(self.species_locations[i,0],
-                        self.species_locations[i,1],
-                        0.002,
+            context.arc(self.species_locations[i][0],
+                        self.species_locations[i][1],
+                        self.node_radius,
                         0,
                         2 * math.pi)
 
@@ -191,7 +225,7 @@ class NetworkRenderer:
 
             context.set_line_width(0.01)
             context.move_to(0.5,0.5)
-            context.line_to(0.99,0.01)
+            # context.line_to(0.99,0.01)
 
             context.stroke()
 
