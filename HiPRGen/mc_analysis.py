@@ -46,14 +46,26 @@ def reaction_tally_report(
         cutoff=10):
 
     reaction_tally = {}
+    species_set = set()
     for seed in network_loader.trajectories:
         for step in network_loader.trajectories[seed]:
             reaction_id = network_loader.trajectories[seed][step][0]
+
+            reaction = network_loader.index_to_reaction(reaction_id)
 
             if reaction_id in reaction_tally:
                 reaction_tally[reaction_id] += 1
             else:
                 reaction_tally[reaction_id] = 1
+
+            for i in range(reaction['number_of_reactants']):
+                reactant_id = reaction['reactants'][i]
+                species_set.add(reactant_id)
+
+            for j in range(reaction['number_of_products']):
+                product_id = reaction['products'][j]
+                species_set.add(product_id)
+
 
 
     report_generator = ReportGenerator(
@@ -62,6 +74,19 @@ def reaction_tally_report(
         rebuild_mol_pictures=False)
 
     report_generator.emit_text("reaction tally report")
+    report_generator.emit_text(
+        "total number of reactions: " +
+        str(network_loader.number_of_reactions))
+    report_generator.emit_text(
+        "number of reactions which fired: " +
+        str(len(reaction_tally.keys())))
+    report_generator.emit_text(
+        "total number of species: " +
+        str(network_loader.number_of_species))
+    report_generator.emit_text(
+        "number of species observed: " +
+        str(len(species_set)))
+
 
     for (reaction_index, number) in sorted(
             reaction_tally.items(), key=lambda pair: -pair[1]):
