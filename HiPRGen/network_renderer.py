@@ -129,11 +129,21 @@ class QuadTreeNode:
 
 
 class RepulsiveSampler:
-    def __init__(self, rejection_radius, x_min, x_max, y_min, y_max, quad_tree_depth=7, seed=42):
+    def __init__(self,
+                 rejection_radius,
+                 x_min,
+                 x_max,
+                 y_min,
+                 y_max,
+                 global_mask, # reject a sample if global mask returns false
+                 quad_tree_depth=7,
+                 seed=42,
+                 ):
 
         self.quad_tree = QuadTreeNode(quad_tree_depth, x_min, x_max, y_min, y_max)
         self.rejection_radius = rejection_radius
         self.internal_sampler = random.Random(seed)
+        self.global_mask = global_mask
 
     def sample(self):
         while (True):
@@ -145,6 +155,9 @@ class RepulsiveSampler:
             y = self.internal_sampler.uniform(
                 self.quad_tree.y_min,
                 self.quad_tree.y_max)
+
+            if not self.global_mask(x,y):
+                continue
 
             node = self.quad_tree.find_node(x,y)
             neighborhood = self.quad_tree.find_neighborhood(x,y)
@@ -162,6 +175,7 @@ class RepulsiveSampler:
 
             if (not too_close):
                 result = (x,y)
+                print(result)
                 node.data.append(result)
                 return result
 
@@ -178,7 +192,7 @@ class NetworkRenderer:
             output_file,
             width=1024,
             height=1024,
-            rejection_radius = 0.01,
+            rejection_radius = 0.008,
             node_radius = 0.002
     ):
         """
@@ -195,7 +209,14 @@ class NetworkRenderer:
         self.output_file = output_file
         self.width = width
         self.height = height
-        self.repulsive_sampler = RepulsiveSampler(rejection_radius, 0, 1, 0, 1)
+        self.repulsive_sampler = RepulsiveSampler(
+            rejection_radius,
+            0.0,
+            1.0,
+            0.0,
+            1.0,
+            lambda x, y: True if (x - 0.5)**2 + (y - 0.5)**2 < 0.47**2 else False
+        )
         self.node_radius = node_radius
 
 
@@ -222,12 +243,6 @@ class NetworkRenderer:
                         2 * math.pi)
 
             context.fill()
-
-            context.set_line_width(0.01)
-            context.move_to(0.5,0.5)
-            # context.line_to(0.99,0.01)
-
-            context.stroke()
 
         self.surface.write_to_png(self.output_file)
 
