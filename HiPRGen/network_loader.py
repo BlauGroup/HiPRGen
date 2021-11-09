@@ -49,8 +49,6 @@ class NetworkLoader:
 
         if initial_state_database:
             self.initial_state_con = sqlite3.connect(initial_state_database)
-            self.load_trajectories()
-            self.load_initial_state()
 
         self.reactions = {}
 
@@ -87,7 +85,6 @@ class NetworkLoader:
             reaction['dG'] = res[8]
             reaction['dG_barrier'] = res[9]
             yield reaction
-
 
 
     def index_to_reaction(self, reaction_index):

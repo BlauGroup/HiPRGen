@@ -232,6 +232,9 @@ def li_test():
         folder + '/initial_state.sqlite'
         )
 
+    network_loader.load_trajectories()
+    network_loader.load_initial_state()
+
 
 
     # HiPRGen has analysis tools to understand what happened in our simulation.
@@ -398,6 +401,11 @@ def mg_test():
         folder + '/mol_entries.pickle',
         folder + '/initial_state.sqlite'
         )
+
+    network_loader.load_trajectories()
+    network_loader.load_initial_state()
+
+
 
     report_generator = ReportGenerator(
         network_loader.mol_entries,

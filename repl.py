@@ -11,6 +11,7 @@ from HiPRGen.network_renderer import *
 network_loader = NetworkLoader(
     '/home/danielbarter/big_network/rn.sqlite',
     '/home/danielbarter/big_network/mol_entries.pickle',
+    '/home/danielbarter/big_network/initial_state.sqlite',
     )
 
 
