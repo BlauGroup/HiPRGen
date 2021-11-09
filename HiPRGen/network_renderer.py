@@ -195,8 +195,12 @@ class NetworkRenderer:
             rejection_radius = 0.008,
             node_radius = 0.002,
             global_mask_radius=0.47,
-            reaction_batch_size = 100000,
-            edge_probability = 1.0/10.0
+            # size of reaction batches fetched from the database
+            reaction_batch_size = 10000,
+            # for the background, there is no need to render every reaction
+            # instead we render reactions according to the reaction probability
+            reaction_probability = 0.001,
+            colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]]
     ):
         """
         species of interest is a dict mapping species ids to
@@ -213,7 +217,8 @@ class NetworkRenderer:
         self.rejection_radius = rejection_radius
         self.width = width
         self.height = height
-        self.edge_probability = edge_probability
+        self.reaction_probability = reaction_probability
+        self.colors = colors
         self.repulsive_sampler = RepulsiveSampler(
             rejection_radius,
             0.0,
@@ -244,8 +249,7 @@ class NetworkRenderer:
         local_sampler = random.Random(42)
         context = self.context
 
-        context.set_source_rgb(0.5,0.5,0.5)
-        context.set_line_width(0.001)
+        context.set_line_width(0.0001)
         current_base_reaction = 0
         while (current_base_reaction <
                self.network_loader.number_of_reactions):
@@ -256,10 +260,10 @@ class NetworkRenderer:
 
             for reaction in reactions:
                 print(reaction['reaction_id'])
-                for i in range(reaction['number_of_reactants']):
-                    for j in range(reaction['number_of_products']):
-                        if i <= j:
-                            if (local_sampler.randint(0,int(1/self.edge_probability)) == 0):
+                if (local_sampler.random() < self.reaction_probability):
+                    for i in range(reaction['number_of_reactants']):
+                        for j in range(reaction['number_of_products']):
+                            if i <= j:
                                 reactant_index = reaction['reactants'][i]
                                 product_index = reaction['products'][j]
                                 edges.append(
@@ -267,6 +271,8 @@ class NetworkRenderer:
                                      self.species_locations[product_index]))
 
             for edge in edges:
+                color = local_sampler.choice(self.colors)
+                context.set_source_rgb(*color)
                 context.move_to(*edge[0])
                 context.line_to(*edge[1])
                 context.stroke()
