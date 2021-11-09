@@ -198,7 +198,7 @@ class NetworkRenderer:
             reaction_batch_size = 10000,
             # for the background, there is no need to render every reaction
             # instead we render reactions according to the reaction probability
-            reaction_probability = 0.001,
+            reaction_probability = 1,
             colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]],
     ):
         """
@@ -236,12 +236,36 @@ class NetworkRenderer:
         self.context = cairo.Context(self.surface)
         self.context.scale(width, height)
 
+        self.species_locations = {}
 
-        self.species_locations = [
-            self.repulsive_sampler.sample()
-            for i in range(network_loader.number_of_species)]
+        if self.species_of_interest is not None:
+            for species_id in self.species_of_interest:
+                position = self.species_of_interest[species_id]
+                self.species_locations[species_id] = position
+                node = self.repulsive_sampler.quad_tree.find_node(*position)
+                node.data.append(position)
+
+        for i in range(self.network_loader.number_of_species):
+            if i not in self.species_locations:
+                self.species_locations[i] = self.repulsive_sampler.sample()
+
 
         self.reaction_batch_size = reaction_batch_size
+
+
+    def render_reaction(self, reaction, color):
+        context = self.context
+        for i in range(reaction['number_of_reactants']):
+            for j in range(reaction['number_of_products']):
+                if i <= j:
+                    reactant_index = reaction['reactants'][i]
+                    product_index = reaction['products'][j]
+
+                    context.set_source_rgb(*color)
+                    context.move_to(*self.species_locations[reactant_index])
+                    context.line_to(*self.species_locations[product_index])
+                    context.stroke()
+
 
 
     def render(self):
@@ -252,33 +276,18 @@ class NetworkRenderer:
         context.set_line_width(self.background_line_width)
         current_base_reaction = 0
 
-        while (current_base_reaction <
-               self.network_loader.number_of_reactions):
+        while (current_base_reaction < self.network_loader.number_of_reactions):
 
             reactions = self.network_loader.get_reactions_in_range(
                 current_base_reaction,
                 current_base_reaction + self.reaction_batch_size)
 
-            edges = []
 
             for reaction in reactions:
                 print(reaction['reaction_id'])
                 if (local_sampler.random() < self.reaction_probability):
-                    for i in range(reaction['number_of_reactants']):
-                        for j in range(reaction['number_of_products']):
-                            if i <= j:
-                                reactant_index = reaction['reactants'][i]
-                                product_index = reaction['products'][j]
-                                edges.append(
-                                    (self.species_locations[reactant_index],
-                                     self.species_locations[product_index]))
-
-            for edge in edges:
-                color = local_sampler.choice(self.colors)
-                context.set_source_rgb(*color)
-                context.move_to(*edge[0])
-                context.line_to(*edge[1])
-                context.stroke()
+                    color = local_sampler.choice(self.colors)
+                    self.render_reaction(reaction, color)
 
             current_base_reaction += self.reaction_batch_size
 
@@ -293,6 +302,11 @@ class NetworkRenderer:
                         2 * math.pi)
 
             context.fill()
+
+        if self.reactions_of_interest is not None:
+            for reaction_id in self.reactions_of_interest:
+                reaction = self.network_loader.index_to_reaction(reaction_id)
+                self.render_reaction(reaction, self.reactions_of_interest[reaction_id])
 
 
 
