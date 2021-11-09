@@ -180,8 +180,6 @@ class RepulsiveSampler:
                 return result
 
 
-
-
 class NetworkRenderer:
 
     def __init__(
@@ -194,13 +192,14 @@ class NetworkRenderer:
             height=1024,
             rejection_radius = 0.008,
             node_radius = 0.002,
+            background_line_width=0.001,
             global_mask_radius=0.47,
             # size of reaction batches fetched from the database
             reaction_batch_size = 10000,
             # for the background, there is no need to render every reaction
             # instead we render reactions according to the reaction probability
             reaction_probability = 0.001,
-            colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]]
+            colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]],
     ):
         """
         species of interest is a dict mapping species ids to
@@ -230,6 +229,7 @@ class NetworkRenderer:
                 else False )
         )
         self.node_radius = node_radius
+        self.background_line_width = background_line_width
 
 
         self.surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
@@ -249,13 +249,16 @@ class NetworkRenderer:
         local_sampler = random.Random(42)
         context = self.context
 
-        context.set_line_width(0.0001)
+        context.set_line_width(self.background_line_width)
         current_base_reaction = 0
+
         while (current_base_reaction <
                self.network_loader.number_of_reactions):
+
             reactions = self.network_loader.get_reactions_in_range(
                 current_base_reaction,
                 current_base_reaction + self.reaction_batch_size)
+
             edges = []
 
             for reaction in reactions:
