@@ -195,7 +195,8 @@ class NetworkRenderer:
             rejection_radius = 0.008,
             node_radius = 0.002,
             global_mask_radius=0.47,
-            reaction_batch_size = 10000
+            reaction_batch_size = 100000,
+            edge_probability = 1.0/10.0
     ):
         """
         species of interest is a dict mapping species ids to
@@ -212,6 +213,7 @@ class NetworkRenderer:
         self.rejection_radius = rejection_radius
         self.width = width
         self.height = height
+        self.edge_probability = edge_probability
         self.repulsive_sampler = RepulsiveSampler(
             rejection_radius,
             0.0,
@@ -257,18 +259,17 @@ class NetworkRenderer:
                 for i in range(reaction['number_of_reactants']):
                     for j in range(reaction['number_of_products']):
                         if i <= j:
-                            reactant_index = reaction['reactants'][i]
-                            product_index = reaction['products'][j]
-                            edges.append(
-                                (self.species_locations[reactant_index],
-                                 self.species_locations[product_index]))
+                            if (local_sampler.randint(0,int(1/self.edge_probability)) == 0):
+                                reactant_index = reaction['reactants'][i]
+                                product_index = reaction['products'][j]
+                                edges.append(
+                                    (self.species_locations[reactant_index],
+                                     self.species_locations[product_index]))
 
             for edge in edges:
-                # don't plot every edge
-                if (local_sampler.randint(0,5) == 0):
-                    context.move_to(*edge[0])
-                    context.line_to(*edge[1])
-                    context.stroke()
+                context.move_to(*edge[0])
+                context.line_to(*edge[1])
+                context.stroke()
 
             current_base_reaction += self.reaction_batch_size
 
