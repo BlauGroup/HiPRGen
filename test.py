@@ -269,6 +269,15 @@ def li_test():
         sort_by_frequency=False
     )
 
+    generate_pathway_report(
+        pathfinding,
+        130,
+        folder + '/130_pathways.tex',
+        sort_by_frequency=False
+    )
+
+
+
     species_report(network_loader, folder + '/species_report.tex')
 
 

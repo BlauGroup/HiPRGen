@@ -292,6 +292,13 @@ class NetworkRenderer:
             current_base_reaction += self.reaction_batch_size
 
 
+        if self.reactions_of_interest is not None:
+            for reaction_id in self.reactions_of_interest:
+                reaction = self.network_loader.index_to_reaction(reaction_id)
+                self.render_reaction(reaction, self.reactions_of_interest[reaction_id])
+
+
+
         context.set_source_rgb(0,0,0)
         # plot species nodes
         for i in range(self.network_loader.number_of_species):
@@ -302,11 +309,6 @@ class NetworkRenderer:
                         2 * math.pi)
 
             context.fill()
-
-        if self.reactions_of_interest is not None:
-            for reaction_id in self.reactions_of_interest:
-                reaction = self.network_loader.index_to_reaction(reaction_id)
-                self.render_reaction(reaction, self.reactions_of_interest[reaction_id])
 
 
 
