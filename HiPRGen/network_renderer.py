@@ -77,6 +77,10 @@ class QuadTreeNode:
                 self.y_mid,
                 self.y_max)
 
+    def insert(self, x, y, val):
+        node = self.find_node(x,y)
+        node.data.append(val)
+
     def find_neighborhood(self,x,y):
         """
         find all nodes adjacent to our point.
@@ -180,13 +184,13 @@ class RepulsiveSampler:
                 return result
 
 
-class NetworkRenderer:
 
+class NetworkRenderer:
     def __init__(
             self,
             network_loader,
-            species_of_interest,
-            reactions_of_interest,
+            species_of_interest, # a map of species indexes to positions
+            reactions_to_render, # list of reactions to render
             output_file,
             width=1024,
             height=1024,
@@ -194,30 +198,20 @@ class NetworkRenderer:
             node_radius = 0.002,
             background_line_width=0.001,
             global_mask_radius=0.47,
-            # size of reaction batches fetched from the database
-            reaction_batch_size = 10000,
-            # for the background, there is no need to render every reaction
-            # instead we render reactions according to the reaction probability
-            reaction_probability = 1,
-            colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]],
+            colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]]
     ):
-        """
-        species of interest is a dict mapping species ids to
-        their canvas coordinates and styling.
-
-        reactions of interest is a dict mapping reaction ids
-        to their styling.
-        """
 
         self.network_loader = network_loader
         self.species_of_interest = species_of_interest
-        self.reactions_of_interest = reactions_of_interest
+        self.reactions_to_render = reactions_to_render
         self.output_file = output_file
-        self.rejection_radius = rejection_radius
         self.width = width
         self.height = height
-        self.reaction_probability = reaction_probability
+        self.rejection_radius = rejection_radius
+        self.node_radius = node_radius
+        self.background_line_width = background_line_width
         self.colors = colors
+
         self.repulsive_sampler = RepulsiveSampler(
             rejection_radius,
             0.0,
@@ -228,13 +222,11 @@ class NetworkRenderer:
                 True if (x - 0.5)**2 + (y - 0.5)**2 < global_mask_radius**2
                 else False )
         )
-        self.node_radius = node_radius
-        self.background_line_width = background_line_width
-
 
         self.surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
         self.context = cairo.Context(self.surface)
         self.context.scale(width, height)
+
 
         self.species_locations = {}
 
@@ -250,55 +242,22 @@ class NetworkRenderer:
                 self.species_locations[i] = self.repulsive_sampler.sample()
 
 
-        self.reaction_batch_size = reaction_batch_size
-
-
     def render_reaction(self, reaction, color):
         context = self.context
         for i in range(reaction['number_of_reactants']):
             for j in range(reaction['number_of_products']):
-                if i <= j:
-                    reactant_index = reaction['reactants'][i]
-                    product_index = reaction['products'][j]
+                reactant_index = reaction['reactants'][i]
+                product_index = reaction['products'][j]
 
-                    context.set_source_rgb(*color)
-                    context.move_to(*self.species_locations[reactant_index])
-                    context.line_to(*self.species_locations[product_index])
-                    context.stroke()
-
+                context.set_source_rgb(*color)
+                context.move_to(*self.species_locations[reactant_index])
+                context.line_to(*self.species_locations[product_index])
+                context.stroke()
 
 
     def render(self):
-
-        local_sampler = random.Random(42)
         context = self.context
-
-        context.set_line_width(self.background_line_width)
-        current_base_reaction = 0
-
-        while (current_base_reaction < self.network_loader.number_of_reactions):
-
-            reactions = self.network_loader.get_reactions_in_range(
-                current_base_reaction,
-                current_base_reaction + self.reaction_batch_size)
-
-
-            for reaction in reactions:
-                print(reaction['reaction_id'])
-                if (local_sampler.random() < self.reaction_probability):
-                    color = local_sampler.choice(self.colors)
-                    self.render_reaction(reaction, color)
-
-            current_base_reaction += self.reaction_batch_size
-
-
-        if self.reactions_of_interest is not None:
-            for reaction_id in self.reactions_of_interest:
-                reaction = self.network_loader.index_to_reaction(reaction_id)
-                self.render_reaction(reaction, self.reactions_of_interest[reaction_id])
-
-
-
+        local_sampler = random.Random(42)
         context.set_source_rgb(0,0,0)
         # plot species nodes
         for i in range(self.network_loader.number_of_species):
@@ -310,7 +269,13 @@ class NetworkRenderer:
 
             context.fill()
 
+        context.set_line_width(self.background_line_width)
+
+        for reaction_id in self.reactions_to_render:
+            reaction = self.network_loader.index_to_reaction(reaction_id)
+            color = local_sampler.choice(self.colors)
+            self.render_reaction(reaction, color)
+
 
 
         self.surface.write_to_png(self.output_file)
-
