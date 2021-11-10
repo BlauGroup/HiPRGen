@@ -3,11 +3,12 @@ from HiPRGen.reaction_questions import *
 from HiPRGen.mc_analysis import *
 from HiPRGen.network_renderer import *
 import math
+from multiprocessing import Pool
 
 network_loader = NetworkLoader(
-    './scratch/li_test/rn.sqlite',
-    './scratch/li_test/mol_entries.pickle',
-    './scratch/li_test/initial_state.sqlite',
+    '../big_network/rn.sqlite',
+    '../big_network/mol_entries.pickle',
+    '../big_network/initial_state.sqlite',
     )
 
 network_loader.load_trajectories()
@@ -40,28 +41,40 @@ for i in simulation_replayer.sinks:
     count += 1
 
 
-top_pathway_reactions = set()
-for reaction_id in simulation_replayer.sinks:
+
+
+def f(reaction_id):
+    print("pathfinding for", reaction_id)
     pathways = pathfinding.compute_pathways(reaction_id)
     pathways_sorted = sorted(pathways, key=lambda p: pathways[p]['weight'])[0:4]
-    for p in pathways_sorted:
+    return pathways_sorted
+
+
+top_pathway_reactions = set()
+
+with Pool(20) as p:
+    results = p.map(f, simulation_replayer.sinks)
+
+for result in results:
+    for p in result:
         top_pathway_reactions.update(p)
 
 
-
-
-network_renderer = NetworkRenderer(
+network_renderer_1 = NetworkRenderer(
     network_loader,
     species_of_interest,
     reactions_which_fired,
     '/tmp/rn_reactions_which_fired.png',
 )
 
-network_renderer = NetworkRenderer(
+network_renderer_1.render()
+
+network_renderer_2 = NetworkRenderer(
     network_loader,
     species_of_interest,
     top_pathway_reactions,
     '/tmp/top_pathway_reactions.png',
 )
 
-network_renderer.render()
+network_renderer_2.render()
+

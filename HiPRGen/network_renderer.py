@@ -195,7 +195,7 @@ class NetworkRenderer:
             width=1024,
             height=1024,
             rejection_radius = 0.008,
-            node_radius = 0.002,
+            node_radius = 0.0008,
             background_line_width=0.001,
             global_mask_radius=0.47,
             colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]]
@@ -258,6 +258,16 @@ class NetworkRenderer:
     def render(self):
         context = self.context
         local_sampler = random.Random(42)
+
+
+        context.set_line_width(self.background_line_width)
+
+        for reaction_id in self.reactions_to_render:
+            reaction = self.network_loader.index_to_reaction(reaction_id)
+            color = local_sampler.choice(self.colors)
+            self.render_reaction(reaction, color)
+
+
         context.set_source_rgb(0,0,0)
         # plot species nodes
         for i in range(self.network_loader.number_of_species):
@@ -268,13 +278,6 @@ class NetworkRenderer:
                         2 * math.pi)
 
             context.fill()
-
-        context.set_line_width(self.background_line_width)
-
-        for reaction_id in self.reactions_to_render:
-            reaction = self.network_loader.index_to_reaction(reaction_id)
-            color = local_sampler.choice(self.colors)
-            self.render_reaction(reaction, color)
 
 
 
