@@ -194,6 +194,7 @@ class NetworkRenderer:
             species_of_interest, # a map of species indexes to positions
 
             # TODO: map reactions to stylings
+            # change name to reactions of interest
             reactions_to_render, # list of reactions to render
             output_file,
             width=1024,
