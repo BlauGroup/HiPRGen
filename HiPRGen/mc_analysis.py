@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from itertools import chain
+from multiprocessing import Pool
 
 def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
@@ -51,8 +52,51 @@ def render_reactions_which_fired(network_loader, path):
     renderer.render(path)
 
 
-def render_top_trajectories(pathfinding, threshold, output_path):
-    pass
+def render_top_pathways(pathfinding, species, output_path, num_threads=8, threshold=5):
+    renderer = Renderer()
+    reactions_in_top_pathways = set()
+    species_in_top_pathways = set()
+
+
+    for species_id in species:
+        pathways = pathfinding.compute_pathways(species_id)
+        pathways_sorted = sorted(pathways, key=lambda p: pathways[p]['weight'])
+
+        for p in pathways_sorted[0:threshold]:
+            reactions_in_top_pathways.update(p)
+
+
+    for reaction_id in reactions_in_top_pathways:
+        reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
+
+        for i in range(reaction['number_of_reactants']):
+            reactant_id = reaction['reactants'][i]
+            species_in_top_pathways.add(reactant_id)
+
+        for j in range(reaction['number_of_products']):
+            product_id = reaction['products'][j]
+            species_in_top_pathways.add(product_id)
+
+
+    for species_id in species_in_top_pathways:
+        renderer.new_node(species_id)
+
+    for reaction_id in reactions_in_top_pathways:
+        reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
+        for i in range(reaction['number_of_reactants']):
+            for j in range(reaction['number_of_products']):
+                reactant_id = reaction['reactants'][i]
+                product_id = reaction['products'][j]
+                renderer.draw_edge(reactant_id, product_id)
+
+
+    for species_id in species_in_top_pathways:
+        renderer.draw_node(species_id)
+
+    renderer.render(output_path)
+
+
+
 
 def redox_report(
         network_loader,

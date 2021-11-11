@@ -13,7 +13,13 @@ network_loader = NetworkLoader(
 
 network_loader.load_trajectories()
 network_loader.load_initial_state()
+
+
+
 pathfinding = Pathfinding(network_loader)
 simulation_replayer = SimulationReplayer(network_loader)
+render_top_pathways(pathfinding, simulation_replayer.sinks, '/tmp/top_pathways.png')
+
+
 
 render_reactions_which_fired(network_loader, '/tmp/reactions_which_fired.png')
