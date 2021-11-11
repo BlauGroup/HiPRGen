@@ -51,6 +51,9 @@ def render_reactions_which_fired(network_loader, path):
     renderer.render(path)
 
 
+def render_top_trajectories(pathfinding, threshold, output_path):
+    pass
+
 def redox_report(
         network_loader,
         redox_report_path,
