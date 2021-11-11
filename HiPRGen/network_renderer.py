@@ -268,8 +268,9 @@ class NetworkRenderer:
             self.render_reaction(reaction, color)
 
 
-        context.set_source_rgb(0,0,0)
+
         # plot species nodes
+        context.set_source_rgb(0,0,0)
         for i in range(self.network_loader.number_of_species):
             context.arc(self.species_locations[i][0],
                         self.species_locations[i][1],
