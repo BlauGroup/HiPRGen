@@ -16,3 +16,4 @@ network_loader.load_initial_state()
 pathfinding = Pathfinding(network_loader)
 simulation_replayer = SimulationReplayer(network_loader)
 
+render_reactions_which_fired(network_loader, '/tmp/reactions_which_fired.png')

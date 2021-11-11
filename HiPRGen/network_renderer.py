@@ -1,4 +1,4 @@
-from HiPRGen.network_loader import *
+from HiPRGen.network_loader import NetworkLoader
 import cairo
 import math
 import random
@@ -192,7 +192,8 @@ class Renderer:
             width=1024,
             height=1024,
             rejection_radius=0.01,
-            global_mask_radius=0.47
+            global_mask_radius=0.47,
+            colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]]
     ):
 
         self.repulsive_sampler = RepulsiveSampler(
@@ -206,32 +207,54 @@ class Renderer:
                 else False )
         )
 
+        self.local_sampler = random.Random(42)
+        self.node_dict = {}
+
+        self.width = width
+        self.height = height
+        self.colors = colors
 
         self.surface = cairo.ImageSurface(cairo.Format.ARGB32, width, height)
         self.context = cairo.Context(self.surface)
         self.context.scale(width, height)
 
+    def new_node(self, tag, point=None):
+        # if point is None, a node position will be generated
+        # note: if you provide a point, it will go exactly where you say, which
+        # may be very close to other points. If tag already used, do nothing.
+        if tag not in self.node_dict:
 
-    def draw_node(point, color, radius):
-        # calling code needs to keep track of where it is has placed nodes
-        # is point is None, a node position will be generated
-        if point is not None:
-            self.repulsive_sampler.quad_tree.insert(point[0],point[1],point)
-        else:
-            point = self.repulsive_sampler.sample()
+            if point is not None:
+                self.node_dict[tag] = (
+                    self.repulsive_sampler.quad_tree.insert(
+                        point[0],
+                        point[1],
+                        point))
 
+            else:
+                self.node_dict[tag] = self.repulsive_sampler.sample()
+
+
+
+    def draw_node(self, tag, color=(0,0,0), radius=0.0008):
+        point = self.node_dict[tag]
         self.context.set_source_rgb(*color)
         self.context.arc(point[0], point[1], radius, 0, 2 * math.pi)
-        context.fill()
-        return point
+        self.context.fill()
 
 
-    def draw_edge(point1, point2, color, width):
+    def draw_edge(self, tag1, tag2, color=None, width=0.001):
+        if color is None:
+            color = self.local_sampler.choice(self.colors)
+
+
+        point1 = self.node_dict[tag1]
+        point2 = self.node_dict[tag2]
         self.context.set_source_rgb(*color)
         self.context.set_line_width(width)
         self.context.move_to(*point1)
         self.context.line_to(*point2)
-        context.stroke()
+        self.context.stroke()
 
-    def render(path):
+    def render(self, path):
         self.surface.write_to_png(path)

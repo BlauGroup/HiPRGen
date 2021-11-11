@@ -1,4 +1,5 @@
 from HiPRGen.report_generator import ReportGenerator
+from HiPRGen.network_renderer import Renderer
 from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.constants import ROOM_TEMP, KB
 from HiPRGen.reaction_questions import marcus_barrier
@@ -11,6 +12,43 @@ from itertools import chain
 
 def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
+
+
+def render_reactions_which_fired(network_loader, path):
+    renderer = Renderer()
+    reactions_which_fired = set()
+    species_which_formed = set()
+    for seed in network_loader.trajectories:
+        for step in network_loader.trajectories[seed]:
+            reaction_id = network_loader.trajectories[seed][step][0]
+            reaction = network_loader.index_to_reaction(reaction_id)
+            reactions_which_fired.add(reaction_id)
+
+            for i in range(reaction['number_of_reactants']):
+                reactant_id = reaction['reactants'][i]
+                species_which_formed.add(reactant_id)
+
+            for j in range(reaction['number_of_products']):
+                product_id = reaction['products'][j]
+                species_which_formed.add(product_id)
+
+
+    for species_id in species_which_formed:
+        renderer.new_node(species_id)
+
+    for reaction_id in reactions_which_fired:
+        reaction = network_loader.index_to_reaction(reaction_id)
+        for i in range(reaction['number_of_reactants']):
+            for j in range(reaction['number_of_products']):
+                reactant_id = reaction['reactants'][i]
+                product_id = reaction['products'][j]
+                renderer.draw_edge(reactant_id, product_id)
+
+
+    for species_id in species_which_formed:
+        renderer.draw_node(species_id)
+
+    renderer.render(path)
 
 
 def redox_report(
