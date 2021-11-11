@@ -189,7 +189,11 @@ class NetworkRenderer:
     def __init__(
             self,
             network_loader,
+
+            # TODO: map species indices to positions and stylings
             species_of_interest, # a map of species indexes to positions
+
+            # TODO: map reactions to stylings
             reactions_to_render, # list of reactions to render
             output_file,
             width=1024,
