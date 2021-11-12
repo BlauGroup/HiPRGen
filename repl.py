@@ -3,7 +3,7 @@ from HiPRGen.reaction_questions import *
 from HiPRGen.mc_analysis import *
 from HiPRGen.network_renderer import *
 import math
-from multiprocessing import Pool
+
 
 network_loader = NetworkLoader(
     './scratch/li_test/rn.sqlite',
