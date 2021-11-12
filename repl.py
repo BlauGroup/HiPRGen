@@ -22,4 +22,7 @@ render_top_pathways(pathfinding, simulation_replayer.sinks, '/tmp/top_pathways.p
 
 
 
-render_reactions_which_fired(network_loader, '/tmp/reactions_which_fired.png')
+render_reactions_which_fired(
+    network_loader,
+    simulation_replayer.sinks,
+    '/tmp/reactions_which_fired.png')

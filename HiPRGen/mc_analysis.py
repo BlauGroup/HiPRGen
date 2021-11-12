@@ -15,27 +15,44 @@ def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
 
 
-def render_reactions_which_fired(network_loader, path):
+def compute_starting_angle(l):
+    if l % 2 == 1:
+        return - int(l / 2) / 10
+    else:
+        return - ((l / 2) / 10) + 0.05
+
+def render_reactions_which_fired(network_loader, sinks, path):
     renderer = Renderer()
     reactions_which_fired = set()
-    species_which_formed = set()
     for seed in network_loader.trajectories:
         for step in network_loader.trajectories[seed]:
             reaction_id = network_loader.trajectories[seed][step][0]
             reaction = network_loader.index_to_reaction(reaction_id)
             reactions_which_fired.add(reaction_id)
 
-            for i in range(reaction['number_of_reactants']):
-                reactant_id = reaction['reactants'][i]
-                species_which_formed.add(reactant_id)
-
-            for j in range(reaction['number_of_products']):
-                product_id = reaction['products'][j]
-                species_which_formed.add(product_id)
+    starting_species_count = 0
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+            starting_species_count += 1
 
 
-    for species_id in species_which_formed:
-        renderer.new_node(species_id)
+    left_angle_counter = math.pi + compute_starting_angle(starting_species_count)
+    left_angle_counter_step = 0.1
+    right_angle_counter = compute_starting_angle(len(sinks))
+    right_angle_counter_step = 0.1
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+
+            renderer.new_node_boundary(species_id, left_angle_counter)
+            left_angle_counter += left_angle_counter_step
+
+        elif species_id in sinks:
+
+            renderer.new_node_boundary(species_id, right_angle_counter)
+            right_angle_counter += right_angle_counter_step
+
+        else:
+            renderer.new_node(species_id)
 
     for reaction_id in reactions_which_fired:
         reaction = network_loader.index_to_reaction(reaction_id)
@@ -46,19 +63,24 @@ def render_reactions_which_fired(network_loader, path):
                 renderer.draw_edge(reactant_id, product_id)
 
 
-    for species_id in species_which_formed:
-        renderer.draw_node(species_id)
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+            renderer.draw_node(species_id, color=(24/256, 33/256, 201/256), radius=0.005)
+        elif species_id in sinks:
+            renderer.draw_node(species_id, color=(201/256, 27/256, 24/256), radius=0.005)
+        else:
+            renderer.draw_node(species_id)
 
     renderer.render(path)
 
 
-def render_top_pathways(pathfinding, species, output_path, num_threads=8, threshold=5):
+def render_top_pathways(pathfinding, sinks, output_path, num_threads=8, threshold=5):
     renderer = Renderer()
     reactions_in_top_pathways = set()
     species_in_top_pathways = set()
 
 
-    for species_id in species:
+    for species_id in sinks:
         pathways = pathfinding.compute_pathways(species_id)
         pathways_sorted = sorted(pathways, key=lambda p: pathways[p]['weight'])
 
@@ -78,8 +100,30 @@ def render_top_pathways(pathfinding, species, output_path, num_threads=8, thresh
             species_in_top_pathways.add(product_id)
 
 
-    for species_id in species_in_top_pathways:
-        renderer.new_node(species_id)
+    starting_species_count = 0
+    for species_id in range(pathfinding.network_loader.number_of_species):
+        if pathfinding.network_loader.initial_state_array[species_id] > 0:
+            starting_species_count += 1
+
+
+    left_angle_counter = math.pi + compute_starting_angle(starting_species_count)
+    left_angle_counter_step = 0.1
+    right_angle_counter = compute_starting_angle(len(sinks))
+    right_angle_counter_step = 0.1
+    for species_id in range(pathfinding.network_loader.number_of_species):
+        if pathfinding.network_loader.initial_state_array[species_id] > 0:
+
+            renderer.new_node_boundary(species_id, left_angle_counter)
+            left_angle_counter += left_angle_counter_step
+
+        elif species_id in sinks:
+
+            renderer.new_node_boundary(species_id, right_angle_counter)
+            right_angle_counter += right_angle_counter_step
+
+        else:
+            renderer.new_node(species_id)
+
 
     for reaction_id in reactions_in_top_pathways:
         reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
@@ -90,8 +134,16 @@ def render_top_pathways(pathfinding, species, output_path, num_threads=8, thresh
                 renderer.draw_edge(reactant_id, product_id)
 
 
+
     for species_id in species_in_top_pathways:
-        renderer.draw_node(species_id)
+        if pathfinding.network_loader.initial_state_array[species_id] > 0:
+            renderer.draw_node(species_id, color=(24/256, 33/256, 201/256), radius=0.005)
+        elif species_id in sinks:
+            renderer.draw_node(species_id, color=(201/256, 27/256, 24/256), radius=0.005)
+        else:
+            renderer.draw_node(species_id)
+
+
 
     renderer.render(output_path)
 
