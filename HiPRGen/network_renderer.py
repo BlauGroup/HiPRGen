@@ -253,6 +253,7 @@ class Renderer:
         point = self.node_dict[tag]
         self.context.set_source_rgb(*color)
         self.context.rectangle(point[0] - side/2, point[1] - side/2, side, side)
+        self.context.fill()
 
     def draw_edge(self, tag1, tag2, color=None, width=0.001):
         if color is None:

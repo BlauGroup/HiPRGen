@@ -23,7 +23,7 @@ def compute_starting_angle(l):
 
 
 
-def render_reactions_which_fired(network_loader, sinks, path):
+def render_reactions_which_fired(network_loader, sinks, colors, path):
     renderer = Renderer()
     reactions_which_fired = set()
     for seed in network_loader.trajectories:
@@ -65,19 +65,22 @@ def render_reactions_which_fired(network_loader, sinks, path):
                 dG = reaction['dG']
                 renderer.draw_edge(reactant_id, product_id)
 
-
     for species_id in range(network_loader.number_of_species):
         if network_loader.initial_state_array[species_id] > 0:
             renderer.draw_node(species_id, radius=0.008)
         elif species_id in sinks:
-            renderer.draw_node_square(species_id, side=0.013)
+            if species_id in colors:
+                renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
+            else:
+                renderer.draw_node_square(species_id, side=0.013)
+
         else:
             renderer.draw_node(species_id)
 
     renderer.render(path)
 
 
-def render_top_pathways(pathfinding, sinks, output_path, num_threads=8, threshold=5):
+def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, threshold=5):
     renderer = Renderer()
     reactions_in_top_pathways = set()
     species_in_top_pathways = set()
@@ -139,17 +142,18 @@ def render_top_pathways(pathfinding, sinks, output_path, num_threads=8, threshol
 
 
     for species_id in species_in_top_pathways:
+
         if pathfinding.network_loader.initial_state_array[species_id] > 0:
             renderer.draw_node(species_id, radius=0.008)
         elif species_id in sinks:
-            renderer.draw_node_square(species_id, side=0.013)
+            if species_id in colors:
+                renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
+            else:
+                renderer.draw_node_square(species_id, side=0.013)
         else:
             renderer.draw_node(species_id)
 
-
     renderer.render(output_path)
-
-
 
 
 def redox_report(
