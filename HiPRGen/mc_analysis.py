@@ -21,6 +21,8 @@ def compute_starting_angle(l):
     else:
         return - ((l / 2) / 10) + 0.05
 
+
+
 def render_reactions_which_fired(network_loader, sinks, path):
     renderer = Renderer()
     reactions_which_fired = set()
@@ -60,14 +62,15 @@ def render_reactions_which_fired(network_loader, sinks, path):
             for j in range(reaction['number_of_products']):
                 reactant_id = reaction['reactants'][i]
                 product_id = reaction['products'][j]
+                dG = reaction['dG']
                 renderer.draw_edge(reactant_id, product_id)
 
 
     for species_id in range(network_loader.number_of_species):
         if network_loader.initial_state_array[species_id] > 0:
-            renderer.draw_node(species_id, color=(24/256, 33/256, 201/256), radius=0.005)
+            renderer.draw_node(species_id, radius=0.008)
         elif species_id in sinks:
-            renderer.draw_node(species_id, color=(201/256, 27/256, 24/256), radius=0.005)
+            renderer.draw_node_square(species_id, side=0.013)
         else:
             renderer.draw_node(species_id)
 
@@ -137,12 +140,11 @@ def render_top_pathways(pathfinding, sinks, output_path, num_threads=8, threshol
 
     for species_id in species_in_top_pathways:
         if pathfinding.network_loader.initial_state_array[species_id] > 0:
-            renderer.draw_node(species_id, color=(24/256, 33/256, 201/256), radius=0.005)
+            renderer.draw_node(species_id, radius=0.008)
         elif species_id in sinks:
-            renderer.draw_node(species_id, color=(201/256, 27/256, 24/256), radius=0.005)
+            renderer.draw_node_square(species_id, side=0.013)
         else:
             renderer.draw_node(species_id)
-
 
 
     renderer.render(output_path)

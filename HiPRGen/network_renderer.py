@@ -249,6 +249,10 @@ class Renderer:
         self.context.arc(point[0], point[1], radius, 0, 2 * math.pi)
         self.context.fill()
 
+    def draw_node_square(self, tag, color=(0,0,0), side=0.005):
+        point = self.node_dict[tag]
+        self.context.set_source_rgb(*color)
+        self.context.rectangle(point[0] - side/2, point[1] - side/2, side, side)
 
     def draw_edge(self, tag1, tag2, color=None, width=0.001):
         if color is None:
