@@ -64,6 +64,9 @@ render_reactions_which_fired(
     '/tmp/reactions_which_fired.png'
 )
 
+
+# clear out the database connections so that we can pass the pathfinding
+# objects into Pool(n).map
 network_loader.rn_con = None
 network_loader.initial_state_con = None
 network_loader.cur = None
