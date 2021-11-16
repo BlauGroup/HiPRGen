@@ -2,6 +2,7 @@ from HiPRGen.network_loader import *
 from HiPRGen.reaction_questions import *
 from HiPRGen.mc_analysis import *
 from HiPRGen.network_renderer import *
+import sqlite3
 import math
 
 
@@ -56,6 +57,18 @@ pathfinding = Pathfinding(network_loader)
 simulation_replayer = SimulationReplayer(network_loader)
 
 
+render_reactions_which_fired(
+    network_loader,
+    simulation_replayer.sinks,
+    colors,
+    '/tmp/reactions_which_fired.png'
+)
+
+network_loader.rn_con = None
+network_loader.initial_state_con = None
+network_loader.cur = None
+
+
 render_top_pathways(
     pathfinding,
     simulation_replayer.sinks,
@@ -64,9 +77,3 @@ render_top_pathways(
 )
 
 
-render_reactions_which_fired(
-    network_loader,
-    simulation_replayer.sinks,
-    colors,
-    '/tmp/reactions_which_fired.png'
-)

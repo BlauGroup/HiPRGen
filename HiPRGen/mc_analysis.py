@@ -80,18 +80,34 @@ def render_reactions_which_fired(network_loader, sinks, colors, path):
     renderer.render(path)
 
 
+class PathfindingTransfer:
+    def __init__(self,pathfinding,threshold):
+        self.pathfinding = pathfinding
+        self.threshold = threshold
+
+    def __call__(self, species_id):
+        result = set()
+        pathways = self.pathfinding.compute_pathways(species_id)
+        pathways_sorted = sorted(pathways, key=lambda p: pathways[p]['weight'])
+
+        for p in pathways_sorted[0:self.threshold]:
+            result.update(p)
+
+        return result
+
+
+
+
 def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, threshold=5):
     renderer = Renderer()
     reactions_in_top_pathways = set()
     species_in_top_pathways = set()
 
+    pathfinding_transfer = PathfindingTransfer(pathfinding, threshold)
 
-    for species_id in sinks:
-        pathways = pathfinding.compute_pathways(species_id)
-        pathways_sorted = sorted(pathways, key=lambda p: pathways[p]['weight'])
-
-        for p in pathways_sorted[0:threshold]:
-            reactions_in_top_pathways.update(p)
+    with Pool(num_threads) as p:
+        for result in p.map(pathfinding_transfer, sinks):
+            reactions_in_top_pathways.update(result)
 
 
     for reaction_id in reactions_in_top_pathways:
