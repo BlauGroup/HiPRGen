@@ -5,12 +5,18 @@ from HiPRGen.network_renderer import *
 import sqlite3
 import math
 
-
 network_loader = NetworkLoader(
-    './scratch/li_test/rn.sqlite',
-    './scratch/li_test/mol_entries.pickle',
-    './scratch/li_test/initial_state.sqlite',
+    '../big_network/rn.sqlite',
+    '../big_network/mol_entries.pickle',
+    '../big_network/initial_state.sqlite',
 )
+
+
+# network_loader = NetworkLoader(
+#     './scratch/li_test/rn.sqlite',
+#     './scratch/li_test/mol_entries.pickle',
+#     './scratch/li_test/initial_state.sqlite',
+# )
 
 
 network_loader.load_trajectories()
@@ -76,7 +82,8 @@ render_top_pathways(
     pathfinding,
     simulation_replayer.sinks,
     colors,
-    '/tmp/top_pathways.png'
+    '/tmp/top_pathways.png',
+    num_threads=20
 )
 
 

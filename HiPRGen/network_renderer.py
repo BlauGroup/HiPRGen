@@ -192,7 +192,7 @@ class Renderer:
             self,
             width=1024,
             height=1024,
-            rejection_radius=0.01,
+            rejection_radius=0.005,
             global_mask_radius=0.47,
             colors = [(x,x,x) for x in [0.3,0.4,0.5,0.6,0.7,0.8]]
     ):

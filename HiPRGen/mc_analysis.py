@@ -15,11 +15,11 @@ def default_cost(free_energy):
     return math.exp(min(10.0, free_energy) / (ROOM_TEMP * KB)) + 1
 
 
-def compute_starting_angle(l):
+def compute_starting_angle(l, step):
     if l % 2 == 1:
-        return - int(l / 2) / 10
+        return - int(l / 2) * step
     else:
-        return - ((l / 2) / 10) + 0.05
+        return - ((l / 2) * step) + 0.05
 
 
 
@@ -38,10 +38,17 @@ def render_reactions_which_fired(network_loader, sinks, colors, path):
             starting_species_count += 1
 
 
-    left_angle_counter = math.pi + compute_starting_angle(starting_species_count)
-    left_angle_counter_step = 0.1
-    right_angle_counter = compute_starting_angle(len(sinks))
-    right_angle_counter_step = 0.1
+    left_angle_counter_step = 0.05
+    left_angle_counter = math.pi + compute_starting_angle(
+        starting_species_count,
+        left_angle_counter_step
+    )
+
+    right_angle_counter_step = 0.05
+    right_angle_counter = compute_starting_angle(
+        len(sinks),
+        right_angle_counter_step
+    )
     for species_id in range(network_loader.number_of_species):
         if network_loader.initial_state_array[species_id] > 0:
 
@@ -110,7 +117,6 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
         for result in p.map(pathfinding_transfer, sinks):
             reactions_in_top_pathways.update(result)
 
-
     for reaction_id in reactions_in_top_pathways:
         reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
 
@@ -129,10 +135,17 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
             starting_species_count += 1
 
 
-    left_angle_counter = math.pi + compute_starting_angle(starting_species_count)
-    left_angle_counter_step = 0.1
-    right_angle_counter = compute_starting_angle(len(sinks))
-    right_angle_counter_step = 0.1
+    left_angle_counter_step = 0.05
+    left_angle_counter = math.pi + compute_starting_angle(
+        starting_species_count,
+        left_angle_counter_step
+    )
+    right_angle_counter_step = 0.05
+    right_angle_counter = compute_starting_angle(
+        len(sinks),
+        right_angle_counter_step
+    )
+
     for species_id in range(pathfinding.network_loader.number_of_species):
         if pathfinding.network_loader.initial_state_array[species_id] > 0:
 
