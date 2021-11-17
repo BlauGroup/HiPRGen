@@ -38,27 +38,17 @@ def render_reactions_which_fired(network_loader, sinks, colors, path):
             starting_species_count += 1
 
 
-    left_angle_counter_step = 0.05
+    left_angle_counter_step = 0.1
     left_angle_counter = math.pi + compute_starting_angle(
         starting_species_count,
         left_angle_counter_step
     )
 
-    right_angle_counter_step = 0.05
-    right_angle_counter = compute_starting_angle(
-        len(sinks),
-        right_angle_counter_step
-    )
     for species_id in range(network_loader.number_of_species):
         if network_loader.initial_state_array[species_id] > 0:
 
             renderer.new_node_boundary(species_id, left_angle_counter)
             left_angle_counter += left_angle_counter_step
-
-        elif species_id in sinks:
-
-            renderer.new_node_boundary(species_id, right_angle_counter)
-            right_angle_counter += right_angle_counter_step
 
         else:
             renderer.new_node(species_id)
@@ -135,12 +125,12 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
             starting_species_count += 1
 
 
-    left_angle_counter_step = 0.05
+    left_angle_counter_step = 0.1
     left_angle_counter = math.pi + compute_starting_angle(
         starting_species_count,
         left_angle_counter_step
     )
-    right_angle_counter_step = 0.05
+    right_angle_counter_step = 0.1
     right_angle_counter = compute_starting_angle(
         len(sinks),
         right_angle_counter_step
@@ -169,7 +159,6 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
                 reactant_id = reaction['reactants'][i]
                 product_id = reaction['products'][j]
                 renderer.draw_edge(reactant_id, product_id)
-
 
 
     for species_id in species_in_top_pathways:
