@@ -57,6 +57,7 @@ def render_reactions_which_fired(network_loader, sinks, colors, path):
             renderer.new_node(species_id)
 
     for reaction_id in reactions_which_fired:
+        print(reaction_id)
         reaction = network_loader.index_to_reaction(reaction_id)
         for i in range(reaction['number_of_reactants']):
             for j in range(reaction['number_of_products']):
@@ -148,6 +149,7 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
 
 
     for reaction_id in reactions_in_top_pathways:
+        print(reaction_id)
         reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
         for i in range(reaction['number_of_reactants']):
             for j in range(reaction['number_of_products']):
