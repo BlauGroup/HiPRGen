@@ -264,6 +264,9 @@ def reaction_tally_report(
     report_generator.finished()
 
 def species_report(network_loader, species_report_path):
+    """
+    print all species
+    """
     report_generator = ReportGenerator(
         network_loader.mol_entries,
         species_report_path,
@@ -280,6 +283,26 @@ def species_report(network_loader, species_report_path):
         report_generator.emit_newline()
 
     report_generator.finished()
+
+def reaction_report(network_loader, reaction_report_path):
+    """
+    print all reactions. Warning: don't do this for a big network
+    """
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        species_report_path,
+        rebuild_mol_pictures=False)
+
+    report_generator.emit_text("reaction report")
+    for i in range(network_loader.number_of_reactions):
+        reaction = network_loader.index_to_reaction(i)
+        report_generator.emit_reaction(reaction)
+        report_generator.emit_newline()
+
+    report_generator.finished()
+
+
+
 
 
 class Pathfinding:
