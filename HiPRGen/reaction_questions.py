@@ -317,7 +317,7 @@ class reactant_and_product_not_isomorphic(MSONable):
             return False
 
 
-class default_true(MSONable):
+class reaction_default_true(MSONable):
 
     def __init__(self):
         pass
@@ -688,7 +688,7 @@ li_ec_reaction_decision_tree = [
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
         (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
-        (default_true(), Terminal.KEEP)
+        (reaction_default_true(), Terminal.KEEP)
     ]),
 
 
@@ -709,10 +709,10 @@ li_ec_reaction_decision_tree = [
     (fragment_matching_found(), [
         (single_reactant_single_product_not_hydrogen_transfer(), Terminal.DISCARD),
         (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-        (default_true(), Terminal.KEEP)]
+        (reaction_default_true(), Terminal.KEEP)]
     ),
 
-    (default_true(), Terminal.DISCARD)
+    (reaction_default_true(), Terminal.DISCARD)
     ]
 
 
@@ -727,7 +727,7 @@ mg_g2_reaction_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (default_true(), Terminal.KEEP)
+        (reaction_default_true(), Terminal.KEEP)
     ]),
 
     (dG_above_threshold(
@@ -747,10 +747,10 @@ mg_g2_reaction_decision_tree = [
 
     (fragment_matching_found(), [
         (single_reactant_single_product_not_hydrogen_transfer(), Terminal.DISCARD),
-        (default_true(), Terminal.KEEP)]
+        (reaction_default_true(), Terminal.KEEP)]
     ),
 
-    (default_true(), Terminal.DISCARD)
+    (reaction_default_true(), Terminal.DISCARD)
     ]
 
 mg_thf_reaction_decision_tree = [
@@ -765,7 +765,7 @@ mg_thf_reaction_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (default_true(), Terminal.KEEP)
+        (reaction_default_true(), Terminal.KEEP)
     ]),
 
     (dG_above_threshold(
@@ -786,8 +786,8 @@ mg_thf_reaction_decision_tree = [
 
     (fragment_matching_found(), [
         (single_reactant_single_product_not_hydrogen_transfer(), Terminal.DISCARD),
-        (default_true(), Terminal.KEEP)]
+        (reaction_default_true(), Terminal.KEEP)]
     ),
 
-    (default_true(), Terminal.DISCARD)
+    (reaction_default_true(), Terminal.DISCARD)
     ]

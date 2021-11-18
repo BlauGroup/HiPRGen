@@ -378,7 +378,7 @@ class no_bare_mg(MSONable):
         else:
             return False
 
-class default_true(MSONable):
+class species_default_true(MSONable):
     def __init__(self):
         pass
 
@@ -441,7 +441,7 @@ li_ec_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (default_true(), Terminal.KEEP)
+    (species_default_true(), Terminal.KEEP)
     ]
 
 mg_g2_species_decision_tree = [
@@ -456,7 +456,7 @@ mg_g2_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (default_true(), Terminal.KEEP)
+    (species_default_true(), Terminal.KEEP)
     ]
 
 mg_thf_species_decision_tree = [
@@ -471,5 +471,5 @@ mg_thf_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (default_true(), Terminal.KEEP)
+    (species_default_true(), Terminal.KEEP)
     ]
