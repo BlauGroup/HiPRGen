@@ -290,7 +290,7 @@ def reaction_report(network_loader, reaction_report_path):
     """
     report_generator = ReportGenerator(
         network_loader.mol_entries,
-        species_report_path,
+        reaction_report_path,
         rebuild_mol_pictures=False)
 
     report_generator.emit_text("reaction report")
