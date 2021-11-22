@@ -29,7 +29,7 @@
             openssh # needed for correct MPI functioning
           ];
 
-          checkPhase = "python test.py 2";
+          checkPhase = "python test.py 4";
         };
 
 
