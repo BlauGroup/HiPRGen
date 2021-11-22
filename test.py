@@ -479,4 +479,4 @@ tests = [
 
 for test in tests:
     if not test():
-        break
+        exit(1)

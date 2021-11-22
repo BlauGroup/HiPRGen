@@ -8,35 +8,55 @@
 
   outputs = { self, nixpkgs, RNMC }:
 
+    let
+      HiPRGen = systemString:
+        with import nixpkgs { system = systemString; };
+        with python38Packages;
+        buildPythonPackage {
+          pname = "HiPRGen";
+          version = "0.1";
+          src = ./.;
+          checkInputs = [
+            pymatgen
+            monty
+            openbabel-bindings
+            pygraphviz
+            mpi4py
+            pycairo
+            mpi
+            (builtins.getAttr systemString RNMC.defaultPackage)
+            sqlite
+            openssh # needed for correct MPI functioning
+          ];
 
-    let genericDevShell = systemString: includeSelf:
-          with import nixpkgs { system = systemString; };
-          let
-            HiPRGen = python38Packages.buildPythonPackage {
-              pname = "HiPRGen";
-              version = "0.1";
-              src = ./.;
-              doCheck = false;
-            };
+          checkPhase = "python test.py 8";
+        };
 
-            pythonEnv = python38.withPackages (
-              ps: [ ps.pymatgen
-                    ps.monty
-                    ps.openbabel-bindings
-                    ps.pygraphviz
-                    ps.mpi4py
-                    ps.pycairo
-                    (if includeSelf then HiPRGen else null)
-                  ]);
 
-          in mkShell {
-            buildInputs = [ pythonEnv
-                            texlive.combined.scheme-small
-                            mpi
-                            sqlite
-                            (builtins.getAttr systemString RNMC.defaultPackage)
-                          ];
-          };
+      pythonEnv = systemString: installHiPRGen:
+        with import nixpkgs { system = systemString; };
+        python38.withPackages (
+          ps: [ ps.pymatgen
+                ps.monty
+                ps.openbabel-bindings
+                ps.pygraphviz
+                ps.mpi4py
+                ps.pycairo
+                (if installHiPRGen then (HiPRGen systemString) else null)
+              ]);
+
+
+      genericDevShell = systemString: installHiPRGen:
+        with import nixpkgs { system = systemString; };
+        mkShell {
+          buildInputs = [ (pythonEnv systemString installHiPRGen)
+                          texlive.combined.scheme-small
+                          mpi
+                          sqlite
+                          (builtins.getAttr systemString RNMC.defaultPackage)
+                        ];
+        };
+
     in {
       devShell = {
         x86_64-linux = genericDevShell "x86_64-linux" false;
