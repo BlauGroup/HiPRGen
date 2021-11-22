@@ -1,0 +1,62 @@
+{
+  "nodes": {
+    "RNMC": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1637547837,
+        "narHash": "sha256-VkTSLJoRLguvovYRUQ48dCWS3zzwNcZ4zxJBt2Gv8WI=",
+        "owner": "BlauGroup",
+        "repo": "RNMC",
+        "rev": "23613aa4f607821235bba085b397cfb4994fedfb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BlauGroup",
+        "repo": "RNMC",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1637316267,
+        "narHash": "sha256-hfAA/0W3tycKKOSwP7Xt6FXLG9h/FgCu45wdGubHtV0=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "24528474d2b3370f2f23879a557ae2cc92a5d50b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-21.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1637448181,
+        "narHash": "sha256-ujcXli4esmtIHUBjE1BjmMuBWrcNvlHZrVXx56i5B1M=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "d5b65f812cd4f5a8fa74b406075b59a46f1cfd98",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-21.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "RNMC": "RNMC",
+        "nixpkgs": "nixpkgs_2"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

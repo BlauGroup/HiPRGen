@@ -6,8 +6,10 @@
     RNMC.url = github:BlauGroup/RNMC;
   };
 
-  outputs = { self, nixpkgs }:
-    let genericDevShell = systemString:
+  outputs = { self, nixpkgs, RNMC }:
+
+
+    let genericDevShell = systemString: includeSelf:
           with import nixpkgs { system = systemString; };
           let
             HiPRGen = python38Packages.buildPythonPackage {
@@ -24,7 +26,7 @@
                     ps.pygraphviz
                     ps.mpi4py
                     ps.pycairo
-                    # HiPRGen
+                    (if includeSelf then HiPRGen else null)
                   ]);
 
           in mkShell {
@@ -32,12 +34,13 @@
                             texlive.combined.scheme-small
                             mpi
                             sqlite
-                            RNMC
+                            (builtins.getAttr systemString RNMC.defaultPackage)
                           ];
           };
-    in
+    in {
       devShell = {
-        x86_64-linux = genericDevShell "x86_64-linux";
+        x86_64-linux = genericDevShell "x86_64-linux" false;
       };
+    };
 
 }
