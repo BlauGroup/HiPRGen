@@ -480,3 +480,4 @@ tests = [
 for test in tests:
     if not test():
         exit(1)
+
