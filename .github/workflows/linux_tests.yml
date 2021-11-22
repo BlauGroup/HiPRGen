@@ -1,10 +1,12 @@
-name: "macos tests"
+name: "linux tests"
 on:
   pull_request:
   push:
+    branches:
+      - main
 jobs:
   tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2.4.0
     - uses: cachix/install-nix-action@v16
