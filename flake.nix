@@ -40,6 +40,7 @@
     in {
       devShell = {
         x86_64-linux = genericDevShell "x86_64-linux" false;
+        x86_64-darwin = genericDevShell "x86_64-darwin" false;
       };
     };
 
