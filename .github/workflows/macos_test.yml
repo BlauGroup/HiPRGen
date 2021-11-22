@@ -1,4 +1,4 @@
-name: "jobs machine tests"
+name: "macos tests"
 on:
   pull_request:
   push:
