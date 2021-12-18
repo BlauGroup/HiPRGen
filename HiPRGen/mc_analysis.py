@@ -22,8 +22,42 @@ def compute_starting_angle(l, step):
         return - ((l / 2) * step) + 0.05
 
 
+def render_species(network_loader, path):
+    renderer = Renderer()
 
-def render_reactions_which_fired(network_loader, sinks, colors, path):
+    starting_species_count = 0
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+            starting_species_count += 1
+
+
+    left_angle_counter_step = 0.1
+    left_angle_counter = math.pi + compute_starting_angle(
+        starting_species_count,
+        left_angle_counter_step
+    )
+
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+
+            renderer.new_node_boundary(species_id, left_angle_counter)
+            left_angle_counter += left_angle_counter_step
+
+        else:
+            renderer.new_node(species_id)
+
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+            renderer.draw_node(species_id, radius=0.008)
+        else:
+            renderer.draw_node(species_id, radius=0.002)
+
+    renderer.render(path)
+
+
+
+
+def render_reactions_which_fired(network_loader, colors, path):
     renderer = Renderer()
     reactions_which_fired = set()
     for seed in network_loader.trajectories:
@@ -66,16 +100,77 @@ def render_reactions_which_fired(network_loader, sinks, colors, path):
     for species_id in range(network_loader.number_of_species):
         if network_loader.initial_state_array[species_id] > 0:
             renderer.draw_node(species_id, radius=0.008)
-        elif species_id in sinks:
-            if species_id in colors:
-                renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
-            else:
-                renderer.draw_node_square(species_id, side=0.013)
-
+        elif species_id in colors:
+            renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
         else:
             renderer.draw_node(species_id)
 
     renderer.render(path)
+
+
+def render_reactions_which_fired_new_positions(network_loader, colors, path):
+    renderer = Renderer()
+    reactions_which_fired = set()
+    for seed in network_loader.trajectories:
+        for step in network_loader.trajectories[seed]:
+            reaction_id = network_loader.trajectories[seed][step][0]
+            reaction = network_loader.index_to_reaction(reaction_id)
+            reactions_which_fired.add(reaction_id)
+
+    starting_species_count = 0
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+            starting_species_count += 1
+
+
+
+    left_angle_counter_step = 0.1
+    left_angle_counter = math.pi + compute_starting_angle(
+        starting_species_count,
+        left_angle_counter_step
+    )
+    right_angle_counter_step = 0.1
+    right_angle_counter = compute_starting_angle(
+        len(colors),
+        right_angle_counter_step
+    )
+
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+
+            renderer.new_node_boundary(species_id, left_angle_counter)
+            left_angle_counter += left_angle_counter_step
+
+        elif species_id in colors:
+
+            renderer.new_node_boundary(species_id, right_angle_counter)
+            right_angle_counter += right_angle_counter_step
+
+        else:
+            renderer.new_node(species_id)
+
+
+
+    for reaction_id in reactions_which_fired:
+        print(reaction_id)
+        reaction = network_loader.index_to_reaction(reaction_id)
+        for i in range(reaction['number_of_reactants']):
+            for j in range(reaction['number_of_products']):
+                reactant_id = reaction['reactants'][i]
+                product_id = reaction['products'][j]
+                dG = reaction['dG']
+                renderer.draw_edge(reactant_id, product_id)
+
+    for species_id in range(network_loader.number_of_species):
+        if network_loader.initial_state_array[species_id] > 0:
+            renderer.draw_node(species_id, radius=0.008)
+        elif species_id in colors:
+            renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
+        else:
+            renderer.draw_node(species_id)
+
+    renderer.render(path)
+
 
 
 class PathfindingTransfer:
@@ -93,6 +188,101 @@ class PathfindingTransfer:
 
         return result
 
+
+def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, num_threads=8, threshold=5):
+    renderer = Renderer(colors=[(0.7,0.7,0.7)])
+    reactions_in_top_pathways = set()
+    species_in_top_pathways = set()
+
+    pathfinding_transfer = PathfindingTransfer(pathfinding, threshold)
+
+    with Pool(num_threads) as p:
+        for result in p.map(pathfinding_transfer, sinks):
+            reactions_in_top_pathways.update(result)
+
+    purple = colors[purple_id]
+    pathways_lol = pathfinding.compute_pathways(purple_id)
+    highlighted_reactions = sorted(
+        pathways_lol,
+        key=lambda p: pathways_lol[p]['weight'])[3]
+
+    for reaction_id in reactions_in_top_pathways:
+        reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
+
+        for i in range(reaction['number_of_reactants']):
+            reactant_id = reaction['reactants'][i]
+            species_in_top_pathways.add(reactant_id)
+
+        for j in range(reaction['number_of_products']):
+            product_id = reaction['products'][j]
+            species_in_top_pathways.add(product_id)
+
+
+    starting_species_count = 0
+    for species_id in range(pathfinding.network_loader.number_of_species):
+        if pathfinding.network_loader.initial_state_array[species_id] > 0:
+            starting_species_count += 1
+
+
+    left_angle_counter_step = 0.1
+    left_angle_counter = math.pi + compute_starting_angle(
+        starting_species_count,
+        left_angle_counter_step
+    )
+    right_angle_counter_step = 0.1
+    right_angle_counter = compute_starting_angle(
+        len(sinks),
+        right_angle_counter_step
+    )
+
+    for species_id in range(pathfinding.network_loader.number_of_species):
+        if pathfinding.network_loader.initial_state_array[species_id] > 0:
+
+            renderer.new_node_boundary(species_id, left_angle_counter)
+            left_angle_counter += left_angle_counter_step
+
+        elif species_id in sinks:
+
+            renderer.new_node_boundary(species_id, right_angle_counter)
+            right_angle_counter += right_angle_counter_step
+
+        else:
+            renderer.new_node(species_id)
+
+
+    for reaction_id in reactions_in_top_pathways:
+        print(reaction_id)
+        reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
+        for i in range(reaction['number_of_reactants']):
+            for j in range(reaction['number_of_products']):
+                reactant_id = reaction['reactants'][i]
+                product_id = reaction['products'][j]
+                renderer.draw_edge(reactant_id, product_id)
+
+    for reaction_id in highlighted_reactions:
+        print(reaction_id)
+        reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
+        for i in range(reaction['number_of_reactants']):
+            for j in range(reaction['number_of_products']):
+                reactant_id = reaction['reactants'][i]
+                product_id = reaction['products'][j]
+                renderer.draw_edge(reactant_id, product_id,color=purple,width=0.003)
+
+
+
+    for species_id in species_in_top_pathways:
+
+        if pathfinding.network_loader.initial_state_array[species_id] > 0:
+            renderer.draw_node(species_id, radius=0.008)
+        elif species_id in sinks:
+            if species_id in colors:
+                renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
+            else:
+                renderer.draw_node_square(species_id, side=0.013)
+        else:
+            renderer.draw_node(species_id)
+
+    renderer.render(output_path)
 
 
 

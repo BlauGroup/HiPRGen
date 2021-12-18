@@ -256,8 +256,10 @@ class Renderer:
         self.context.fill()
 
     def draw_edge(self, tag1, tag2, color=None, width=0.001):
+
         if color is None:
             color = self.local_sampler.choice(self.colors)
+
 
 
         point1 = self.node_dict[tag1]
