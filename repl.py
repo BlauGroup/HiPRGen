@@ -5,66 +5,69 @@ from HiPRGen.network_renderer import *
 import sqlite3
 import math
 
-gold = (222/256, 146/256, 4/256)
+gold = (0, 0, 0)
 green = (0/256, 103/256, 0/256)
 light_green = (132/256, 176/256, 0/256)
 purple = (149/256, 63/256, 202/256)
 black = (0,0,0)
 
-
-# network_loader = NetworkLoader(
-#     '../big_network/rn.sqlite',
-#     '../big_network/mol_entries.pickle',
-#     '../big_network/initial_state.sqlite',
-# )
-
-# colors = {
-#     # Gases:
-#     4048 : green,
-#     1239 : green,
-
-#     # Inorganics:
-#     2539 : green,
-#     3418 : green,
-#     1459 : green,
-#     4432 : green,
-
-#     # Alkyl carbonates:
-#     4329 : green,
-#     23 : light_green,
-#     2549 : green,
-#     3867 : light_green,
-#     173 : green,
-#     496 : green,
-#     3827 : green,
-
-#     # Carbs, esters, oxides:
-#     2711 : black,
-#     2750 : black,
-
-#     # Cyclic species:
-#     2341 : gold,
-#     2676 : purple,
-#     3829 : black,
-# }
-
-
-
 network_loader = NetworkLoader(
-    './scratch/li_test/rn.sqlite',
-    './scratch/li_test/mol_entries.pickle',
-    './scratch/li_test/initial_state.sqlite',
+    '/global/scratch/dbarter/oct_production_networks/li_1.4/rn.sqlite',
+    '/global/scratch/dbarter/oct_production_networks/li_1.4/mol_entries.pickle',
+    '/global/scratch/dbarter/oct_production_networks/li_1.4/li_ec_co2/initial_state.sqlite',
 )
 
 colors = {
-    75 : green,
-    88 : black,
-    58 : purple,
-    183 : green,
-    63 : green,
-    6 : black,
-    1 : green
+    # Gases:
+    4048 : green,
+    1239 : green,
+
+    # Inorganics:
+    2539 : green,
+    3418 : green,
+    1459 : green,
+    4432 : green,
+
+    # Alkyl carbonates:
+    4329 : green,
+    23 : light_green,
+    2549 : green,
+    3867 : light_green,
+    173 : green,
+    496 : green,
+    3827 : green,
+
+    # Carbs, esters, oxides:
+    2711 : black,
+    2750 : black,
+
+    # Cyclic species:
+    2341 : gold,
+    2676 : purple,
+    3829 : black,
 }
+
+
+
+
+
+
+
+# network_loader = NetworkLoader(
+#     './scratch/li_test/rn.sqlite',
+#     './scratch/li_test/mol_entries.pickle',
+#     './scratch/li_test/initial_state.sqlite',
+# )
+
+# colors = {
+#     75 : green,
+#     88 : black,
+#     58 : purple,
+#     183 : green,
+#     63 : green,
+#     6 : black,
+#     1 : green
+# }
 
 network_loader.load_trajectories()
 network_loader.load_initial_state()
@@ -104,20 +107,18 @@ network_loader.cur = None
 
 render_top_pathways(
     pathfinding,
-    simulation_replayer.sinks,
     colors,
     '../network_renders/frame_5.png',
-    num_threads=8
+    num_threads=20
 )
 
 
 render_top_highlighted(
     pathfinding,
-    simulation_replayer.sinks,
     colors,
     '../network_renders/frame_6.png',
     58,
-    num_threads=8
+    num_threads=20
 )
 
 

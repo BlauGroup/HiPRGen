@@ -189,7 +189,7 @@ class PathfindingTransfer:
         return result
 
 
-def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, num_threads=8, threshold=5):
+def render_top_highlighted(pathfinding, colors, output_path, purple_id, num_threads=8, threshold=5):
     renderer = Renderer(colors=[(0.7,0.7,0.7)])
     reactions_in_top_pathways = set()
     species_in_top_pathways = set()
@@ -197,14 +197,14 @@ def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, n
     pathfinding_transfer = PathfindingTransfer(pathfinding, threshold)
 
     with Pool(num_threads) as p:
-        for result in p.map(pathfinding_transfer, sinks):
+        for result in p.map(pathfinding_transfer, list(colors.keys())):
             reactions_in_top_pathways.update(result)
 
     purple = colors[purple_id]
     pathways_lol = pathfinding.compute_pathways(purple_id)
     highlighted_reactions = sorted(
         pathways_lol,
-        key=lambda p: pathways_lol[p]['weight'])[3]
+        key=lambda p: pathways_lol[p]['weight'])[2]
 
     for reaction_id in reactions_in_top_pathways:
         reaction = pathfinding.network_loader.index_to_reaction(reaction_id)
@@ -231,7 +231,7 @@ def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, n
     )
     right_angle_counter_step = 0.1
     right_angle_counter = compute_starting_angle(
-        len(sinks),
+        len(colors),
         right_angle_counter_step
     )
 
@@ -241,7 +241,7 @@ def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, n
             renderer.new_node_boundary(species_id, left_angle_counter)
             left_angle_counter += left_angle_counter_step
 
-        elif species_id in sinks:
+        elif species_id in colors:
 
             renderer.new_node_boundary(species_id, right_angle_counter)
             right_angle_counter += right_angle_counter_step
@@ -274,11 +274,8 @@ def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, n
 
         if pathfinding.network_loader.initial_state_array[species_id] > 0:
             renderer.draw_node(species_id, radius=0.008)
-        elif species_id in sinks:
-            if species_id in colors:
-                renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
-            else:
-                renderer.draw_node_square(species_id, side=0.013)
+        elif species_id in colors:
+            renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
         else:
             renderer.draw_node(species_id)
 
@@ -286,7 +283,7 @@ def render_top_highlighted(pathfinding, sinks, colors, output_path, purple_id, n
 
 
 
-def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, threshold=5):
+def render_top_pathways(pathfinding, colors, output_path, num_threads=8, threshold=5):
     renderer = Renderer()
     reactions_in_top_pathways = set()
     species_in_top_pathways = set()
@@ -294,7 +291,7 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
     pathfinding_transfer = PathfindingTransfer(pathfinding, threshold)
 
     with Pool(num_threads) as p:
-        for result in p.map(pathfinding_transfer, sinks):
+        for result in p.map(pathfinding_transfer, list(colors.keys())):
             reactions_in_top_pathways.update(result)
 
     for reaction_id in reactions_in_top_pathways:
@@ -322,7 +319,7 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
     )
     right_angle_counter_step = 0.1
     right_angle_counter = compute_starting_angle(
-        len(sinks),
+        len(colors),
         right_angle_counter_step
     )
 
@@ -332,7 +329,7 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
             renderer.new_node_boundary(species_id, left_angle_counter)
             left_angle_counter += left_angle_counter_step
 
-        elif species_id in sinks:
+        elif species_id in colors:
 
             renderer.new_node_boundary(species_id, right_angle_counter)
             right_angle_counter += right_angle_counter_step
@@ -355,11 +352,8 @@ def render_top_pathways(pathfinding, sinks, colors, output_path, num_threads=8, 
 
         if pathfinding.network_loader.initial_state_array[species_id] > 0:
             renderer.draw_node(species_id, radius=0.008)
-        elif species_id in sinks:
-            if species_id in colors:
-                renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
-            else:
-                renderer.draw_node_square(species_id, side=0.013)
+        elif species_id in colors:
+            renderer.draw_node_square(species_id, color=colors[species_id], side=0.013)
         else:
             renderer.draw_node(species_id)
 
