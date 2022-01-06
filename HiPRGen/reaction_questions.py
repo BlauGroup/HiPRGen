@@ -686,7 +686,7 @@ class concerted_metal_coordination_one_reactant(MSONable):
 
         return False
 
-li_ec_reaction_decision_tree = [
+default_reaction_decision_tree = [
 
     # redox branch
     (is_redox_reaction(), [
@@ -724,77 +724,3 @@ li_ec_reaction_decision_tree = [
 
 
 
-mg_g2_reaction_decision_tree = [
-
-    # redox branch
-    (is_redox_reaction(), [
-
-        (dG_above_threshold(0.0, "free_energy", 0), Terminal.DISCARD),
-
-        (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (reaction_default_true(), Terminal.KEEP)
-    ]),
-
-    (dG_above_threshold(
-             0.0, "solvation_free_energy", 0), Terminal.DISCARD),
-
-    (star_count_diff_above_threshold(6), Terminal.DISCARD),
-
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
-
-    (concerted_metal_coordination(), Terminal.DISCARD),
-
-    (concerted_metal_coordination_one_product(), Terminal.DISCARD),
-
-    (concerted_metal_coordination_one_reactant(), Terminal.DISCARD),
-
-    (metal_coordination_passthrough(), Terminal.KEEP),
-
-    (fragment_matching_found(), [
-        (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
-        (reaction_default_true(), Terminal.KEEP)]
-    ),
-
-    (reaction_default_true(), Terminal.DISCARD)
-    ]
-
-mg_thf_reaction_decision_tree = [
-
-    # redox branch
-    (is_redox_reaction(), [
-
-        (dG_above_threshold(
-                 0.0,
-                 "free_energy", 0), Terminal.DISCARD),
-
-        (too_many_reactants_or_products(), Terminal.DISCARD),
-        (dcharge_too_large(), Terminal.DISCARD),
-        (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (reaction_default_true(), Terminal.KEEP)
-    ]),
-
-    (dG_above_threshold(
-             0.0,
-             "solvation_free_energy", 0), Terminal.DISCARD),
-
-    (star_count_diff_above_threshold(6), Terminal.DISCARD),
-
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
-
-    (concerted_metal_coordination(), Terminal.DISCARD),
-
-    (concerted_metal_coordination_one_product(), Terminal.DISCARD),
-
-    (concerted_metal_coordination_one_reactant(), Terminal.DISCARD),
-
-    (metal_coordination_passthrough(), Terminal.KEEP),
-
-    (fragment_matching_found(), [
-        (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
-        (reaction_default_true(), Terminal.KEEP)]
-    ),
-
-    (reaction_default_true(), Terminal.DISCARD)
-    ]

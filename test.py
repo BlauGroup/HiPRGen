@@ -24,8 +24,7 @@ from HiPRGen.species_questions import (
 )
 
 from HiPRGen.reaction_questions import (
-    li_ec_reaction_decision_tree,
-    mg_g2_reaction_decision_tree,
+    default_reaction_decision_tree,
 
 )
 
@@ -151,7 +150,7 @@ def li_test():
 
     worker_payload = WorkerPayload(
         folder + '/buckets.sqlite',
-        li_ec_reaction_decision_tree,
+        default_reaction_decision_tree,
         params,
         Terminal.DISCARD
     )
@@ -342,7 +341,7 @@ def mg_test():
 
     worker_payload = WorkerPayload(
         folder + '/buckets.sqlite',
-        mg_g2_reaction_decision_tree,
+        default_reaction_decision_tree,
         {
             'temperature' : ROOM_TEMP,
             'electron_free_energy' : -2.06
