@@ -27,15 +27,15 @@ m_formulas = frozenset([m + "1" for m in metals])
 # solvation environments
 li_ec = {
     "solvation_correction" : {
-        "Li" : -0.68
+        "Li_1" : -0.68
     },
 
     "coordination_radius" : {
-        "Li" : 2.4
+        "Li_1" : 2.4
     },
 
     "max_number_of_coordination_bonds" : {
-        "Li" : 4
+        "Li_1" : 4
     }
 }
 

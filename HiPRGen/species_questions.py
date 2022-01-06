@@ -222,59 +222,8 @@ class bad_metal_coordination(MSONable):
 
         return False
 
-class li_set_solvation_free_energy(MSONable):
-    """
-    metal atoms coordinate with the surrounding solvent. We need to correct
-    free energy to take this into account. The correction is
-    solvation_correction * (
-           max_coodination_bonds -
-           number_of_coordination_bonds_in_mol).
-    Since coordination bonding can't reliably be detected from the molecule
-    graph, we search for all atoms within a radius of the metal atom and
-    discard them if they are positively charged.
-    """
 
-    def __init__(self, solvation_env):
-        self.solvation_env = solvation_env
-
-    def __call__(self, mol):
-
-        mol.number_of_coordination_bonds = 0
-
-        correction = 0.0
-
-        for i in mol.m_inds:
-
-            species = mol.species[i]
-            coordination_partners = []
-            radius = self.solvation_env["coordination_radius"][species]
-
-            for j in range(mol.num_atoms):
-                if j != i:
-                    displacement_vector = (
-                        mol.atom_locations[j] -
-                        mol.atom_locations[i])
-
-                    if (np.inner(displacement_vector, displacement_vector)
-                        < radius ** 2 and (
-                            mol.partial_charges_resp[j] < 0 or
-                            mol.partial_charges_mulliken[j] < 0)):
-                        if not mol.graph.has_edge(i,j):
-                            mol.graph.add_edge(i,j)
-                        coordination_partners.append(j)
-
-
-            number_of_coordination_bonds = len(coordination_partners)
-            mol.number_of_coordination_bonds += number_of_coordination_bonds
-            correction += self.solvation_env["solvation_correction"][species] * (
-                self.solvation_env["max_number_of_coordination_bonds"][species] -
-                number_of_coordination_bonds)
-
-        mol.solvation_free_energy = correction + mol.free_energy
-        return False
-
-
-class mg_set_solvation_free_energy(MSONable):
+class set_solvation_free_energy(MSONable):
     """
     metal atoms coordinate with the surrounding solvent. We need to correct
     free energy to take this into account. The correction is
@@ -393,7 +342,7 @@ class charge_too_big(MSONable):
 
 li_ec_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
-    (li_set_solvation_free_energy(li_ec), Terminal.KEEP),
+    (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (charge_too_big(), Terminal.DISCARD),
     (li0_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
@@ -408,9 +357,9 @@ li_ec_species_decision_tree = [
     ]
 
 mg_g2_species_decision_tree = [
-    (mg_set_solvation_free_energy(mg_g2), Terminal.KEEP),
-    (no_bare_mg(), Terminal.DISCARD),
     (fix_hydrogen_bonding(), Terminal.KEEP),
+    (set_solvation_free_energy(mg_g2), Terminal.KEEP),
+    (no_bare_mg(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),
@@ -422,17 +371,3 @@ mg_g2_species_decision_tree = [
     (species_default_true(), Terminal.KEEP)
     ]
 
-mg_thf_species_decision_tree = [
-    (mg_set_solvation_free_energy(mg_thf), Terminal.KEEP),
-    (no_bare_mg(), Terminal.DISCARD),
-    (fix_hydrogen_bonding(), Terminal.KEEP),
-    (compute_graph_hashes, Terminal.KEEP),
-    (metal_ion_filter(), Terminal.DISCARD),
-    (bad_metal_coordination(), Terminal.DISCARD),
-    (mol_not_connected(), Terminal.DISCARD),
-    (metal_complex(), Terminal.DISCARD),
-    (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(), Terminal.KEEP),
-    (species_default_true(), Terminal.KEEP)
-    ]
