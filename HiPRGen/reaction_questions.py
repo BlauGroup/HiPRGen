@@ -729,7 +729,7 @@ mg_g2_reaction_decision_tree = [
     # redox branch
     (is_redox_reaction(), [
 
-        (dG_above_threshold(0.5, "free_energy", 0), Terminal.DISCARD),
+        (dG_above_threshold(0.0, "free_energy", 0), Terminal.DISCARD),
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
@@ -738,7 +738,7 @@ mg_g2_reaction_decision_tree = [
     ]),
 
     (dG_above_threshold(
-             0.5, "solvation_free_energy", 0), Terminal.DISCARD),
+             0.0, "solvation_free_energy", 0), Terminal.DISCARD),
 
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
 
@@ -766,7 +766,7 @@ mg_thf_reaction_decision_tree = [
     (is_redox_reaction(), [
 
         (dG_above_threshold(
-                 0.5,
+                 0.0,
                  "free_energy", 0), Terminal.DISCARD),
 
         (too_many_reactants_or_products(), Terminal.DISCARD),
@@ -776,7 +776,7 @@ mg_thf_reaction_decision_tree = [
     ]),
 
     (dG_above_threshold(
-             0.5,
+             0.0,
              "solvation_free_energy", 0), Terminal.DISCARD),
 
     (star_count_diff_above_threshold(6), Terminal.DISCARD),

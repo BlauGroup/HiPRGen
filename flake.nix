@@ -49,7 +49,7 @@
 
             texlive.combined.scheme-small
             mpi
-            sqlite
+            (sqlite.override { interactive = true; })
             (builtins.getAttr systemString RNMC.defaultPackage)
           ];
         };
