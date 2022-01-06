@@ -203,7 +203,10 @@ class fix_hydrogen_bonding(MSONable):
                     for adjacent_atom, _ in adjacent_atoms:
                         if adjacent_atom != closest_atom:
                             mol.graph.remove_edge(i, adjacent_atom)
-                            mol.covalent_graph.remove_edge(i, adjacent_atom)
+                            if adjacent_atom in mol.covalent_graph:
+                                mol.covalent_graph.remove_edge(i, adjacent_atom)
+
+
 
         return False
 
@@ -245,7 +248,7 @@ class set_solvation_free_energy(MSONable):
         for i in mol.m_inds:
 
             species = mol.species[i]
-            partial_charge = mol.partial_charge_nbo[i]
+            partial_charge = mol.partial_charges_nbo[i]
 
             if partial_charge < 1.2:
                 effective_charge = "_1"
