@@ -302,14 +302,14 @@ def compute_graph_hashes(mol):
 
 
 class neutral_metal_filter(MSONable):
-    def __init__(self):
-        pass
+    def __init__(self, cutoff):
+        self.cutoff = cutoff
 
     def __call__(self, mol):
 
         for i in mol.m_inds:
             if (mol.species[i] in metals and
-                mol.partial_charges_nbo[i] < 0.1):
+                mol.partial_charges_nbo[i] < self.cutoff):
                 return True
 
         return False
@@ -332,7 +332,7 @@ li_ec_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (charge_too_big(), Terminal.DISCARD),
-    (neutral_metal_filter(), Terminal.DISCARD),
+    (neutral_metal_filter(0.1), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),
@@ -347,6 +347,7 @@ li_ec_species_decision_tree = [
 mg_g2_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(mg_g2), Terminal.KEEP),
+    (neutral_metal_filter(0.5), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),

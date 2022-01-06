@@ -334,6 +334,7 @@ def mg_test():
     )
 
 
+
     bucket(mol_entries, folder + '/buckets.sqlite')
 
 
@@ -450,7 +451,7 @@ def mg_test():
     species_report(network_loader, folder + '/species_report.tex')
 
     tests_passed = True
-    if network_loader.number_of_species == 92:
+    if network_loader.number_of_species == 83:
         print(bcolors.PASS +
               "mg_test: correct number of species" +
               bcolors.ENDC)
@@ -462,7 +463,7 @@ def mg_test():
 
 
 
-    if network_loader.number_of_reactions == 1096:
+    if network_loader.number_of_reactions == 788:
         print(bcolors.PASS +
               "mg_test: correct number of reactions" +
               bcolors.ENDC)
