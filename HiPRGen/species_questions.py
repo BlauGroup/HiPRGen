@@ -280,15 +280,6 @@ class set_solvation_free_energy(MSONable):
         mol.solvation_free_energy =  correction + mol.free_energy
         return False
 
-class no_bare_mg(MSONable):
-    def __init__(self):
-        pass
-
-    def __call__(self, mol):
-        if mol.formula in m_formulas:
-            return True
-        else:
-            return False
 
 class species_default_true(MSONable):
     def __init__(self):
