@@ -245,8 +245,7 @@ class set_solvation_free_energy(MSONable):
         for i in mol.m_inds:
 
             species = mol.species[i]
-            partial_charge = max( mol.partial_charges_mulliken[i],
-                                  mol.partial_charges_resp[i])
+            partial_charge = mol.partial_charge_nbo[i]
 
             if partial_charge < 1.2:
                 effective_charge = "_1"
@@ -265,7 +264,8 @@ class set_solvation_free_energy(MSONable):
                     if (np.inner(displacement_vector, displacement_vector)
                         < radius ** 2 and (
                             mol.partial_charges_resp[j] < 0 or
-                            mol.partial_charges_mulliken[j] < 0)):
+                            mol.partial_charges_mulliken[j] < 0 or
+                            mol.partial_charges_nbo[j] < 0)):
                         coordination_partners.append(j)
 
             number_of_coordination_bonds = len(coordination_partners)
