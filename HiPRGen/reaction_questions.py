@@ -740,7 +740,7 @@ mg_g2_reaction_decision_tree = [
     (dG_above_threshold(
              0.5, "solvation_free_energy", 0), Terminal.DISCARD),
 
-    (star_count_diff_above_threshold(4), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
 
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
 
@@ -779,7 +779,7 @@ mg_thf_reaction_decision_tree = [
              0.5,
              "solvation_free_energy", 0), Terminal.DISCARD),
 
-    (star_count_diff_above_threshold(4), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
 
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
 

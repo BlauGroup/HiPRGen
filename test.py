@@ -459,7 +459,7 @@ def mg_test():
 
 
 
-    if network_loader.number_of_reactions == 731:
+    if network_loader.number_of_reactions == 1217:
         print(bcolors.PASS +
               "mg_test: correct number of reactions" +
               bcolors.ENDC)
