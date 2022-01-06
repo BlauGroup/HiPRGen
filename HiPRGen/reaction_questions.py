@@ -171,7 +171,6 @@ class dG_above_threshold(MSONable):
             return False
 
 
-
 class is_redox_reaction(MSONable):
 
     def __init__(self):
@@ -218,6 +217,19 @@ class too_many_reactants_or_products(MSONable):
             return False
 
 
+class metal_metal_reaction(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, reaction, mol_entries, params):
+        if (reaction['number_of_reactants'] == 1 and
+            reaction['number_of_products'] == 1 and
+            (mol_entries[reaction['reactants'][0]].formula in m_formulas) and
+            (mol_entries[reaction['products'][0]].formula in m_formulas)):
+
+            return True
+        else:
+            return False
 
 
 class dcharge_too_large(MSONable):
@@ -688,6 +700,7 @@ class concerted_metal_coordination_one_reactant(MSONable):
 
 default_reaction_decision_tree = [
 
+    (metal_metal_reaction(), Terminal.DISCARD),
     # redox branch
     (is_redox_reaction(), [
 
