@@ -171,7 +171,7 @@ class metal_complex(MSONable):
 
         return not nx.is_connected(mol.covalent_graph)
 
-class li_fix_hydrogen_bonding(MSONable):
+class fix_hydrogen_bonding(MSONable):
     def __init__(self):
         pass
 
@@ -204,43 +204,6 @@ class li_fix_hydrogen_bonding(MSONable):
                         if adjacent_atom != closest_atom:
                             mol.graph.remove_edge(i, adjacent_atom)
                             mol.covalent_graph.remove_edge(i, adjacent_atom)
-
-        return False
-
-class mg_fix_hydrogen_bonding(MSONable):
-    def __init__(self):
-        pass
-
-    def __call__(self, mol):
-        # TODO: Make this user-defined?
-        max_dist = 1.5
-
-        if mol.num_atoms > 1:
-            for i in range(mol.num_atoms):
-                if mol.species[i] == 'H':
-
-                    adjacent_atoms = []
-
-                    for bond in mol.graph.edges:
-                        if i in bond[0:2]:
-
-                            if i == bond[0]:
-                                adjacent_atom = bond[1]
-                            else:
-                                adjacent_atom = bond[0]
-
-                            displacement = (mol.atom_locations[adjacent_atom] -
-                                            mol.atom_locations[i])
-
-                            dist = np.inner(displacement, displacement)
-
-                            adjacent_atoms.append((adjacent_atom, dist))
-
-                    for adjacent_atom, dist in adjacent_atoms:
-                        if dist > max_dist ** 2:
-                            mol.graph.remove_edge(i, adjacent_atom)
-                            if adjacent_atom in mol.covalent_graph:
-                                mol.covalent_graph.remove_edge(i, adjacent_atom)
 
         return False
 
@@ -429,7 +392,7 @@ class charge_too_big(MSONable):
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
 li_ec_species_decision_tree = [
-    (li_fix_hydrogen_bonding(), Terminal.KEEP),
+    (fix_hydrogen_bonding(), Terminal.KEEP),
     (li_set_solvation_free_energy(li_ec), Terminal.KEEP),
     (charge_too_big(), Terminal.DISCARD),
     (li0_filter(), Terminal.DISCARD),
@@ -447,7 +410,7 @@ li_ec_species_decision_tree = [
 mg_g2_species_decision_tree = [
     (mg_set_solvation_free_energy(mg_g2), Terminal.KEEP),
     (no_bare_mg(), Terminal.DISCARD),
-    (mg_fix_hydrogen_bonding(), Terminal.KEEP),
+    (fix_hydrogen_bonding(), Terminal.KEEP),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),
@@ -462,7 +425,7 @@ mg_g2_species_decision_tree = [
 mg_thf_species_decision_tree = [
     (mg_set_solvation_free_energy(mg_thf), Terminal.KEEP),
     (no_bare_mg(), Terminal.DISCARD),
-    (mg_fix_hydrogen_bonding(), Terminal.KEEP),
+    (fix_hydrogen_bonding(), Terminal.KEEP),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),
