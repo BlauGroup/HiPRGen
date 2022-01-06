@@ -59,6 +59,11 @@ hydrogen_hash = weisfeiler_lehman_graph_hash(
     hydrogen_graph,
     node_attr='specie')
 
+fluorine_graph = nx.MultiGraph()
+fluorine_graph.add_node(0, specie='F')
+fluorine_hash = weisfeiler_lehman_graph_hash(
+    fluorine_graph,
+    node_attr='specie')
 
 def run_decision_tree(
         reaction,
@@ -546,7 +551,7 @@ class fragment_matching_found(MSONable):
         return False
 
 
-class single_reactant_single_product_not_hydrogen_transfer(MSONable):
+class single_reactant_single_product_not_atom_transfer(MSONable):
     def __init__(self):
         pass
 
@@ -558,11 +563,13 @@ class single_reactant_single_product_not_hydrogen_transfer(MSONable):
             reaction['number_of_products'] == 1 and
             len(reaction['reactant_bonds_broken']) == 1 and
             len(reaction['product_bonds_broken']) == 1 and
-            hydrogen_hash not in reaction['hashes']):
+            hydrogen_hash not in reaction['hashes'] and
+            fluorine_hash not in reaction['hashes']):
 
             return True
 
         return False
+
 
 class single_reactant_double_product_ring_close(MSONable):
     def __init__(self):
@@ -707,7 +714,7 @@ li_ec_reaction_decision_tree = [
     (metal_coordination_passthrough(), Terminal.KEEP),
 
     (fragment_matching_found(), [
-        (single_reactant_single_product_not_hydrogen_transfer(), Terminal.DISCARD),
+        (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
         (single_reactant_double_product_ring_close(), Terminal.DISCARD),
         (reaction_default_true(), Terminal.KEEP)]
     ),
@@ -746,7 +753,7 @@ mg_g2_reaction_decision_tree = [
     (metal_coordination_passthrough(), Terminal.KEEP),
 
     (fragment_matching_found(), [
-        (single_reactant_single_product_not_hydrogen_transfer(), Terminal.DISCARD),
+        (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
         (reaction_default_true(), Terminal.KEEP)]
     ),
 
@@ -785,7 +792,7 @@ mg_thf_reaction_decision_tree = [
     (metal_coordination_passthrough(), Terminal.KEEP),
 
     (fragment_matching_found(), [
-        (single_reactant_single_product_not_hydrogen_transfer(), Terminal.DISCARD),
+        (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
         (reaction_default_true(), Terminal.KEEP)]
     ),
 
