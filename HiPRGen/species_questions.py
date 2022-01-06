@@ -253,7 +253,6 @@ class set_solvation_free_energy(MSONable):
             elif partial_charge >= 1.2:
                 effective_charge = "_2"
 
-
             coordination_partners = list()
             species_charge = species + effective_charge
             radius = self.solvation_env["coordination_radius"][species_charge]
@@ -328,7 +327,7 @@ class charge_too_big(MSONable):
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
-li_ec_species_decision_tree = [
+li_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (charge_too_big(), Terminal.DISCARD),
@@ -344,7 +343,7 @@ li_ec_species_decision_tree = [
     (species_default_true(), Terminal.KEEP)
     ]
 
-mg_g2_species_decision_tree = [
+mg_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(mg_g2), Terminal.KEEP),
     (neutral_metal_filter(0.5), Terminal.DISCARD),

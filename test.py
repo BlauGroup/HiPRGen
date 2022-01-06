@@ -19,8 +19,8 @@ from HiPRGen.reaction_filter_payloads import (
 )
 
 from HiPRGen.species_questions import (
-    mg_g2_species_decision_tree,
-    li_ec_species_decision_tree
+    mg_species_decision_tree,
+    li_species_decision_tree
 )
 
 from HiPRGen.reaction_questions import (
@@ -96,7 +96,7 @@ def li_test():
     # through the a species decision tree to discard molecules. This happens
     # here rather than further complicating the DFT pipelines which generate the
     # input data for HiPRGen.
-    species_decision_tree = li_ec_species_decision_tree
+    species_decision_tree = li_species_decision_tree
 
 
     # there is one non local part of species filtering: we consider two
@@ -319,7 +319,7 @@ def mg_test():
 
     folder = './scratch/mg_test'
     mol_json = './data/sam_G2.json'
-    species_decision_tree = mg_g2_species_decision_tree
+    species_decision_tree = mg_species_decision_tree
 
     database_entries = loadfn(mol_json)
 
@@ -389,7 +389,8 @@ def mg_test():
         0)
 
     initial_state = {
-        mg_g2_plus_plus_id : 30
+        33 : 30,
+        81 : 30
     }
 
 
