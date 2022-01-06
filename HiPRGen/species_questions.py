@@ -301,17 +301,14 @@ def compute_graph_hashes(mol):
     return False
 
 
-class li0_filter(MSONable):
+class neutral_metal_filter(MSONable):
     def __init__(self):
         pass
 
     def __call__(self, mol):
-        # some molecules don't have NBO data
-        if not mol.partial_charges_nbo:
-            return False
 
         for i in mol.m_inds:
-            if (mol.species[i] == 'Li' and
+            if (mol.species[i] in metals and
                 mol.partial_charges_nbo[i] < 0.1):
                 return True
 
@@ -335,7 +332,7 @@ li_ec_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (charge_too_big(), Terminal.DISCARD),
-    (li0_filter(), Terminal.DISCARD),
+    (neutral_metal_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),
