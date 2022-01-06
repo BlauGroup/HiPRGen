@@ -173,10 +173,10 @@ class MoleculeEntry:
             partial_charges_mulliken = doc['partial_charges']['mulliken']
             spin_multiplicity = doc['spin_multiplicity']
 
-            if 'nbo' in doc['partial_charges']:
-                partial_charges_nbo = doc['partial_charges']['nbo']
+            if doc['number_atoms'] == 1:
+                partial_charges_nbo = doc['partial_charges']['mulliken']
             else:
-                partial_charges_nbo = None
+                partial_charges_nbo = doc['partial_charges']['nbo']
 
             electron_affinity_eV = None
             ionization_energy_eV = None

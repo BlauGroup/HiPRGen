@@ -322,6 +322,9 @@ def mg_test():
     species_decision_tree = mg_g2_species_decision_tree
 
     database_entries = loadfn(mol_json)
+
+
+
     mol_entries = species_filter(
         database_entries,
         folder + '/mol_entries.pickle',
@@ -329,6 +332,7 @@ def mg_test():
         species_decision_tree,
         lambda mol: mol.solvation_free_energy
     )
+
 
     bucket(mol_entries, folder + '/buckets.sqlite')
 
