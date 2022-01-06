@@ -446,7 +446,7 @@ def mg_test():
     species_report(network_loader, folder + '/species_report.tex')
 
     tests_passed = True
-    if network_loader.number_of_species == 90:
+    if network_loader.number_of_species == 92:
         print(bcolors.PASS +
               "mg_test: correct number of species" +
               bcolors.ENDC)
@@ -458,7 +458,7 @@ def mg_test():
 
 
 
-    if network_loader.number_of_reactions == 1093:
+    if network_loader.number_of_reactions == 1096:
         print(bcolors.PASS +
               "mg_test: correct number of reactions" +
               bcolors.ENDC)

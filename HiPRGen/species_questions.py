@@ -359,7 +359,6 @@ li_ec_species_decision_tree = [
 mg_g2_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(mg_g2), Terminal.KEEP),
-    (no_bare_mg(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
     (bad_metal_coordination(), Terminal.DISCARD),
