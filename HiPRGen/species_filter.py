@@ -76,15 +76,6 @@ def log_message(string):
         string)
 
 
-class Coordimer:
-    """
-    we need to store as little as possible in each coordimer
-    """
-    def __init__(self, mol_entry):
-        self.electron_affinity = mol_entry.electron_affinity
-        self.ionization_energy = mol_entry.ionization_energy
-        self.free_energy = mol_entry.free_energy
-
 def species_filter(
         dataset_entries,
         mol_entries_pickle_location,
