@@ -169,6 +169,7 @@ def species_filter(
         m.partial_charges_resp = None
         m.partial_charges_mulliken = None
         m.partial_charges_nbo = None
+        m.partial_spins_nbo = None
         m.atom_locations = None
 
     # currently, take lowest energy mol in each iso class

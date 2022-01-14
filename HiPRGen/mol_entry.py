@@ -53,7 +53,8 @@ class MoleculeEntry:
         partial_charges_nbo,
         electron_affinity,
         ionization_energy,
-        spin_multiplicity
+        spin_multiplicity,
+        partial_spins_nbo
     ):
         self.energy = energy
         self.enthalpy = enthalpy
@@ -78,6 +79,7 @@ class MoleculeEntry:
         self.partial_charges_resp = partial_charges_resp
         self.partial_charges_mulliken = partial_charges_mulliken
         self.partial_charges_nbo = partial_charges_nbo
+        self.partial_spins_nbo = partial_spins_nbo
 
         self.molecule = self.mol_graph.molecule
         self.graph = self.mol_graph.graph.to_undirected()
@@ -173,10 +175,13 @@ class MoleculeEntry:
             partial_charges_mulliken = doc['partial_charges']['mulliken']
             spin_multiplicity = doc['spin_multiplicity']
 
+
             if doc['number_atoms'] == 1:
                 partial_charges_nbo = doc['partial_charges']['mulliken']
+                partial_spins_nbo = doc['partial_spins']['mulliken']
             else:
                 partial_charges_nbo = doc['partial_charges']['nbo']
+                partial_spins_nbo = doc['partial_spins']['nbo']
 
             electron_affinity_eV = None
             ionization_energy_eV = None
@@ -207,7 +212,8 @@ class MoleculeEntry:
             partial_charges_nbo=partial_charges_nbo,
             electron_affinity=electron_affinity_eV,
             ionization_energy=ionization_energy_eV,
-            spin_multiplicity=spin_multiplicity
+            spin_multiplicity=spin_multiplicity,
+            partial_spins_nbo=partial_spins_nbo
         )
 
 
