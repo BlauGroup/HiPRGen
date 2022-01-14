@@ -20,7 +20,9 @@ from HiPRGen.reaction_filter_payloads import (
 
 from HiPRGen.species_questions import (
     mg_species_decision_tree,
-    li_species_decision_tree
+    li_species_decision_tree,
+    positive_penalty,
+    species_default_true
 )
 
 from HiPRGen.reaction_questions import (
@@ -113,7 +115,11 @@ def li_test():
         mol_entries_pickle_location=folder + '/mol_entries.pickle',
         species_report=folder + '/unfiltered_species_report.tex',
         species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy)
+        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
+        species_logging_decision_tree=[
+            (positive_penalty(), Terminal.KEEP),
+            (species_default_true(), Terminal.DISCARD)],
+        generate_unfiltered_mol_pictures=True
     )
 
 

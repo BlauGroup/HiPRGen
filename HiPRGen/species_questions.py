@@ -99,6 +99,16 @@ class spin_multiplicity_filter(MSONable):
 
         return False
 
+class positive_penalty(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, mol):
+        if mol.penalty > 0:
+            return True
+        else:
+            return False
+
 class add_star_hashes(MSONable):
     def __init__(self):
         pass
