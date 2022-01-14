@@ -89,7 +89,11 @@ class MoleculeEntry:
             i for i, x in enumerate(self.species) if x in metals
         ]
 
-
+        # penalty gets used in the non local part of species filtering.
+        # certain species filters will increase penalty rather than explicitly filtering
+        # out a molecule. The non local filtering step prioritizes mols with a lower
+        # penalty.
+        self.penalty = 0
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
 

@@ -113,7 +113,7 @@ def li_test():
         mol_entries_pickle_location=folder + '/mol_entries.pickle',
         species_report=folder + '/unfiltered_species_report.tex',
         species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: mol.solvation_free_energy
+        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy)
     )
 
 
@@ -330,7 +330,7 @@ def mg_test():
         folder + '/mol_entries.pickle',
         folder + '/unfiltered_species_report.tex',
         species_decision_tree,
-        lambda mol: mol.solvation_free_energy
+        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy)
     )
 
 

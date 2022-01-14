@@ -83,6 +83,21 @@ class mol_not_connected(MSONable):
     def __call__(self, mol):
         return not nx.is_connected(mol.graph)
 
+class spin_multiplicity_filter(MSONable):
+    def __init__(self, threshold):
+        self.threshold = threshold
+
+    def __call__(self, mol):
+        if (mol.spin_multiplicity == 2):
+            num_partial_spins_above_threshold = 0
+            for i in range(mol.num_atoms):
+                if mol.partial_spins_nbo[i] > self.threshold:
+                    num_partial_spins_above_threshold += 1
+
+            if num_partial_spins_above_threshold >= 2:
+                mol.penalty += 1
+
+        return False
 
 class add_star_hashes(MSONable):
     def __init__(self):
@@ -340,6 +355,7 @@ li_species_decision_tree = [
     (bad_metal_coordination(), Terminal.DISCARD),
     (mol_not_connected(), Terminal.DISCARD),
     (metal_complex(), Terminal.DISCARD),
+    (spin_multiplicity_filter(0.4), Terminal.DISCARD),
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
