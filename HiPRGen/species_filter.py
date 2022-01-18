@@ -156,11 +156,11 @@ def species_filter(
     # during species filtering.
     log_message("clearing unneeded attributes")
     for m in mol_entries_filtered:
-        m.partial_charges_resp = None
-        m.partial_charges_mulliken = None
-        m.partial_charges_nbo = None
-        m.partial_spins_nbo = None
-        m.atom_locations = None
+        del m.partial_charges_resp
+        del m.partial_charges_mulliken
+        del m.partial_charges_nbo
+        del m.partial_spins_nbo
+        del m.atom_locations
 
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
