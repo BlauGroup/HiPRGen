@@ -4,9 +4,13 @@
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs/nixos-21.05;
     RNMC.url = github:BlauGroup/RNMC;
+    flake-compat = {
+      url = github:edolstra/flake-compat;
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, RNMC }:
+  outputs = { self, nixpkgs, RNMC, flake-compat }:
 
     let
       HiPRGen = systemString:
@@ -45,6 +49,7 @@
                     ps.mpi4py
                     ps.pycairo
                     (if installHiPRGen then (HiPRGen systemString) else null)
+                    ps.jupyterlab
                   ]))
 
             texlive.combined.scheme-small
