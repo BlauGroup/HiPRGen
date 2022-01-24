@@ -306,7 +306,11 @@ def li_test():
     # that we use to identify network products. The third criteria is
     # that each network product must have a shortest path with cost
     # less than 10. This can be checked by generating pathway reports
-    # to each species shown in the sink report.
+    # to each species shown in the sink report. For the curious reader,
+    # we note that generating pathway reports to the six species in the
+    # sink report will show that only Li2CO3, C2H4, LiEDC-, and DLEMC
+    # have sufficiently low-cost paths to pass the third criteria and
+    # thus to be considered products of the test network used here.
     sink_report(simulation_replayer, folder + '/sink_report.tex')
     # Run `pdflatex sink_report.tex` to generater the sink report PDF.
     
