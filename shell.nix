@@ -6,5 +6,5 @@
       sha256 = lock.nodes.flake-compat.locked.narHash;
     }
   )
-  { src = ./.; }
+  { src = ./.; inherit system; }
 ).shellNix
