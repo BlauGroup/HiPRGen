@@ -10,6 +10,16 @@ HiPRGen uses [nix flakes](https://www.tweag.io/blog/2020-05-25-flakes/) which ne
 
 If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. Create a conda environment where these are installed and then run `pip install -e .` from the HiPRGen directory. Again, on macos, conda and MPI don't work well together.
 
+The whole process looks like this:
+```
+# this first step requires sudo to create the directory as root /nix with permissions 755.
+sh <(curl -L https://nixos.org/nix/install) --no-daemon
+echo "experimental-features = nix-command flakes" > ~/.config/nix/nix.conf
+git clone https://github.com/BlauGroup/HiPRGen
+cd HiPRGen
+nix develop
+```
+
 ### Tests
 
 Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads (you should use as many as your machine has). The working directories for the tests are in `scratch`. After the tests have finished, run `python -i repl.py` and inspect the `network_loader` object. This is the test Lithium / Ethylene Carbonate network.
