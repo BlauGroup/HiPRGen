@@ -50,10 +50,12 @@ Once you are in an environment where HiPRGen is installed, the tests can be run 
 The network loader is a great place to start using the codebase and is run as follows:
 
 ```
+# run from the root directory of HiPRGen after running the tests
 from HiPRGen.network_loader import *
 
-    network_loader = NetworkLoader(
-        './rn.sqlite',
-        './mol_entries.pickle'
-        )
+network_loader = NetworkLoader(
+    './scratch/li_test/rn.sqlite',
+    './scratch/li_test/mol_entries.pickle',
+    './scratch/li_test/initial_state.sqlite',
+)
 ```
