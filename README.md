@@ -13,7 +13,7 @@ If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, 
 The whole process looks like this:
 ```
 # this first step requires sudo to create the directory as root /nix with permissions 755.
-sh <(curl -L https://nixos.org/nix/install) --no-daemon
+sh <(curl -L https://nixos.org/nix/install) --daemon
 echo "experimental-features = nix-command flakes" > ~/.config/nix/nix.conf
 git clone https://github.com/BlauGroup/HiPRGen
 cd HiPRGen
