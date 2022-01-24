@@ -116,10 +116,10 @@ def li_test():
         species_report=folder + '/unfiltered_species_report.tex',
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
-        species_logging_decision_tree=[
-            (positive_penalty(), Terminal.KEEP),
-            (species_default_true(), Terminal.DISCARD)],
-        generate_unfiltered_mol_pictures=True
+        # species_logging_decision_tree=[
+        #     (positive_penalty(), Terminal.KEEP),
+        #     (species_default_true(), Terminal.DISCARD)],
+        # generate_unfiltered_mol_pictures=True
     )
 
 

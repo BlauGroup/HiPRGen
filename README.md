@@ -11,11 +11,13 @@ If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, 
 The whole process looks like this:
 ```
 # this first step requires sudo to create the directory as root /nix with permissions 755.
+# run the nixos install script and follow the prompts
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
-## if you have an M1 mac, you also need to force nix to use x86 emulation mode
-## some of our dependencies don't have native arm versions.
-## uncomment the following lines if you have an M1 mac.
+# if you have an M1 mac, you also need to force nix to use x86 emulation mode
+# some of our dependencies don't have native arm versions.
+# uncomment the following lines if you have an M1 mac.
+
 # mkdir -p ~/.config/nix
 # echo "system = x86_64-darwin" > ~/.config/nix/nix.conf
 
