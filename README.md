@@ -8,23 +8,24 @@ HiPRGen depends on `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`
 
 The whole process looks like this:
 ```
-# this first step requires sudo to create the directory /nix as root.
-# run the nixos install script and follow the prompts
-# on linux, uninstalling nix is fairly straightforward. Consult your preferred SE
-# on macos, it is a little more complex.
-# see https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
+# The first step requires sudo to create the directory /nix as root.
+# Run the NixOS install script below and follow the prompts.
+# On Linux, uninstalling nix is fairly straightforward. 
+#    Instructions can be found with a quick web search.
+# On MacOS, it is a little more complex.
+#    See https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
 
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
-# if you have an M1 mac, you also need to force nix to use x86 binaries
-# some of our dependencies don't have native arm binaries.
-# uncomment the following two lines if you have an M1 mac.
+# If you have an M1 Mac, you also need to force nix to use x86 binaries
+#    since some of our dependencies don't have native arm binaries.
+# Uncomment the following two lines if you have an M1 Mac:
 
 # mkdir -p ~/.config/nix
 # echo "system = x86_64-darwin" > ~/.config/nix/nix.conf
 
 
-# close your existing terminal and open a new one
+# Close your existing terminal and open a new one, then run:
 
 git clone https://github.com/BlauGroup/HiPRGen
 cd HiPRGen
@@ -36,7 +37,7 @@ nix-shell
 
 Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads, though you could use as many threads as your machine allows to speed up the execution. Running the tests will populate working directories in `scratch`. Note that `test.py` is heavily commented to explain how to use HiPRGen.
 
-Once the tests have finished, you can run `python -i repl.py` and inspect the `network_loader` object, which contains all of the data associated with the test Lithium / Ethylene Carbonate network after running 1000 trajectories. Additionally, HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflatex LEDC_pathways.tex` to generate a PDF of the top pathways to LEDC in the test Li / EC network or run `pdflatex sink_report.tex` to generate a PDF of the test network products.
+Once the tests have finished, you can run `python -i repl.py` and inspect the `network_loader` object, which contains all of the data associated with the test Lithium / Ethylene Carbonate network after running 1000 trajectories. Additionally, HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflatex LEDC_pathways.tex` to generate a PDF of the top pathways to LEDC in the test Li / EC network or run `pdflatex sink_report.tex` to generate a PDF of the test network products. Explanation of other types of reports and the commands to generate them are given in `test.py`.
 
 
 ### Design
@@ -49,7 +50,7 @@ Once the tests have finished, you can run `python -i repl.py` and inspect the `n
 
 - Simulation: Once the reaction network database has been generated, it is provided as an input to [RNMC](https://github.com/BlauGroup/RNMC) which runs simulations and writes them into the reaction network database. This is much more well-suited to Lustre filesystems than an approach involving writing each trajectory to an independent file.
 
-- Analysis: HiPRGen also has important primitives for useful analysis. The ReportGenerator class in `report_generator.py` facilitates the construction of a variety of useful PDFs via functions in `mc_analysis.py` and the NetworkLoader class in `network_loader.py` allows for straightforward interrogation of the network and trajectories while abstracting away the fact that they are stored in a sqlite db.
+- Analysis: HiPRGen also has important primitives for useful analysis. The ReportGenerator class in `report_generator.py` facilitates the construction of a variety of useful PDFs via functions in `mc_analysis.py`, and the NetworkLoader class in `network_loader.py` allows for straightforward interrogation of the network and trajectories while abstracting away the fact that they are stored in a sqlite db.
 
 The network loader is a great place to start using the codebase and is run as follows:
 
