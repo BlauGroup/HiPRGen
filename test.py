@@ -43,19 +43,19 @@ from HiPRGen.mc_analysis import (
 
 # Since HiPRGen uses an end-to-end testing approach rather than testing
 # each individual function, we have decided to use the tests as
-# documentation, by explaining every single line.
+# documentation, by explaining every single line through the first test.
 
 
-# the first thing you need to think about when using HiPRGen is how many
+# The first thing you need to consider when using HiPRGen is how many
 # worker threads do you want to run. HiPRGen can be run with a single
 # thread or thousands distrubuted across several nodes. For reaction
-# networks with between 5000 and 10000 species, we have found that the
+# networks with between ~5000 and ~10000 species, we have found that the
 # optimal number of worker threads is between 1000 and 2000. If you try
 # and use more than that, the worker threads are going to spend lots of
 # time waiting for the dispatcher to get through all of the reactions it
 # is being sent, which slows everything down. Fixing this would require
-# a more complex distrubuted system, but it hasn't been an issue yet for
-# the large reaction networks we have been generating.
+# a more complex distrubuted system, but it hasn't been an issue even
+# for very large reaction networks.
 if len(sys.argv) != 2:
     print("usage: python test.py number_of_threads")
     quit()
@@ -70,7 +70,7 @@ class bcolors:
 
 
 # HiPRGen is organized as a pipeline, where all the relevent data is
-# stored in a sqlite database inbetween phases. For this reason, during
+# stored in a sqlite database between phases. For this reason, during
 # a single run of the full pipeline, it makes sense to store all the
 # relevent files in a single directory. We have two test sets, a lithium
 # set and a magnesium set. Since the lithium test set is older, we shall
@@ -90,25 +90,24 @@ def li_test():
     # folder is the where we store all our intermediate databases
     folder = './scratch/li_test'
 
-    # the initial input to the pipeline is a list of LIBE or MADEIRA
+    # The initial input to the pipeline is a list of LIBE or MADEIRA
     # dataset entries. We provide two examples in the data foloder.
     mol_json = './data/ronald_LIBE.json'
     database_entries = loadfn(mol_json)
-    # the first step of the HiPRGen pipeline is passing the input molecules
-    # through the a species decision tree to discard molecules. This happens
-    # here rather than further complicating the DFT pipelines which generate the
-    # input data for HiPRGen.
+    # The first step of the HiPRGen pipeline is passing the input molecules
+    # through the species decision tree to discard molecules.
     species_decision_tree = li_species_decision_tree
 
 
-    # there is one non local part of species filtering: we consider two
-    # molecules to be equivalent of they have the same covalent bonds
-    # and we choose one such molecule in each coordimer class using the
-    # coodimer weight function.  Since most of our logging later on is
-    # defined in terms of a fixed molecule set, logging for the species
-    # filtering phase is messy, so ignore the species_report argument for
-    # now. The second argument is where we store a pickle of the
-    # filtered molecule entries for use in later phases.
+    # There is one non-local part of species filtering: we consider two
+    # molecules to be equivalent if they have the same total charge,
+    # composition, and covalent bonds, even if they have different metal
+    # coordination, and we choose one such molecule in each "coordimer"
+    # class using the coodimer weight function.  Since most of our logging
+    # later on is defined in terms of a fixed molecule set, logging for
+    # the species filtering phase is messy, so ignore the species_report
+    # argument for now. The second argument is where we store a pickle of
+    # the filtered molecule entries for use in later phases.
 
     mol_entries = species_filter(
         database_entries,
@@ -116,31 +115,27 @@ def li_test():
         species_report=folder + '/unfiltered_species_report.tex',
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
-        # species_logging_decision_tree=[
-        #     (positive_penalty(), Terminal.KEEP),
-        #     (species_default_true(), Terminal.DISCARD)],
-        # generate_unfiltered_mol_pictures=True
     )
 
 
-    # once we have generated our molecule list, we generate the bucket database
-    # which is how we break up the reaction filtering amoungst all avaliable workers.
-    # it gets stored in the buckets.sqlite database.
+    # Once we have generated our molecule list, we generate the bucket database
+    # which is how we break up the reaction filtering amongst all avaliable workers.
+    # It gets stored in the buckets.sqlite database.
     bucket(mol_entries, folder + '/buckets.sqlite')
 
 
-    # reaction filtering is paralellized using MPI, so we need to spawn
-    # an MPI instance to run it. That is why we can't just start
+    # Reaction filtering is paralellized using MPI, so we need to spawn
+    # an MPI instance to run it. This is why we can't just start
     # reaction filtering by calling a python function. We pass the
-    # reaction decision tree, the logging decision tree and the electron
+    # reaction decision tree, the logging decision tree, and the electron
     # free energy as strings across this barrier. Every possible
     # reaction gets passed through both the reaction decision tree and
-    # the logging decision tree.  if a reaction passes the reaction
-    # decision tree, it gets written to the network.  if a reaction
+    # the logging decision tree. If a reaction passes the reaction
+    # decision tree, it gets written to the network. If a reaction
     # passes the logging decision tree, it gets logged to the reaction
     # report along with what happened to it in reaction_decision_tree.
 
-    # the reaction decision trees are constructed in
+    # The reaction decision trees are constructed in
     # HiPRGen.reaction_questions
 
     params = {
@@ -162,8 +157,8 @@ def li_test():
     )
 
 
-    # the dispatcher and worker payloads are passed through the MPI barrier
-    # as json blobs dispatcher_payload and worker_payload
+    # The dispatcher and worker payloads are passed through the MPI barrier
+    # as JSON blobs dispatcher_payload and worker_payload
     dumpfn(dispatcher_payload, folder + '/dispatcher_payload.json')
     dumpfn(worker_payload, folder + '/worker_payload.json')
 
@@ -181,10 +176,10 @@ def li_test():
         ]
     )
 
-    # after we have generated the mol_entries, we refer to molecules by
-    # their index. The function find_mol_entry_from_xyz_and_charge is able
-    # to find a mol entry just from the xyz positions of its atoms, although
-    # it isn't 100% reliable.
+    # After we have generated the mol_entries, we refer to molecules by
+    # their index. The function find_mol_entry_from_xyz_and_charge can
+    # help find the indices of specific species to be used in the initial
+    # condition for propagating trajectories and/or trajectory analysis.
     Li_plus_id = find_mol_entry_from_xyz_and_charge(
         mol_entries,
         './xyz_files/Li.xyz',
@@ -201,23 +196,24 @@ def li_test():
         0)
 
 
-    # after generating a reaction network, it is stored in rn.sqlite. We want
-    # to use Monte Carlo simulation to better understand the network, and for that
-    # we need to insert an initial condition.
+    # After generating a reaction network, it is stored in rn.sqlite. We 
+    # use Monte Carlo simulation to interrogate the network, and for that
+    # we need to define an initial condition.
     initial_state = {
         Li_plus_id : 30,
         EC_id : 30
     }
 
-    # the initial state and trajectories (after simulation) are stored in
-    # a seperate database, in this case called initial_state.sqlite.
-    # This facilitates running multiple simulations of the same network
-    # with different initial conditions at the same time.
+    # The initial state and the trajectories (after simulation) are stored in
+    # a seperate database from the network, here called initial_state.sqlite.
+    # This facilitates running multiple independent simulations of the same
+    # network with different initial conditions at the same time, if desired.
     insert_initial_state(initial_state, mol_entries, folder + '/initial_state.sqlite')
 
 
-    # GMC is a high performance reaction network monte carlo simulator using the
-    # gillespie algorithm: https://github.com/BlauGroup/RNMC
+    # GMC is a high performance reaction network Monte Carlo simulator using the
+    # Gillespie algorithm: https://github.com/BlauGroup/RNMC. Here we run 1000
+    # trajectories each of 200 steps.
     subprocess.run([
         'GMC',
         '--reaction_database=' + folder + '/rn.sqlite',
@@ -229,7 +225,7 @@ def li_test():
         '--dependency_threshold=1'
     ])
 
-    # the network loader builds a python object around a reaction network
+    # The network loader builds a python object around a reaction network
     # and the molecules to make it easier to use them.
     network_loader = NetworkLoader(
         folder + '/rn.sqlite',
@@ -243,46 +239,77 @@ def li_test():
 
 
     # HiPRGen has analysis tools to understand what happened in our simulation.
-    # the output files are written into the same folder as where the reaction
+    # The output files are written into the same folder in which the reaction
     # network is stored.
 
-    # this report is empty, but we use it to generate the molecule pictures.
-    # this is an expensive operation, so we only want do do it once.
+    # This report is empty, but we use it to generate the molecule pictures.
+    # This is an expensive operation, so we only want do do it once.
     report_generator = ReportGenerator(
         network_loader.mol_entries,
         folder + '/dummy.tex',
         rebuild_mol_pictures=True)
+    
 
+    # The tally report shows reactions sorted by the number of times fired.
     reaction_tally_report(
         network_loader,
         folder + '/reaction_tally.tex'
     )
+    # Run `pdflatex reaction_tally.tex` to generate the tally report PDF.
+    
+    
+    # The species report shows every specie in the network and their ID.
+    species_report(network_loader, folder + '/species_report.tex')
+    # Run `pdflatex species_report.tex` to generate the species report PDF.
+    
 
-    # pathfinding is the main goal of HiPRGen / GMC.
-    # run pdflatex LEDC_pathways.tex to see all the ways that LEDC was
-    # produced in the simulations of our lithium test network. Note that this
-    # network has ~5000 reactions. Our production networks have
-    # between 50-100 million reactions.
-
-    redox_report(network_loader, folder + '/redox_report.tex', params)
-
+    # Pathfinding is a central goal of HiPRGen / GMC. See mc_analysis.py for
+    # further documentation of the Pathfinding class.
     pathfinding = Pathfinding(network_loader)
+    
+    
+    # The pathway report shows all the ways that a target species was
+    # produced in the simulation trajectories, where each simulation only
+    # contributes the shortest path responsible for the first formation
+    # of the target species to the report. The report can be sorted by
+    # pathway frequency, but instead here we sort by pathway cost. Note
+    # that the test network has ~5000 reactions while production networks
+    # have between 50-100 million reactions.
     generate_pathway_report(
         pathfinding,
         LEDC_id,
         folder + '/LEDC_pathways.tex',
         sort_by_frequency=False
     )
-
-
-    species_report(network_loader, folder + '/species_report.tex')
-
-
+    # Run `pdflatex LEDC_pathways.tex` to generater the LEDC pathway
+    # report.
+    
+    
+    # The simulation replayer sweeps through all trajectories in order
+    # to extract additional information that is used for consumption
+    # reports and sink reports.
     simulation_replayer = SimulationReplayer(network_loader)
-    sink_report(simulation_replayer, folder + '/sink_report.tex')
+    
+    
+    # The consumption report shows reactions which consumed a target
+    # species, sorted by the number of times the reaction fired.
     consumption_report(simulation_replayer,
                        LEDC_id,
                        folder + '/LEDC_consumption_report.tex')
+    # Run `pdflatex LEDC_consumption_report.tex` to generate the LEDC
+    # consumption report.
+    
+    
+    # The sink report shows species which have a production to
+    # consumption ratio of greater than 3/2 and which have an expected
+    # value above 0.1. These are two of the three heuristic criteria
+    # that we use to identify network products. The third criteria is
+    # that each network product must have a shortest path with cost
+    # less than 10. This can be checked by generating pathway reports
+    # to each species shown in the sink report.
+    sink_report(simulation_replayer, folder + '/sink_report.tex')
+    # Run `pdflatex sink_report.tex` to generater the sink report PDF.
+    
 
 
     tests_passed = True
