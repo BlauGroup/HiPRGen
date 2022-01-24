@@ -69,12 +69,13 @@
       defaultPackage = {
         x86_64-linux = HiPRGen "x86_64-linux";
         x86_64-darwin = HiPRGen "x86_64-darwin";
+        aarch64-darwin = HiPRGen "aarch64-darwin";
       };
 
       checks = {
         x86_64-linux.tests = HiPRGen "x86_64-linux";
         x86_64-darwin.tests = HiPRGen "x86_64-darwin";
-
+        aarch64-darwin = HiPRGen "aarch64-darwin";
       };
     };
 
