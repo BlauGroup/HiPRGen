@@ -10,7 +10,7 @@ The whole process looks like this:
 ```
 # this first step requires sudo to create the directory /nix as root.
 # run the nixos install script and follow the prompts
-# on linux, uninstalling nix is fairly straightforward. Consult your prefered SE
+# on linux, uninstalling nix is fairly straightforward. Consult your preferred SE
 # on macos, it is a little more complex.
 # see https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
 
