@@ -235,6 +235,7 @@ class fix_hydrogen_bonding(MSONable):
 
         return False
 
+
 class bad_metal_coordination(MSONable):
     def __init__(self):
         pass
@@ -294,6 +295,8 @@ class set_solvation_free_energy(MSONable):
                             mol.partial_charges_resp[j] < 0 or
                             mol.partial_charges_mulliken[j] < 0 or
                             mol.partial_charges_nbo[j] < 0)):
+                        if not mol.graph.has_edge(i,j):
+                            mol.graph.add_edge(i,j)
                         coordination_partners.append(j)
 
             number_of_coordination_bonds = len(coordination_partners)
