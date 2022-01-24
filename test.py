@@ -255,12 +255,14 @@ def li_test():
         network_loader,
         folder + '/reaction_tally.tex'
     )
-    # Run `pdflatex reaction_tally.tex` to generate the tally report PDF.
+    # Run `pdflatex reaction_tally.tex` in `scratch/li_test` to generate
+    # the tally report PDF.
     
     
-    # The species report shows every specie in the network and their ID.
+    # The species report shows every specie in the network and their IDs.
     species_report(network_loader, folder + '/species_report.tex')
-    # Run `pdflatex species_report.tex` to generate the species report PDF.
+    # Run `pdflatex species_report.tex` in `scratch/li_test` to generate
+    # the species report PDF.
     
 
     # Pathfinding is a central goal of HiPRGen / GMC. See mc_analysis.py for
@@ -281,8 +283,8 @@ def li_test():
         folder + '/LEDC_pathways.tex',
         sort_by_frequency=False
     )
-    # Run `pdflatex LEDC_pathways.tex` to generater the LEDC pathway
-    # report.
+    # Run `pdflatex LEDC_pathways.tex` in `scratch/li_test` to generate
+    # the LEDC pathway report PDF.
     
     
     # The simulation replayer sweeps through all trajectories in order
@@ -296,8 +298,8 @@ def li_test():
     consumption_report(simulation_replayer,
                        LEDC_id,
                        folder + '/LEDC_consumption_report.tex')
-    # Run `pdflatex LEDC_consumption_report.tex` to generate the LEDC
-    # consumption report.
+    # Run `pdflatex LEDC_consumption_report.tex` in `scratch/li_test`
+    # to generate the LEDC consumption report PDF.
     
     
     # The sink report shows species which have a production to
@@ -312,7 +314,8 @@ def li_test():
     # have sufficiently low-cost paths to pass the third criteria and
     # thus to be considered products of the test network used here.
     sink_report(simulation_replayer, folder + '/sink_report.tex')
-    # Run `pdflatex sink_report.tex` to generater the sink report PDF.
+    # Run `pdflatex sink_report.tex` in `scratch/li_test` to generate
+    # the sink report PDF.
     
 
 
