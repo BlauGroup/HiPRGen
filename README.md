@@ -10,6 +10,10 @@ The whole process looks like this:
 ```
 # this first step requires sudo to create the directory /nix as root.
 # run the nixos install script and follow the prompts
+# on linux, uninstalling nix is fairly straightforward. Consult your prefered SE
+# on macos, it is a little more complex.
+# see https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
+
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
 # if you have an M1 mac, you also need to force nix to use x86 binaries
@@ -21,6 +25,7 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 
 
 # close your existing terminal and open a new one
+
 git clone https://github.com/BlauGroup/HiPRGen
 cd HiPRGen
 nix-shell
