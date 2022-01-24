@@ -14,6 +14,11 @@ The whole process looks like this:
 ```
 # this first step requires sudo to create the directory as root /nix with permissions 755.
 sh <(curl -L https://nixos.org/nix/install) --daemon
+
+# close your existing terminal and open a new one
+
+
+mkdir -p ~/.config/nix
 echo "experimental-features = nix-command flakes" > ~/.config/nix/nix.conf
 git clone https://github.com/BlauGroup/HiPRGen
 cd HiPRGen
