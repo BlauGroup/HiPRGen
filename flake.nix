@@ -49,7 +49,6 @@
                     ps.mpi4py
                     ps.pycairo
                     (if installHiPRGen then (HiPRGen systemString) else null)
-                    ps.jupyterlab
                   ]))
 
             texlive.combined.scheme-small
