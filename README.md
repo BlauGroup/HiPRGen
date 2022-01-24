@@ -4,7 +4,7 @@ HiPRGen is a python module for constructing reaction networks by running hundred
 
 ### Installation
 
-HiPRGen depends on `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. In our experience, the conda version of MPI does not work consistently, so we use [nix package manager](https://nixos.org/) to get HiPRGen running on a wide range of systems. Instructions for installing nix can be found [here](https://nixos.org/download.html).
+HiPRGen depends on `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. In our experience, the conda version of MPI does not work consistently, so we use the [nix package manager](https://nixos.org/) to get HiPRGen running on a wide range of systems. Instructions for installing nix can be found [here](https://nixos.org/download.html).
 
 The whole process looks like this:
 ```
