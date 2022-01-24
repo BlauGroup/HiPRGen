@@ -12,8 +12,8 @@ The whole process looks like this:
 # run the nixos install script and follow the prompts
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
-# if you have an M1 mac, you also need to force nix to use x86 emulation mode
-# some of our dependencies don't have native arm versions.
+# if you have an M1 mac, you also need to force nix to use x86 binaries
+# some of our dependencies don't have native arm binaries.
 # uncomment the following two lines if you have an M1 mac.
 
 # mkdir -p ~/.config/nix
