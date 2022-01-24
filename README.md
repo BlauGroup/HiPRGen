@@ -1,6 +1,6 @@
 <img src="./logo.png">
 
-HiPRGen is a python module for constructing reaction networks by running hundreds of billions of reactions through a decision tree. HiPRGen is built on top of [MPI4py](https://mpi4py.readthedocs.io/en/stable/) which facilitates multi-node parallelism.
+HiPRGen (**Hi**gh **P**erformance **R**eaction **Gen**eration) is a python module for constructing reaction networks via exhaustive reaction enumeration and filtering decision trees with the capacity to be applied to systems with hundreds of billions of possible reactions. HiPRGen is built on top of [MPI4py](https://mpi4py.readthedocs.io/en/stable/) which facilitates multi-node parallelism.
 
 ### Installation
 
