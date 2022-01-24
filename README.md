@@ -19,7 +19,7 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 
 # If you have an M1 Mac, you also need to force nix to use x86 binaries
 #    since some of our dependencies don't have native arm binaries.
-# Uncomment the following two lines if you have an M1 Mac:
+# Uncomment and run the following two lines if you have an M1 Mac:
 
 # mkdir -p ~/.config/nix
 # echo "system = x86_64-darwin" > ~/.config/nix/nix.conf
