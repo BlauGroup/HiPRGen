@@ -10,9 +10,9 @@ The whole process looks like this:
 ```
 # The first step requires sudo to create the directory /nix as root.
 # Run the NixOS install script below and follow the prompts.
-# FYI: On Linux, instructions for uninstalling nix can be found with a quick
-#      web search. On MacOS, uninstalling can be accompished with this script:
-#      https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
+# Note: On Linux, instructions for uninstalling nix can be found with a quick
+#       web search. On MacOS, uninstalling can be accompished with this script:
+#       https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
 
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
@@ -36,7 +36,7 @@ nix-shell
 
 Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads, though you could use as many threads as your machine allows to speed up the execution. Running the tests will populate working directories in `scratch`. Note that `test.py` is heavily commented to explain how to use HiPRGen.
 
-Once the tests have finished, you can run `python -i repl.py` and inspect the `network_loader` object, which contains all of the data associated with the test Lithium / Ethylene Carbonate network after running 1000 trajectories. Additionally, HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflatex LEDC_pathways.tex` to generate a PDF of the top pathways to LEDC in the test Li / EC network or run `pdflatex sink_report.tex` to generate a PDF of the test network products. Explanation of other types of reports and the commands to generate them are given in `test.py`.
+Once the tests have finished, you can run `python -i repl.py` and inspect the `network_loader` object, which contains all of the data associated with the test Lithium / Ethylene Carbonate network after running 1000 trajectories. Additionally, HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflatex LEDC_pathways.tex` to generate a PDF of the top pathways to Lithium Ethylene Dicarbonate (LEDC) in the test Lithium / Ethylene Carbonate network. Explanation of other types of reports and the commands to generate them are given in `test.py`.
 
 
 ### Design
