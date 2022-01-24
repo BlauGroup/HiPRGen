@@ -6,23 +6,24 @@ HiPRGen is a python module for constructing reaction networks by running hundred
 
 The most consistent way to get HiPRGen running (especially on macos, where the conda version of MPI doesn't work consistently) is using the [nix package manager](https://nixos.org/). Instructions for installing nix can be found [here](https://nixos.org/download.html). HiPRGen requires nix version >= 2.4. If you have an older version installed, upgrade instructions can be found [here](https://nixos.org/manual/nix/unstable/installation/upgrading.html).
 
-HiPRGen uses [nix flakes](https://www.tweag.io/blog/2020-05-25-flakes/) which need to be enabled by adding `experimental-features = nix-command flakes` to the file `~/.config/nix/nix.conf`. Once nix is installed, running `nix develop` in the HiPRGen directory will launch a shell in which HiPRen can be used.
-
-If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. Create a conda environment where these are installed and then run `pip install -e .` from the HiPRGen directory. Again, on macos, conda and MPI don't work well together.
+If you would prefer to use conda, the dependencies are `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. Create a conda environment where these are installed and then run `pip install -e .` from the HiPRGen directory. Again, in our experience, the conda version of MPI does not work well.
 
 The whole process looks like this:
 ```
 # this first step requires sudo to create the directory as root /nix with permissions 755.
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
+## if you have an M1 mac, you also need to force nix to use x86 emulation mode
+## some of our dependencies don't have native arm versions.
+## uncomment the following lines if you have an M1 mac.
+# mkdir -p ~/.config/nix
+# echo "system = x86_64-darwin" > ~/.config/nix/nix.conf
+
+
 # close your existing terminal and open a new one
-
-
-mkdir -p ~/.config/nix
-echo "experimental-features = nix-command flakes" > ~/.config/nix/nix.conf
 git clone https://github.com/BlauGroup/HiPRGen
 cd HiPRGen
-nix develop
+nix-shell
 ```
 
 ### Tests
