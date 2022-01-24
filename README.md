@@ -8,7 +8,7 @@ HiPRGen depends on `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`
 
 The whole process looks like this:
 ```
-# this first step requires sudo to create the directory as root /nix with permissions 755.
+# this first step requires sudo to create the directory /nix as root.
 # run the nixos install script and follow the prompts
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
