@@ -35,7 +35,7 @@ nix-shell
 
 Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads (you should use as many as your machine has). The working directories for the tests are in `scratch`. After the tests have finished, run `python -i repl.py` and inspect the `network_loader` object. This is the test Lithium / Ethylene Carbonate network. `test.py` is heavily commented to explain how to use HiPRGen.
 
-HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflates LEDC_pathways.tex` to generate a PDF of the top pathways to LEDC in the Lithium / Ethylene Carbonate network.
+HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflatex LEDC_pathways.tex` to generate a PDF of the top pathways to LEDC in the Lithium / Ethylene Carbonate network.
 
 
 ### Design
