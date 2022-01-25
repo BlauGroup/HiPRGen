@@ -4,7 +4,7 @@ HiPRGen (**Hi**_gh_ **P**_erformance_ **R**_eaction_ **Gen**_eration_) is a pyth
 
 ### Installation
 
-HiPRGen depends on `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. In our experience, the Conda version of MPI4py does not work consistently, so we use the [nix package manager](https://nixos.org/) to get HiPRGen running on a wide range of systems. Instructions for installing nix can be found [here](https://nixos.org/download.html).
+HiPRGen depends on `pymatgen`, `openbabel`, `pygraphviz`, `pycairo` and `mpi4py`. In our experience, the Conda version of MPI4py does not work consistently, so we use the [nix package manager](https://nixos.org/) to get HiPRGen running on a wide range of systems.  Instructions for installing nix can be found [here](https://nixos.org/download.html).
 
 The whole process looks like this:
 ```
@@ -31,10 +31,19 @@ cd HiPRGen
 nix-shell
 ```
 
+HiPRGen is supported for MacOS and Linux and has been tested on MacOS 11.6 and 12.0.1 as well as Ubuntu 21.10. Installation should take less than five minutes.
+
 
 ### Tests
 
-Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads, though you could use as many threads as your machine allows to speed up the execution. Running the tests will populate working directories in `scratch`. Note that `test.py` is heavily commented to explain how to use HiPRGen.
+Once you are in an environment where HiPRGen is installed, the tests can be run with `python test.py 4`. This will run the tests using 4 threads, though you could use as many threads as your machine allows to speed up the execution. Running the tests will populate working directories in `scratch`. Note that `test.py` is heavily commented to explain how to use HiPRGen. With at least 4 threads, the tests should take less than five minutes to run. Along with a variety of other information, the following lines will be printed to standard output to confirm that the tests have passed:
+
+```
+mg_test: correct number of species
+mg_test: correct number of reactions
+li_test: correct number of species
+li_test: correct number of reactions
+```
 
 Once the tests have finished, you can run `python -i repl.py` and inspect the `network_loader` object, which contains all of the data associated with the test Lithium / Ethylene Carbonate network after running 1000 trajectories. Additionally, HiPRGen has a report generation system for visualizing results. For example, in `scratch/li_test`, run `pdflatex LEDC_pathways.tex` to generate a PDF of the top pathways to Lithium Ethylene Dicarbonate (LEDC) in the test Lithium / Ethylene Carbonate network. Explanation of other types of reports and the commands to generate them are given in `test.py`.
 
