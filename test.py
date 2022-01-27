@@ -196,7 +196,7 @@ def li_test():
         0)
 
 
-    # After generating a reaction network, it is stored in rn.sqlite. We 
+    # After generating a reaction network, it is stored in rn.sqlite. We
     # use Monte Carlo simulation to interrogate the network, and for that
     # we need to define an initial condition.
     initial_state = {
@@ -248,7 +248,7 @@ def li_test():
         network_loader.mol_entries,
         folder + '/dummy.tex',
         rebuild_mol_pictures=True)
-    
+
 
     # The tally report shows reactions sorted by the number of times fired.
     reaction_tally_report(
@@ -257,19 +257,19 @@ def li_test():
     )
     # Run `pdflatex reaction_tally.tex` in `scratch/li_test` to generate
     # the tally report PDF.
-    
-    
+
+
     # The species report shows every specie in the network and their IDs.
     species_report(network_loader, folder + '/species_report.tex')
     # Run `pdflatex species_report.tex` in `scratch/li_test` to generate
     # the species report PDF.
-    
+
 
     # Pathfinding is a central goal of HiPRGen / GMC. See mc_analysis.py for
     # further documentation of the Pathfinding class.
     pathfinding = Pathfinding(network_loader)
-    
-    
+
+
     # The pathway report shows all the ways that a target species was
     # produced in the simulation trajectories, where each simulation only
     # contributes the shortest path responsible for the first formation
@@ -285,14 +285,14 @@ def li_test():
     )
     # Run `pdflatex LEDC_pathways.tex` in `scratch/li_test` to generate
     # the LEDC pathway report PDF.
-    
-    
+
+
     # The simulation replayer sweeps through all trajectories in order
     # to extract additional information that is used for consumption
     # reports and sink reports.
     simulation_replayer = SimulationReplayer(network_loader)
-    
-    
+
+
     # The consumption report shows reactions which consumed a target
     # species, sorted by the number of times the reaction fired.
     consumption_report(simulation_replayer,
@@ -300,8 +300,8 @@ def li_test():
                        folder + '/LEDC_consumption_report.tex')
     # Run `pdflatex LEDC_consumption_report.tex` in `scratch/li_test`
     # to generate the LEDC consumption report PDF.
-    
-    
+
+
     # The sink report shows species which have a production to
     # consumption ratio of greater than 3/2 and which have an expected
     # value above 0.1. These are two of the three heuristic criteria
@@ -316,7 +316,7 @@ def li_test():
     sink_report(simulation_replayer, folder + '/sink_report.tex')
     # Run `pdflatex sink_report.tex` in `scratch/li_test` to generate
     # the sink report PDF.
-    
+
 
 
     tests_passed = True
@@ -517,4 +517,3 @@ tests = [
 for test in tests:
     if not test():
         exit(1)
-
