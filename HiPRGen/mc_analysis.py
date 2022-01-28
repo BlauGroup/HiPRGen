@@ -387,6 +387,41 @@ def redox_report(
     report_generator.finished()
 
 
+
+def export_tally_to_json(network_loader, path):
+    reaction_tally = {}
+    reactions = {}
+    for seed in network_loader.trajectories:
+        for step in network_loader.trajectories[seed]:
+            reaction_id = network_loader.trajectories[seed][step][0]
+
+            db_reaction = network_loader.index_to_reaction(reaction_id)
+            json_reactants = [ network_loader.mol_entries[i].entry_id
+                               for i in db_reaction['reactants'] if i != -1]
+            json_products = [ network_loader.mol_entries[i].entry_id
+                              for i in db_reaction['products'] if i != -1]
+            json_reaction = {
+                'reactants' : json_reactants,
+                'products' : json_products
+            }
+
+            if reaction_id not in reactions:
+                reactions[reaction_id] = json_reaction
+
+
+            if reaction_id in reaction_tally:
+                reaction_tally[reaction_id] += 1
+            else:
+                reaction_tally[reaction_id] = 1
+
+    dumpfn({
+        'pathways' : reaction_tally,
+        'reactions' : reactions}, path)
+
+
+
+
+
 def reaction_tally_report(
         network_loader,
         reaction_tally_report_path,
@@ -636,6 +671,8 @@ class Pathfinding:
             reaction = self.network_loader.index_to_reaction(reaction_index)
             weight += default_cost(reaction["dG"])
         return weight
+
+
 
 def export_pathways_to_json(pathfinding, species_id, path):
     pathways = pathfinding.compute_pathways(species_id)
