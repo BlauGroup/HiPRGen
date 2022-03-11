@@ -13,6 +13,7 @@
   outputs = { self, nixpkgs, RNMC, flake-compat }:
 
     let
+
       HiPRGen = systemString:
         with import nixpkgs { system = systemString; };
         with python38Packages;
@@ -40,17 +41,14 @@
       genericDevShell = systemString: installHiPRGen:
         with import nixpkgs { system = systemString; };
         mkShell {
-          buildInputs = [
-            (python38.withPackages (
-              ps: [ ps.pymatgen
-                    ps.monty
-                    ps.openbabel-bindings
-                    ps.pygraphviz
-                    ps.mpi4py
-                    ps.pycairo
-                    (if installHiPRGen then (HiPRGen systemString) else null)
-                  ]))
-
+          buildInputs = with python38Packages; [
+            pymatgen
+            monty
+            openbabel-bindings
+            pygraphviz
+            mpi4py
+            pycairo
+            (if installHiPRGen then (HiPRGen systemString) else null)
             texlive.combined.scheme-small
             mpi
             (sqlite.override { interactive = true; })
