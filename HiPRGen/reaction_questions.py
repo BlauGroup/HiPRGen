@@ -707,12 +707,12 @@ default_reaction_decision_tree = [
         (too_many_reactants_or_products(), Terminal.DISCARD),
         (dcharge_too_large(), Terminal.DISCARD),
         (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-        (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+        (dG_above_threshold(0.2, "free_energy", 0.0), Terminal.DISCARD),
         (reaction_default_true(), Terminal.KEEP)
     ]),
 
 
-    (dG_above_threshold(0.0, "solvation_free_energy", 0.0), Terminal.DISCARD),
+    (dG_above_threshold(0.2, "free_energy", 0.0), Terminal.DISCARD),
 
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
 
