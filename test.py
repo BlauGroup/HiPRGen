@@ -164,7 +164,7 @@ def li_test():
 
     subprocess.run(
         [
-            'mpiexec',
+            'mpirun',
             '--use-hwthread-cpus',
             '-n',
             number_of_threads,
