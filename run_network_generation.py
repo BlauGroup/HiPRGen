@@ -2,15 +2,6 @@ import sys
 import pickle
 from mpi4py import MPI
 from monty.serialization import loadfn
-import multiprocessing as mp
-
-
-# can't use fork system calls with older versions of MPI.
-# somewhere either inside the python pickle library or the python sqlite library
-# multiprocessing is used, which by default will fork.
-# to avoid possible memory corruption, we force python to use spawn in these instances
-mp.set_start_method('spawn')
-
 
 from HiPRGen.reaction_filter import (
     dispatcher,
