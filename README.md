@@ -11,13 +11,13 @@ The whole process looks like this:
 # The first step requires sudo to create the directory /nix as root.
 # Run the NixOS install script below and follow the prompts.
 # Note: On Linux, instructions for uninstalling nix can be found with a quick
-#       web search. On MacOS, uninstalling can be accompished with this script:
-#       https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
+# web search. On MacOS, uninstalling can be accompished with this script:
+# https://gist.github.com/expelledboy/c00aebb004b178cf78b2c9b344526ff6
 
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
 # If you have an M1 Mac, you also need to force nix to use x86 binaries
-#    since some of our dependencies don't have native arm binaries.
+# since some of our dependencies don't have native arm binaries.
 # Uncomment and run the following two lines if you have an M1 Mac:
 
 # mkdir -p ~/.config/nix
@@ -33,6 +33,15 @@ nix-shell
 
 HiPRGen is supported for MacOS and Linux and has been tested on MacOS 11.6 and 12.0.1 as well as Ubuntu 21.10. Installation should take less than five minutes.
 
+
+### Running on the LRC cluster
+
+On the LRC cluster, an environment where HiPRGen can be run is set up as follows:
+
+```
+module load python/3.8.2-gcc
+pip3 install --user mpi4py pymatgen
+```
 
 ### Tests
 
