@@ -88,7 +88,7 @@ class spin_multiplicity_filter(MSONable):
         self.threshold = threshold
 
     def __call__(self, mol):
-        if (mol.spin_multiplicity == 2):
+        if (mol.spin_multiplicity == 2) and mol.entry_id != "None":
             num_partial_spins_above_threshold = 0
             for i in range(mol.num_atoms):
                 if mol.partial_spins_nbo[i] > self.threshold:
@@ -201,7 +201,7 @@ class fix_hydrogen_bonding(MSONable):
         pass
 
     def __call__(self, mol):
-        if mol.num_atoms > 1:
+        if mol.num_atoms > 1 and mol.entry_id != "None":
             for i in range(mol.num_atoms):
                 if mol.species[i] == 'H':
 
@@ -355,6 +355,56 @@ class charge_too_big(MSONable):
         else:
             return False
 
+
+
+class C_C_bond(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self,mol):
+        decision = False
+        if mol.num_atoms != 1:
+            for node_num, node_dict in mol.graph.nodes(data=True):
+                if node_dict["specie"] == "C":
+                    c_neighbor_count = 0
+                    neighbor_count = len(list(mol.graph.neighbors(node_num)))
+                    for neighbor_node_num in mol.graph.neighbors(node_num):
+                        if mol.graph.nodes[neighbor_node_num]["specie"] == "C":
+                            c_neighbor_count = c_neighbor_count + 1
+                    if c_neighbor_count == neighbor_count:
+                        decision = True
+        return decision
+
+class O_O_bond(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self,mol):
+        decision = False
+        if mol.num_atoms != 1 and mol.num_atoms != 2 and mol.num_atoms != 3 :
+            for node_num, node_dict in mol.graph.nodes(data=True):
+                if node_dict["specie"] == "O":
+                    o_neighbor_count = 0
+                    neighbor_count = len(list(mol.graph.neighbors(node_num)))
+                    for neighbor_node_num in mol.graph.neighbors(node_num):
+                        if mol.graph.nodes[neighbor_node_num]["specie"] == "O":
+                            o_neighbor_count = o_neighbor_count + 1
+                    if o_neighbor_count == neighbor_count:
+                        decision = True
+
+class rings_3_4(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self,mol):
+        try:
+            cycle = nx.find_cycle(mol.covalent_graph)
+            if len(cycle) == 4 or len(cycle) == 3:
+                return True
+        except nx.exception.NetworkXNoCycle:
+            return False
+
+
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
@@ -372,7 +422,10 @@ li_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (species_default_true(), Terminal.KEEP)
+    (species_default_true(), Terminal.KEEP),
+    (C_C_bond(), Terminal.KEEP),
+    (O_O_bond(), Terminal.KEEP),
+    (rings_3_4(), Terminal.KEEP)
     ]
 
 mg_species_decision_tree = [
