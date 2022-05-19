@@ -18,6 +18,13 @@ sql_get_redox = """
     SELECT * FROM reactions WHERE is_redox = 1;
 """
 
+def sql_get_coord(metal_id):
+    return "SELECT * FROM reactions WHERE (number_of_reactants=2 AND number_of_products=1 AND (reactant_1={0} OR reactant_2={0})) ORDER BY dG DESC;".format(metal_id)
+
+def sql_get_decoord(metal_id):
+    return "SELECT * FROM reactions WHERE (number_of_reactants=1 AND number_of_products=2 AND (product_1={0} OR product_2={0})) ORDER BY dG DESC;".format(metal_id)
+
+
 sql_get_trajectory = """
     SELECT * FROM trajectories;
 """
@@ -25,6 +32,8 @@ sql_get_trajectory = """
 sql_get_initial_state = """
     SELECT * FROM initial_state;
 """
+
+
 
 class NetworkLoader:
 
@@ -67,6 +76,40 @@ class NetworkLoader:
             redox_reactions.append(reaction)
 
         return redox_reactions
+
+
+    def get_all_coordination_reactions(self, metal_id):
+        coordination_reactions = []
+        cur = self.rn_con.cursor()
+        for res in cur.execute(sql_get_coord(metal_id)):
+            reaction = {}
+            reaction['number_of_reactants'] = res[1]
+            reaction['number_of_products'] = res[2]
+            reaction['reactants'] = res[3:5]
+            reaction['products'] = res[5:7]
+            reaction['rate'] = res[7]
+            reaction['dG'] = res[8]
+            reaction['dG_barrier'] = res[9]
+            coordination_reactions.append(reaction)
+
+        return coordination_reactions
+
+    def get_all_decoordination_reactions(self, metal_id):
+        decoordination_reactions = []
+        cur = self.rn_con.cursor()
+        for res in cur.execute(sql_get_decoord(metal_id)):
+            reaction = {}
+            reaction['number_of_reactants'] = res[1]
+            reaction['number_of_products'] = res[2]
+            reaction['reactants'] = res[3:5]
+            reaction['products'] = res[5:7]
+            reaction['rate'] = res[7]
+            reaction['dG'] = res[8]
+            reaction['dG_barrier'] = res[9]
+            decoordination_reactions.append(reaction)
+
+        return decoordination_reactions
+
 
     def get_reactions_in_range(self, lower_bound, upper_bound):
         """

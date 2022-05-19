@@ -388,6 +388,60 @@ def redox_report(
 
 
 
+def coordination_report(
+        network_loader,
+        coordination_report_path,
+        formula,
+        charge
+):
+
+    for m in network_loader.mol_entries:
+        if m.formula == formula and m.charge == charge:
+            metal_id = m.ind
+
+    coordination_reactions = network_loader.get_all_coordination_reactions(metal_id)
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        coordination_report_path,
+        rebuild_mol_pictures=False)
+
+    report_generator.emit_text("coordination report")
+    for reaction in coordination_reactions:
+        report_generator.emit_reaction(reaction)
+
+    report_generator.finished()
+
+
+def decoordination_report(
+        network_loader,
+        decoordination_report_path,
+        formula,
+        charge
+):
+
+    for m in network_loader.mol_entries:
+        if m.formula == formula and m.charge == charge:
+            metal_id = m.ind
+
+    decoordination_reactions = network_loader.get_all_decoordination_reactions(
+        metal_id)
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries,
+        decoordination_report_path,
+        rebuild_mol_pictures=False)
+
+    report_generator.emit_text("decoordination report")
+    for reaction in decoordination_reactions:
+        report_generator.emit_reaction(reaction)
+
+    report_generator.finished()
+
+
+
+
+
 def export_tally_to_json(network_loader, path):
     reaction_tally = {}
     reactions = {}
