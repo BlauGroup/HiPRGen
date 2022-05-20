@@ -184,6 +184,20 @@ class add_single_bond_fragments(MSONable):
 
         return False
 
+class has_covalent_ring(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, mol):
+        # if mol is a metal, mol.covalent_graph is empty
+        if mol.formula in m_formulas:
+            mol.has_covalent_ring = False
+        else:
+            mol.has_covalent_ring = not nx.is_tree(mol.covalent_graph)
+
+        return mol.has_covalent_ring
+
+
 
 class metal_complex(MSONable):
     def __init__(self):
@@ -372,6 +386,7 @@ li_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
+    (has_covalent_ring(), Terminal.KEEP),
     (species_default_true(), Terminal.KEEP)
     ]
 

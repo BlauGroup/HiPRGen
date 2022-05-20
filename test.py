@@ -628,7 +628,7 @@ def flicho_test():
 
 
 tests = [
-    mg_test,
+    # mg_test,
     li_test,
     # flicho_test
 ]
