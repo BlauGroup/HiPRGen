@@ -6,6 +6,7 @@ from functools import partial
 from HiPRGen.constants import li_ec, Terminal, mg_g2, mg_thf, m_formulas, metals
 import numpy as np
 from monty.json import MSONable
+from itertools import combinations
 
 """
 species decision tree:
@@ -195,8 +196,74 @@ class has_covalent_ring(MSONable):
         else:
             mol.has_covalent_ring = not nx.is_tree(mol.covalent_graph)
 
+        if mol.has_covalent_ring:
+            mol.ring_fragment_data = []
+
         return mol.has_covalent_ring
 
+
+class covalent_ring_fragments(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, mol):
+        # maps edge to graph with that edge removed
+        ring_edges = {}
+
+        for edge in mol.covalent_graph.edges:
+            h = copy.deepcopy(mol.covalent_graph)
+            h.remove_edge(*edge)
+            if nx.is_connected(h):
+                ring_edges[edge] = {
+                    'modified_graph' : h,
+                    'node_set' : set([edge[0],edge[1]])
+                }
+
+
+        for ring_edge_1, ring_edge_2 in combinations(ring_edges,2):
+
+            if ring_edges[ring_edge_1]['node_set'].isdisjoint(
+                    ring_edges[ring_edge_2]['node_set']):
+
+
+                potential_edges =  [ (ring_edge_1[0], ring_edge_2[0],0),
+                                     (ring_edge_1[0], ring_edge_2[1],0),
+                                     (ring_edge_1[1], ring_edge_2[0],0),
+                                     (ring_edge_1[1], ring_edge_2[1],0) ]
+
+                one_bond_away = False
+                for ring_edge_3 in ring_edges:
+                    if ring_edge_3 in potential_edges:
+                        one_bond_away = True
+
+                if one_bond_away:
+                    h = copy.deepcopy(ring_edges[ring_edge_1]['modified_graph'])
+                    h.remove_edge(*ring_edge_2)
+                    if nx.is_connected(h):
+                        continue
+                    else:
+                        fragments = []
+                        connected_components = nx.algorithms.components.connected_components(h)
+                        for c in connected_components:
+
+                            subgraph = h.subgraph(c)
+
+                            fragment_hash = weisfeiler_lehman_graph_hash(
+                                subgraph,
+                                node_attr='specie')
+
+
+                            fragments.append(fragment_hash)
+
+                        fragment_complex = FragmentComplex(
+                            len(fragments),
+                            2,
+                            [ring_edge_1[0:2], ring_edge_2[0:2]],
+                            fragments)
+
+                        mol.ring_fragment_data.append(fragment_complex)
+
+        return False
 
 
 class metal_complex(MSONable):
@@ -209,6 +276,7 @@ class metal_complex(MSONable):
             return False
 
         return not nx.is_connected(mol.covalent_graph)
+
 
 class fix_hydrogen_bonding(MSONable):
     def __init__(self):
@@ -386,7 +454,10 @@ li_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (has_covalent_ring(), Terminal.KEEP),
+    (has_covalent_ring(), [
+        (covalent_ring_fragments(), Terminal.KEEP),
+        (species_default_true(), Terminal.KEEP)
+    ]),
     (species_default_true(), Terminal.KEEP)
     ]
 
