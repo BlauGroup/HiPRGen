@@ -25,7 +25,10 @@ from HiPRGen.species_questions import (
     species_default_true
 )
 
-from HiPRGen.reaction_questions import *
+from HiPRGen.reaction_questions import (
+    default_reaction_decision_tree,
+
+)
 
 from HiPRGen.mc_analysis import (
     reaction_tally_report,
@@ -150,10 +153,7 @@ def li_test():
         folder + '/buckets.sqlite',
         default_reaction_decision_tree,
         params,
-        [(single_reactant_with_ring_break_two(), Terminal.KEEP),
-         (single_product_with_ring_form_two(), Terminal.KEEP),
-         (reaction_default_true(), Terminal.DISCARD)
-         ]
+        Terminal.DISCARD
     )
 
 
@@ -628,7 +628,7 @@ def flicho_test():
 
 
 tests = [
-    # mg_test,
+    mg_test,
     li_test,
     # flicho_test
 ]
