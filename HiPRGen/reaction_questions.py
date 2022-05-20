@@ -698,6 +698,56 @@ class concerted_metal_coordination_one_reactant(MSONable):
 
         return False
 
+
+class single_reactant_with_ring_break_two(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "single reactant with a ring, break two"
+
+    def __call__(self, reaction, mols, params):
+        if (reaction["number_of_reactants"] == 1 and
+            reaction["number_of_products"] == 2 and
+            mols[reaction["reactants"][0]].has_covalent_ring):
+
+            reactant = mols[reaction["reactants"][0]]
+            product_1 = mols[reaction["products"][0]]
+            product_2 = mols[reaction["products"][1]]
+            for fragment_complex in reactant.ring_fragment_data:
+                if (set(fragment_complex.fragment_hashes) ==
+                    set([product_1.covalent_hash, product_2.covalent_hash])):
+                    return True
+
+
+        return False
+
+
+class single_product_with_ring_form_two(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "single product with a ring, form two"
+
+    def __call__(self, reaction, mols, params):
+        if (reaction["number_of_reactants"] == 2 and
+            reaction["number_of_products"] == 1 and
+            mols[reaction["products"][0]].has_covalent_ring):
+
+            product = mols[reaction["products"][0]]
+            reactant_1 = mols[reaction["reactants"][0]]
+            reactant_2 = mols[reaction["reactants"][1]]
+            for fragment_complex in product.ring_fragment_data:
+                if (set(fragment_complex.fragment_hashes) ==
+                    set([reactant_1.covalent_hash, reactant_2.covalent_hash])):
+                    return True
+
+
+        return False
+
+
+
 default_reaction_decision_tree = [
 
     (metal_metal_reaction(), Terminal.DISCARD),
@@ -711,8 +761,11 @@ default_reaction_decision_tree = [
         (reaction_default_true(), Terminal.KEEP)
     ]),
 
-
     (dG_above_threshold(0.0, "solvation_free_energy", 0.0), Terminal.DISCARD),
+
+
+    (single_reactant_with_ring_break_two(), Terminal.KEEP),
+    (single_product_with_ring_form_two(), Terminal.KEEP),
 
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
 
@@ -734,6 +787,3 @@ default_reaction_decision_tree = [
 
     (reaction_default_true(), Terminal.DISCARD)
     ]
-
-
-
