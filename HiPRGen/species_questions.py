@@ -454,10 +454,10 @@ li_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (has_covalent_ring(), [
-        (covalent_ring_fragments(), Terminal.KEEP),
-        (species_default_true(), Terminal.KEEP)
-    ]),
+    # (has_covalent_ring(), [
+    #     (covalent_ring_fragments(), Terminal.KEEP),
+    #     (species_default_true(), Terminal.KEEP)
+    # ]),
     (species_default_true(), Terminal.KEEP)
     ]
 
