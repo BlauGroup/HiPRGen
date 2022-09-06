@@ -1,15 +1,12 @@
 from HiPRGen.mol_entry import MoleculeEntry
-from functools import partial
-from itertools import chain
-from monty.serialization import dumpfn
 import pickle
 from HiPRGen.species_questions import run_decision_tree
 from HiPRGen.constants import Terminal
+from HiPRGen.logging import log_message
 import networkx as nx
-from time import localtime, strftime
-from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import networkx.algorithms.isomorphism as iso
 from HiPRGen.report_generator import ReportGenerator
+
 """
 Phase 1: species filtering
 input: a list of dataset entries
@@ -68,12 +65,6 @@ def groupby(equivalence_relation, xs):
             groups.append([x])
 
     return groups
-
-
-def log_message(string):
-    print(
-        '[' + strftime('%H:%M:%S', localtime()) + ']',
-        string)
 
 
 def species_filter(

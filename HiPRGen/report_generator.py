@@ -1,7 +1,7 @@
 import networkx as nx
 from copy import deepcopy
-import os
 from pathlib import Path
+from HiPRGen.logging import log_message
 
 atom_colors = {
     "H": "gray",
@@ -22,9 +22,7 @@ def visualize_molecule_entry(molecule_entry, path):
     visualize a molecule using graphviz and
     output the resulting pdf to path
     """
-
     graph = deepcopy(molecule_entry.graph)
-
 
     nx.set_node_attributes(graph, "filled", "style")
     nx.set_node_attributes(graph, "circle", "shape")
@@ -54,6 +52,7 @@ def visualize_molecule_entry(molecule_entry, path):
         )
 
     agraph.layout()
+    log_message("writing " + path.as_posix())
     agraph.draw(path.as_posix(), format="pdf")
 
 

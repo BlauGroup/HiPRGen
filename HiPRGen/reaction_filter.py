@@ -1,14 +1,11 @@
 from mpi4py import MPI
 from itertools import permutations, product
 from HiPRGen.report_generator import ReportGenerator
+from time import time
+from HiPRGen.logging import log_message
 import sqlite3
-from time import localtime, strftime, time
 from enum import Enum
 from math import floor
-from HiPRGen.reaction_filter_payloads import (
-    DispatcherPayload,
-    WorkerPayload
-)
 
 from HiPRGen.reaction_questions import (
     run_decision_tree
@@ -95,12 +92,6 @@ class WorkerState(Enum):
     INITIALIZING = 0
     RUNNING = 1
     FINISHED = 2
-
-
-def log_message(*args, **kwargs):
-    print(
-        '[' + strftime('%H:%M:%S', localtime()) + ']',
-        *args, **kwargs)
 
 def dispatcher(
         mol_entries,
