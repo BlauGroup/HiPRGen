@@ -626,20 +626,20 @@ def euvl_test():
     folder = "./scratch/euvl_test"
     subprocess.run(["mkdir", folder])
 
-    # mol_json = "./data/euvl_summary_docs.json"
-    mol_json = "./data/ronald_LIBE.json"
+    mol_json = "./data/euvl_summary_docs.json"
+    # mol_json = "./data/ronald_LIBE.json"
     database_entries = loadfn(mol_json)
 
-    # species_decision_tree = nonmetal_species_decision_tree
-    species_decision_tree = li_species_decision_tree
+    species_decision_tree = nonmetal_species_decision_tree
+    # species_decision_tree = li_species_decision_tree
 
     mol_entries = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
-        # coordimer_weight=lambda mol: (mol.free_energy),
-        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
+        coordimer_weight=lambda mol: (mol.free_energy),
+        # coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
     )
@@ -650,8 +650,8 @@ def euvl_test():
 
     params = {
         "temperature": ROOM_TEMP,
-        # "electron_free_energy": 0.0,
-        "electron_free_energy": -1.4,
+        "electron_free_energy": 0.0,
+        # "electron_free_energy": -1.4,
         "electron_species": len(mol_entries),
     }
 
@@ -693,10 +693,11 @@ def euvl_test():
         ]
     )
 
-    # report_generator = ReportGenerator(
-    #     mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
-    # )
+    report_generator = ReportGenerator(
+        mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
+    )
 
+    """
     EC_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/EC.xyz", 0)
 
     initial_state = {EC_id: 30}
@@ -731,6 +732,7 @@ def euvl_test():
 
     # The tally report shows reactions sorted by the number of times fired.
     reaction_tally_report(network_loader, folder + "/reaction_tally.tex")
+    """
 
 
 tests = [
