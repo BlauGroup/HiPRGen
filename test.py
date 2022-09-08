@@ -693,10 +693,6 @@ def euvl_phase1_test():
         ]
     )
 
-    report_generator = ReportGenerator(
-        mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
-    )
-
     tps_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tps.xyz", 1)
     phs_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/phs.xyz", 0)
     tf_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tf.xyz", -1)
