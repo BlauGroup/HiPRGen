@@ -12,19 +12,14 @@ from itertools import permutations, product
 
 
 class FragmentComplex:
-
     def __init__(
-            self,
-            number_of_fragments,
-            number_of_bonds_broken,
-            bonds_broken,
-            fragment_hashes):
+        self, number_of_fragments, number_of_bonds_broken, bonds_broken, fragment_hashes
+    ):
 
         self.number_of_fragments = number_of_fragments
         self.number_of_bonds_broken = number_of_bonds_broken
         self.bonds_broken = bonds_broken
         self.fragment_hashes = fragment_hashes
-
 
 
 class MoleculeEntry:
@@ -54,7 +49,7 @@ class MoleculeEntry:
         electron_affinity,
         ionization_energy,
         spin_multiplicity,
-        partial_spins_nbo
+        partial_spins_nbo,
     ):
         self.energy = energy
         self.enthalpy = enthalpy
@@ -68,7 +63,6 @@ class MoleculeEntry:
 
         self.star_hashes = {}
         self.fragment_data = []
-
 
         if not mol_graph:
             mol_graph = MoleculeGraph.with_local_env_strategy(molecule, OpenBabelNN())
@@ -85,9 +79,7 @@ class MoleculeEntry:
         self.graph = self.mol_graph.graph.to_undirected()
         self.species = [str(s) for s in self.molecule.species]
 
-        self.m_inds = [
-            i for i, x in enumerate(self.species) if x in metals
-        ]
+        self.m_inds = [i for i, x in enumerate(self.species) if x in metals]
 
         # penalty gets used in the non local part of species filtering.
         # certain species filters will increase penalty rather than explicitly filtering
@@ -97,23 +89,17 @@ class MoleculeEntry:
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
 
-
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
         self.num_atoms = len(self.molecule)
 
-        self.atom_locations = [
-            site.coords for site in self.molecule]
-
+        self.atom_locations = [site.coords for site in self.molecule]
 
         self.free_energy = self.get_free_energy()
 
         self.non_metal_atoms = [
-            i for i in range(self.num_atoms)
-            if self.species[i] not in metals]
-
-
-
+            i for i in range(self.num_atoms) if self.species[i] not in metals
+        ]
 
     @classmethod
     def from_dataset_entry(
@@ -154,19 +140,17 @@ class MoleculeEntry:
                 thermo == "rrho_shifted"
                 and doc["thermo"]["shifted_rrho_eV"] is not None
             ):
-                energy = (
-                    doc["thermo"]["shifted_rrho_eV"]["electronic_energy"] * 0.0367493
-                )
-                enthalpy = doc["thermo"]["shifted_rrho_eV"]["total_enthalpy"] * 23.061
-                entropy = doc["thermo"]["shifted_rrho_eV"]["total_entropy"] * 23061
+                energy = doc["thermo"]["shifted_rrho_eV"]["electronic_energy"]
+                enthalpy = doc["thermo"]["shifted_rrho_eV"]["total_enthalpy"]
+                entropy = doc["thermo"]["shifted_rrho_eV"]["total_entropy"]
             elif thermo == "qrrho" and doc["thermo"]["quasi_rrho_eV"] is not None:
-                energy = doc["thermo"]["quasi_rrho_eV"]["electronic_energy"] * 0.0367493
-                enthalpy = doc["thermo"]["quasi_rrho_eV"]["total_enthalpy"] * 23.061
-                entropy = doc["thermo"]["quasi_rrho_eV"]["total_entropy"] * 23061
+                energy = doc["thermo"]["quasi_rrho_eV"]["electronic_energy"]
+                enthalpy = doc["thermo"]["quasi_rrho_eV"]["total_enthalpy"]
+                entropy = doc["thermo"]["quasi_rrho_eV"]["total_entropy"]
             else:
-                energy = doc["thermo"]["raw"]["electronic_energy_Ha"]
-                enthalpy = doc["thermo"]["raw"]["total_enthalpy_kcal/mol"]
-                entropy = doc["thermo"]["raw"]["total_entropy_cal/molK"]
+                energy = doc["thermo"]["raw"]["electronic_energy_Ha"] * 27.21139
+                enthalpy = doc["thermo"]["raw"]["total_enthalpy_kcal/mol"] * 0.0433641
+                entropy = doc["thermo"]["raw"]["total_entropy_cal/molK"] * 0.0000433641
 
             entry_id = doc["molecule_id"]
 
@@ -175,34 +159,31 @@ class MoleculeEntry:
             else:
                 mol_graph = MoleculeGraph.from_dict(doc["molecule_graph"])
 
-            partial_charges_resp = doc['partial_charges']['resp']
-            partial_charges_mulliken = doc['partial_charges']['mulliken']
-            spin_multiplicity = doc['spin_multiplicity']
+            partial_charges_resp = doc["partial_charges"]["resp"]
+            partial_charges_mulliken = doc["partial_charges"]["mulliken"]
+            spin_multiplicity = doc["spin_multiplicity"]
 
-
-            if doc['number_atoms'] == 1:
-                partial_charges_nbo = doc['partial_charges']['mulliken']
-                partial_spins_nbo = doc['partial_spins']['mulliken']
+            if doc["number_atoms"] == 1:
+                partial_charges_nbo = doc["partial_charges"]["mulliken"]
+                partial_spins_nbo = doc["partial_spins"]["mulliken"]
             else:
-                partial_charges_nbo = doc['partial_charges']['nbo']
-                partial_spins_nbo = doc['partial_spins']['nbo']
+                partial_charges_nbo = doc["partial_charges"]["nbo"]
+                partial_spins_nbo = doc["partial_spins"]["nbo"]
 
             electron_affinity_eV = None
             ionization_energy_eV = None
-            if 'redox' in doc:
-                if 'electron_affinity_eV' in doc['redox']:
-                    electron_affinity_eV = doc['redox']['electron_affinity_eV']
+            if "redox" in doc:
+                if "electron_affinity_eV" in doc["redox"]:
+                    electron_affinity_eV = doc["redox"]["electron_affinity_eV"]
 
-                if 'ionization_energy_eV' in doc['redox']:
-                    ionization_energy_eV = doc['redox']['ionization_energy_eV']
+                if "ionization_energy_eV" in doc["redox"]:
+                    ionization_energy_eV = doc["redox"]["ionization_energy_eV"]
 
         except KeyError as e:
             raise Exception(
                 "Unable to construct molecule entry from molecule document; missing "
                 f"attribute {e} in `doc`."
             )
-
-
 
         return cls(
             molecule=molecule,
@@ -217,10 +198,77 @@ class MoleculeEntry:
             electron_affinity=electron_affinity_eV,
             ionization_energy=ionization_energy_eV,
             spin_multiplicity=spin_multiplicity,
-            partial_spins_nbo=partial_spins_nbo
+            partial_spins_nbo=partial_spins_nbo,
         )
 
+    @classmethod
+    def from_mp_doc(cls, doc: Dict):
+        """
+        Construct a MoleculeEntry based on a document generated by emmet for
+            the Materials Project.
 
+        :param doc: A dict representation of an emmet document (SummaryDoc)
+        :return: MoleculeEntry
+        """
+
+        if isinstance(doc["molecule"], Molecule):
+            molecule = doc["molecule"]
+        else:
+            molecule = Molecule.from_dict(doc["molecule"])  # type: ignore
+        energy = doc["electronic_energy"]
+        enthalpy = doc["total_enthalpy"]
+        entropy = doc["total_entropy"]
+        entry_id = doc["molecule_id"]
+        if "nbo" in doc["molecule_graph"]:
+            if isinstance(doc["molecule_graph"]["nbo"], MoleculeGraph):
+                mol_graph = doc["molecule_graph"]["nbo"]
+            else:
+                mol_graph = MoleculeGraph.from_dict(doc["molecule_graph"]["nbo"])
+        else:
+            if isinstance(
+                doc["molecule_graph"]["OpenBabelNN + metal_edge_extender"],
+                MoleculeGraph,
+            ):
+                mol_graph = doc["molecule_graph"]["OpenBabelNN + metal_edge_extender"]
+            else:
+                mol_graph = MoleculeGraph.from_dict(
+                    doc["molecule_graph"]["OpenBabelNN + metal_edge_extender"]
+                )
+        partial_charges_resp = doc["partial_charges"]["resp"]
+        partial_charges_mulliken = doc["partial_charges"]["mulliken"]
+        if "nbo" in doc["partial_charges"]:
+            partial_charges_nbo = doc["partial_charges"]["nbo"]
+        else:
+            partial_charges_nbo = None
+        if doc.get("electron_affinity", None) is None:
+            electron_affinity = 0.0
+        else:
+            electron_affinity = doc["electron_affinity"]
+        if doc.get("ionization_energy", None) is None:
+            ionization_energy = 0.0
+        else:
+            ionization_energy = doc["ionization_energy"]
+        spin_multiplicity = doc["spin_multiplicity"]
+        if int(spin_multiplicity) != 1 and "nbo" in doc["partial_spins"]:
+            partial_spins_nbo = None
+        else:
+            partial_spins_nbo = None
+
+        return cls(
+            molecule=molecule,
+            energy=energy,
+            enthalpy=enthalpy,
+            entropy=entropy,
+            entry_id=entry_id,
+            mol_graph=mol_graph,
+            partial_charges_resp=partial_charges_resp,
+            partial_charges_mulliken=partial_charges_mulliken,
+            partial_charges_nbo=partial_charges_nbo,
+            electron_affinity=electron_affinity,
+            ionization_energy=ionization_energy,
+            spin_multiplicity=spin_multiplicity,
+            partial_spins_nbo=partial_spins_nbo,
+        )
 
     def get_free_energy(self, temperature: float = ROOM_TEMP) -> Optional[float]:
         """
@@ -228,11 +276,7 @@ class MoleculeEntry:
         """
         if self.enthalpy is not None and self.entropy is not None:
             # TODO: fix these hard coded vals
-            return (
-                self.energy * 27.21139
-                + 0.0433641 * self.enthalpy
-                - temperature * self.entropy * 0.0000433641
-            )
+            return self.energy + self.enthalpy - temperature * self.entropy
         else:
             return None
 
@@ -244,9 +288,9 @@ class MoleculeEntry:
         ]
 
         energies = [
-            ("Energy", "Hartree", self.energy),
-            ("Enthalpy", "kcal/mol", self.enthalpy),
-            ("Entropy", "cal/mol.K", self.entropy),
+            ("Energy", "eV", self.energy),
+            ("Enthalpy", "eV", self.enthalpy),
+            ("Entropy", "eV/K", self.entropy),
             ("Free Energy (298.15 K)", "eV", self.get_free_energy()),
         ]
         for name, unit, value in energies:

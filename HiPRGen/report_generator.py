@@ -14,8 +14,10 @@ atom_colors = {
     "Mg": "green",
     "P": "darkorange",
     "S": "yellow",
-    "Cl": "chartreuse"
+    "Cl": "chartreuse",
+    "E": "pink",
 }
+
 
 def visualize_molecule_entry(molecule_entry, path):
     """
@@ -25,20 +27,20 @@ def visualize_molecule_entry(molecule_entry, path):
 
     graph = deepcopy(molecule_entry.graph)
 
-
     nx.set_node_attributes(graph, "filled", "style")
     nx.set_node_attributes(graph, "circle", "shape")
-    nx.set_node_attributes(graph, "0.2", "width")
+    if molecule_entry.species[0] == "E":
+        nx.set_node_attributes(graph, "0.5", "width")
+    else:
+        nx.set_node_attributes(graph, "0.2", "width")
     nx.set_node_attributes(graph, "8.0", "fontsize")
     nx.set_node_attributes(graph, "white", "fontcolor")
     nx.set_node_attributes(graph, "true", "fixedsize")
 
-
     nx.set_node_attributes(
         graph,
-        dict(enumerate([atom_colors[a]
-                        for a in molecule_entry.species])),
-        "color"
+        dict(enumerate([atom_colors[a] for a in molecule_entry.species])),
+        "color",
     )
 
     charge = molecule_entry.charge
@@ -61,33 +63,28 @@ def visualize_molecules(mol_entries, folder):
 
     folder.mkdir()
     for index, molecule_entry in enumerate(mol_entries):
-        visualize_molecule_entry(
-            molecule_entry,
-            folder.joinpath(str(index) + ".pdf"))
-
+        visualize_molecule_entry(molecule_entry, folder.joinpath(str(index) + ".pdf"))
 
 
 class ReportGenerator:
-
     def __init__(
-            self,
-            mol_entries,
-            report_file_path,
-            mol_pictures_folder_name='mol_pictures',
-            rebuild_mol_pictures=True
+        self,
+        mol_entries,
+        report_file_path,
+        mol_pictures_folder_name="mol_pictures",
+        rebuild_mol_pictures=True,
     ):
         self.report_file_path = Path(report_file_path)
         self.mol_pictures_folder_name = mol_pictures_folder_name
         self.mol_pictures_folder = self.report_file_path.parent.joinpath(
-            mol_pictures_folder_name)
-
+            mol_pictures_folder_name
+        )
 
         if rebuild_mol_pictures:
             visualize_molecules(mol_entries, self.mol_pictures_folder)
 
         self.mol_entries = mol_entries
-        self.f = self.report_file_path.open(mode='w')
-
+        self.f = self.report_file_path.open(mode="w")
 
         # write in header
         self.f.write("\\documentclass{article}\n")
@@ -109,26 +106,26 @@ class ReportGenerator:
         self.f.write(
             "\\raisebox{-.5\\height}{"
             + "\\includegraphics[scale=0.2]{"
-            + self.mol_pictures_folder_name + '/'
+            + self.mol_pictures_folder_name
+            + "/"
             + str(species_index)
             + ".pdf}}\n"
         )
 
     def emit_newline(self):
-        self.f.write(
-            "\n\\vspace{1cm}\n")
+        self.f.write("\n\\vspace{1cm}\n")
 
     def emit_newpage(self):
         self.f.write("\\newpage\n\n\n")
 
     def emit_verbatim(self, s):
-        self.f.write('\\begin{verbatim}\n')
+        self.f.write("\\begin{verbatim}\n")
         self.f.write(s)
-        self.f.write('\n')
-        self.f.write('\\end{verbatim}\n')
+        self.f.write("\n")
+        self.f.write("\\end{verbatim}\n")
 
-    def emit_text(self,s):
-        self.f.write('\n\n' + s + '\n\n')
+    def emit_text(self, s):
+        self.f.write("\n\n" + s + "\n\n")
 
     def emit_initial_state(self, initial_state):
         self.emit_text("initial state:")
@@ -139,13 +136,10 @@ class ReportGenerator:
                 self.emit_molecule(species_id)
                 self.emit_newline()
 
-
     def emit_reaction(self, reaction, label=None):
-        reactants_filtered = [i for i in reaction['reactants']
-                              if i != -1]
+        reactants_filtered = [i for i in reaction["reactants"] if i != -1]
 
-        products_filtered = [i for i in reaction['products']
-                             if i != -1]
+        products_filtered = [i for i in reaction["products"] if i != -1]
 
         self.f.write("$$\n")
         if label is not None:
@@ -161,15 +155,16 @@ class ReportGenerator:
 
             self.emit_molecule(reactant_index)
 
-        if 'dG' in reaction:
+        if "dG" in reaction:
             self.f.write(
                 "\\xrightarrow["
-                + ("%.2f" % reaction["dG_barrier"]) +
-                "]{" +
-                ("%.2f" % reaction["dG"]) + "}\n")
+                + ("%.2f" % reaction["dG_barrier"])
+                + "]{"
+                + ("%.2f" % reaction["dG"])
+                + "}\n"
+            )
         else:
-            self.f.write(
-                "\\xrightarrow{}\n")
+            self.f.write("\\xrightarrow{}\n")
 
         first = True
         for product_index in products_filtered:
@@ -184,14 +179,14 @@ class ReportGenerator:
         self.f.write("\n\n\n")
 
     def emit_bond_breakage(self, reaction):
-        if 'reactant_bonds_broken' in reaction:
+        if "reactant_bonds_broken" in reaction:
             self.f.write("reactant bonds broken:")
-            for bond in reaction['reactant_bonds_broken']:
+            for bond in reaction["reactant_bonds_broken"]:
                 self.emit_verbatim(str(bond))
 
-        if 'product_bonds_broken' in reaction:
+        if "product_bonds_broken" in reaction:
             self.f.write("product bonds broken:")
-            for bond in reaction['product_bonds_broken']:
+            for bond in reaction["product_bonds_broken"]:
                 self.emit_verbatim(str(bond))
 
         self.f.write("\n\n\n")

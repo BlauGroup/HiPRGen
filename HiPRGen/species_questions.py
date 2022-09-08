@@ -28,9 +28,8 @@ for non terminal nodes, it is an error if every question returns False. i.e gett
 Once a Terminal node is reached, it tells us whether to keep or discard the species.
 """
 
-def run_decision_tree(mol_entry,
-                      decision_tree,
-                      decision_pathway=None):
+
+def run_decision_tree(mol_entry, decision_tree, decision_pathway=None):
 
     node = decision_tree
 
@@ -45,17 +44,14 @@ def run_decision_tree(mol_entry,
                 if decision_pathway is not None:
                     decision_pathway.append(question)
 
-
                 next_node = new_node
                 break
 
         node = next_node
 
-
     if type(node) == Terminal:
         if decision_pathway is not None:
             decision_pathway.append(node)
-
 
         if node == Terminal.KEEP:
             return True
@@ -68,6 +64,7 @@ def run_decision_tree(mol_entry,
 
 class metal_ion_filter(MSONable):
     "only allow positively charged metal ions"
+
     def __init__(self):
         pass
 
@@ -77,6 +74,7 @@ class metal_ion_filter(MSONable):
         else:
             return False
 
+
 class mol_not_connected(MSONable):
     def __init__(self):
         pass
@@ -84,12 +82,13 @@ class mol_not_connected(MSONable):
     def __call__(self, mol):
         return not nx.is_connected(mol.graph)
 
+
 class spin_multiplicity_filter(MSONable):
     def __init__(self, threshold):
         self.threshold = threshold
 
     def __call__(self, mol):
-        if (mol.spin_multiplicity == 2):
+        if mol.spin_multiplicity == 2:
             num_partial_spins_above_threshold = 0
             for i in range(mol.num_atoms):
                 if mol.partial_spins_nbo[i] > self.threshold:
@@ -99,6 +98,7 @@ class spin_multiplicity_filter(MSONable):
                 mol.penalty += 1
 
         return False
+
 
 class positive_penalty(MSONable):
     def __init__(self):
@@ -110,6 +110,7 @@ class positive_penalty(MSONable):
         else:
             return False
 
+
 class add_star_hashes(MSONable):
     def __init__(self):
         pass
@@ -118,16 +119,15 @@ class add_star_hashes(MSONable):
         for i in range(mol.num_atoms):
             if i not in mol.m_inds:
                 neighborhood = nx.generators.ego.ego_graph(
-                    mol.covalent_graph,
-                    i,
-                    1,
-                    undirected=True)
+                    mol.covalent_graph, i, 1, undirected=True
+                )
 
                 mol.star_hashes[i] = weisfeiler_lehman_graph_hash(
-                    neighborhood,
-                    node_attr='specie')
+                    neighborhood, node_attr="specie"
+                )
 
         return False
+
 
 class add_unbroken_fragment(MSONable):
     def __init__(self):
@@ -137,18 +137,14 @@ class add_unbroken_fragment(MSONable):
         if mol.formula in m_formulas:
             return False
 
-        fragment_complex = FragmentComplex(
-             1,
-             0,
-             [],
-             [mol.covalent_hash])
+        fragment_complex = FragmentComplex(1, 0, [], [mol.covalent_hash])
 
         mol.fragment_data.append(fragment_complex)
 
         return False
 
-class add_single_bond_fragments(MSONable):
 
+class add_single_bond_fragments(MSONable):
     def __init__(self):
         pass
 
@@ -156,8 +152,6 @@ class add_single_bond_fragments(MSONable):
 
         if mol.formula in m_formulas:
             return False
-
-
 
         for edge in mol.covalent_graph.edges:
             fragments = []
@@ -169,21 +163,19 @@ class add_single_bond_fragments(MSONable):
                 subgraph = h.subgraph(c)
 
                 fragment_hash = weisfeiler_lehman_graph_hash(
-                    subgraph,
-                    node_attr='specie')
-
+                    subgraph, node_attr="specie"
+                )
 
                 fragments.append(fragment_hash)
 
             fragment_complex = FragmentComplex(
-                len(fragments),
-                1,
-                [edge[0:2]],
-                fragments)
+                len(fragments), 1, [edge[0:2]], fragments
+            )
 
             mol.fragment_data.append(fragment_complex)
 
         return False
+
 
 class has_covalent_ring(MSONable):
     def __init__(self):
@@ -215,21 +207,22 @@ class covalent_ring_fragments(MSONable):
             h.remove_edge(*edge)
             if nx.is_connected(h):
                 ring_edges[edge] = {
-                    'modified_graph' : h,
-                    'node_set' : set([edge[0],edge[1]])
+                    "modified_graph": h,
+                    "node_set": set([edge[0], edge[1]]),
                 }
 
+        for ring_edge_1, ring_edge_2 in combinations(ring_edges, 2):
 
-        for ring_edge_1, ring_edge_2 in combinations(ring_edges,2):
+            if ring_edges[ring_edge_1]["node_set"].isdisjoint(
+                ring_edges[ring_edge_2]["node_set"]
+            ):
 
-            if ring_edges[ring_edge_1]['node_set'].isdisjoint(
-                    ring_edges[ring_edge_2]['node_set']):
-
-
-                potential_edges =  [ (ring_edge_1[0], ring_edge_2[0],0),
-                                     (ring_edge_1[0], ring_edge_2[1],0),
-                                     (ring_edge_1[1], ring_edge_2[0],0),
-                                     (ring_edge_1[1], ring_edge_2[1],0) ]
+                potential_edges = [
+                    (ring_edge_1[0], ring_edge_2[0], 0),
+                    (ring_edge_1[0], ring_edge_2[1], 0),
+                    (ring_edge_1[1], ring_edge_2[0], 0),
+                    (ring_edge_1[1], ring_edge_2[1], 0),
+                ]
 
                 one_bond_away = False
                 for ring_edge_3 in ring_edges:
@@ -237,21 +230,22 @@ class covalent_ring_fragments(MSONable):
                         one_bond_away = True
 
                 if one_bond_away:
-                    h = copy.deepcopy(ring_edges[ring_edge_1]['modified_graph'])
+                    h = copy.deepcopy(ring_edges[ring_edge_1]["modified_graph"])
                     h.remove_edge(*ring_edge_2)
                     if nx.is_connected(h):
                         continue
                     else:
                         fragments = []
-                        connected_components = nx.algorithms.components.connected_components(h)
+                        connected_components = (
+                            nx.algorithms.components.connected_components(h)
+                        )
                         for c in connected_components:
 
                             subgraph = h.subgraph(c)
 
                             fragment_hash = weisfeiler_lehman_graph_hash(
-                                subgraph,
-                                node_attr='specie')
-
+                                subgraph, node_attr="specie"
+                            )
 
                             fragments.append(fragment_hash)
 
@@ -259,7 +253,8 @@ class covalent_ring_fragments(MSONable):
                             len(fragments),
                             2,
                             [ring_edge_1[0:2], ring_edge_2[0:2]],
-                            fragments)
+                            fragments,
+                        )
 
                         mol.ring_fragment_data.append(fragment_complex)
 
@@ -285,7 +280,7 @@ class fix_hydrogen_bonding(MSONable):
     def __call__(self, mol):
         if mol.num_atoms > 1:
             for i in range(mol.num_atoms):
-                if mol.species[i] == 'H':
+                if mol.species[i] == "H":
 
                     adjacent_atoms = []
 
@@ -297,13 +292,14 @@ class fix_hydrogen_bonding(MSONable):
                             else:
                                 adjacent_atom = bond[0]
 
-                            displacement = (mol.atom_locations[adjacent_atom] -
-                                            mol.atom_locations[i])
+                            displacement = (
+                                mol.atom_locations[adjacent_atom]
+                                - mol.atom_locations[i]
+                            )
 
                             dist = np.inner(displacement, displacement)
 
                             adjacent_atoms.append((adjacent_atom, dist))
-
 
                     closest_atom, _ = min(adjacent_atoms, key=lambda pair: pair[1])
 
@@ -312,8 +308,6 @@ class fix_hydrogen_bonding(MSONable):
                             mol.graph.remove_edge(i, adjacent_atom)
                             if adjacent_atom in mol.covalent_graph:
                                 mol.covalent_graph.remove_edge(i, adjacent_atom)
-
-
 
         return False
 
@@ -326,8 +320,10 @@ class bad_metal_coordination(MSONable):
 
         if mol.formula not in m_formulas:
 
-            if (len(metals.intersection(set(mol.species))) > 0 and
-                mol.number_of_coordination_bonds == 0):
+            if (
+                len(metals.intersection(set(mol.species))) > 0
+                and mol.number_of_coordination_bonds == 0
+            ):
 
                 return True
 
@@ -369,27 +365,26 @@ class set_solvation_free_energy(MSONable):
 
             for j in range(mol.num_atoms):
                 if j != i:
-                    displacement_vector = (
-                        mol.atom_locations[j] -
-                        mol.atom_locations[i])
-                    if (np.inner(displacement_vector, displacement_vector)
-                        < radius ** 2 and (
-                            mol.partial_charges_resp[j] < 0 or
-                            mol.partial_charges_mulliken[j] < 0 or
-                            mol.partial_charges_nbo[j] < 0)):
-                        if not mol.graph.has_edge(i,j):
-                            mol.graph.add_edge(i,j)
+                    displacement_vector = mol.atom_locations[j] - mol.atom_locations[i]
+                    if np.inner(
+                        displacement_vector, displacement_vector
+                    ) < radius**2 and (
+                        mol.partial_charges_resp[j] < 0
+                        or mol.partial_charges_mulliken[j] < 0
+                        or mol.partial_charges_nbo[j] < 0
+                    ):
+                        if not mol.graph.has_edge(i, j):
+                            mol.graph.add_edge(i, j)
                         coordination_partners.append(j)
 
             number_of_coordination_bonds = len(coordination_partners)
             mol.number_of_coordination_bonds += number_of_coordination_bonds
-            correction += self.solvation_env[
-                "solvation_correction"][species_charge] * (
-                self.solvation_env[
-                    "max_number_of_coordination_bonds"][species_charge] -
-                number_of_coordination_bonds)
+            correction += self.solvation_env["solvation_correction"][species_charge] * (
+                self.solvation_env["max_number_of_coordination_bonds"][species_charge]
+                - number_of_coordination_bonds
+            )
 
-        mol.solvation_free_energy =  correction + mol.free_energy
+        mol.solvation_free_energy = correction + mol.free_energy
         return False
 
 
@@ -402,13 +397,11 @@ class species_default_true(MSONable):
 
 
 def compute_graph_hashes(mol):
-    mol.total_hash = weisfeiler_lehman_graph_hash(
-        mol.graph,
-        node_attr='specie')
+    mol.total_hash = weisfeiler_lehman_graph_hash(mol.graph, node_attr="specie")
 
     mol.covalent_hash = weisfeiler_lehman_graph_hash(
-        mol.covalent_graph,
-        node_attr='specie')
+        mol.covalent_graph, node_attr="specie"
+    )
 
     return False
 
@@ -420,11 +413,11 @@ class neutral_metal_filter(MSONable):
     def __call__(self, mol):
 
         for i in mol.m_inds:
-            if (mol.species[i] in metals and
-                mol.partial_charges_nbo[i] < self.cutoff):
+            if mol.species[i] in metals and mol.partial_charges_nbo[i] < self.cutoff:
                 return True
 
         return False
+
 
 class charge_too_big(MSONable):
     def __init__(self):
@@ -436,6 +429,7 @@ class charge_too_big(MSONable):
 
         else:
             return False
+
 
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
@@ -458,8 +452,8 @@ li_species_decision_tree = [
     #     (covalent_ring_fragments(), Terminal.KEEP),
     #     (species_default_true(), Terminal.KEEP)
     # ]),
-    (species_default_true(), Terminal.KEEP)
-    ]
+    (species_default_true(), Terminal.KEEP),
+]
 
 mg_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
@@ -473,6 +467,15 @@ mg_species_decision_tree = [
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
     (add_single_bond_fragments(), Terminal.KEEP),
-    (species_default_true(), Terminal.KEEP)
-    ]
+    (species_default_true(), Terminal.KEEP),
+]
 
+nonmetal_species_decision_tree = [
+    (fix_hydrogen_bonding(), Terminal.KEEP),
+    (set_solvation_free_energy(li_ec), Terminal.KEEP),
+    (compute_graph_hashes, Terminal.KEEP),
+    (add_star_hashes(), Terminal.KEEP),
+    (add_unbroken_fragment(), Terminal.KEEP),
+    (add_single_bond_fragments(), Terminal.KEEP),
+    (species_default_true(), Terminal.KEEP),
+]

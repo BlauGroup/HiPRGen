@@ -10,6 +10,11 @@ from time import localtime, strftime
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import networkx.algorithms.isomorphism as iso
 from HiPRGen.report_generator import ReportGenerator
+from pymatgen.core.periodic_table import DummySpecies
+from pymatgen.core.sites import Site
+from pymatgen.core.structure import Molecule
+from pymatgen.analysis.graphs import MoleculeGraph
+
 """
 Phase 1: species filtering
 input: a list of dataset entries
@@ -20,6 +25,7 @@ species isomorphism filtering:
 
 The input dataset entries will often contain isomorphic molecules. Identifying such isomorphisms doesn't fit into the species decision tree, so we have it as a preprocessing phase.
 """
+
 
 def sort_into_tags(mols):
     isomorphism_buckets = {}
@@ -44,9 +50,8 @@ def really_covalent_isomorphic(mol1, mol2):
     return nx.is_isomorphic(
         mol1.covalent_graph,
         mol2.covalent_graph,
-        node_match = iso.categorical_node_match('specie', None)
+        node_match=iso.categorical_node_match("specie", None),
     )
-
 
 
 def groupby(equivalence_relation, xs):
@@ -71,19 +76,17 @@ def groupby(equivalence_relation, xs):
 
 
 def log_message(string):
-    print(
-        '[' + strftime('%H:%M:%S', localtime()) + ']',
-        string)
+    print("[" + strftime("%H:%M:%S", localtime()) + "]", string)
 
 
 def species_filter(
-        dataset_entries,
-        mol_entries_pickle_location,
-        species_report,
-        species_decision_tree,
-        coordimer_weight,
-        species_logging_decision_tree=Terminal.DISCARD,
-        generate_unfiltered_mol_pictures=False
+    dataset_entries,
+    mol_entries_pickle_location,
+    species_report,
+    species_decision_tree,
+    coordimer_weight,
+    species_logging_decision_tree=Terminal.DISCARD,
+    generate_unfiltered_mol_pictures=False,
 ):
 
     """
@@ -94,17 +97,23 @@ def species_filter(
     log_message("starting species filter")
     log_message("loading molecule entries from json")
 
-    mol_entries_unfiltered = [
-        MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
+    if "has_props" in dataset_entries[0].keys():
+        mol_entries_unfiltered = [MoleculeEntry.from_mp_doc(e) for e in dataset_entries]
+        log_message("MP doc entries passed")
+    else:
+        log_message("dataset entries passed")
+        mol_entries_unfiltered = [
+            MoleculeEntry.from_dataset_entry(e) for e in dataset_entries
+        ]
 
-
+    log_message("found " + str(len(mol_entries_unfiltered)) + " molecule entries")
     log_message("generating unfiltered mol pictures")
 
     report_generator = ReportGenerator(
         mol_entries_unfiltered,
         species_report,
-        mol_pictures_folder_name='mol_pictures_unfiltered',
-        rebuild_mol_pictures=generate_unfiltered_mol_pictures
+        mol_pictures_folder_name="mol_pictures_unfiltered",
+        rebuild_mol_pictures=generate_unfiltered_mol_pictures,
     )
 
     report_generator.emit_text("species report")
@@ -125,30 +134,29 @@ def species_filter(
         if run_decision_tree(mol, species_logging_decision_tree):
 
             report_generator.emit_verbatim(
-                '\n'.join([str(f) for f in decision_pathway]))
+                "\n".join([str(f) for f in decision_pathway])
+            )
 
             report_generator.emit_text("number: " + str(i))
             report_generator.emit_text("entry id: " + mol.entry_id)
-            report_generator.emit_text("uncorrected free energy: " +
-                                       str(mol.free_energy))
+            report_generator.emit_text(
+                "uncorrected free energy: " + str(mol.free_energy)
+            )
 
             report_generator.emit_text(
-                "number of coordination bonds: " +
-                str(mol.number_of_coordination_bonds))
+                "number of coordination bonds: " + str(mol.number_of_coordination_bonds)
+            )
 
             report_generator.emit_text(
-                "corrected free energy: " +
-                str(mol.solvation_free_energy))
+                "corrected free energy: " + str(mol.solvation_free_energy)
+            )
 
-            report_generator.emit_text(
-                "formula: " + mol.formula)
+            report_generator.emit_text("formula: " + mol.formula)
 
             report_generator.emit_molecule(i, include_index=False)
             report_generator.emit_newline()
 
-
     report_generator.finished()
-
 
     # python doesn't have shared memory. That means that every worker during
     # reaction filtering must maintain its own copy of the molecules.
@@ -165,36 +173,60 @@ def species_filter(
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
 
-
     def collapse_isomorphism_group(g):
-        lowest_energy_coordimer = min(g,key=coordimer_weight)
+        lowest_energy_coordimer = min(g, key=coordimer_weight)
         return lowest_energy_coordimer
-
 
     mol_entries = []
 
     for tag_group in sort_into_tags(mol_entries_filtered).values():
         for iso_group in groupby(really_covalent_isomorphic, tag_group):
-            mol_entries.append(
-                collapse_isomorphism_group(iso_group))
-
+            mol_entries.append(collapse_isomorphism_group(iso_group))
 
     log_message("assigning indices")
 
     for i, e in enumerate(mol_entries):
         e.ind = i
 
-
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
     # has frozen set keys, so doesn't seralize well into json format.
     # pickles work better in this setting
-    with open(mol_entries_pickle_location, 'wb') as f:
+    with open(mol_entries_pickle_location, "wb") as f:
         pickle.dump(mol_entries, f)
 
-    log_message("species filtering finished. " +
-                str(len(mol_entries)) +
-                " species")
+    log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 
+    return mol_entries
+
+
+def add_electron_species(
+    mol_entries, mol_entries_pickle_location, electron_free_energy
+):
+    e_site = Site(
+        DummySpecies("E", oxidation_state=None, properties=None), [0.0, 0.0, 0.0]
+    )
+    e_mol = Molecule.from_sites([e_site])
+    e_mol.set_charge_and_spin(-1, 2)
+    e_graph = MoleculeGraph.with_empty_graph(molecule=e_mol)
+    electron_entry = MoleculeEntry(
+        molecule=e_mol,
+        energy=electron_free_energy,
+        enthalpy=0,
+        entropy=0,
+        entry_id=None,
+        mol_graph=e_graph,
+        partial_charges_resp=None,
+        partial_charges_mulliken=None,
+        partial_charges_nbo=None,
+        electron_affinity=None,
+        ionization_energy=None,
+        spin_multiplicity=None,
+        partial_spins_nbo=None,
+    )
+    electron_entry.ind = len(mol_entries)
+    mol_entries.append(electron_entry)
+    with open(mol_entries_pickle_location, "wb") as f:
+        pickle.dump(mol_entries, f)
     return mol_entries
