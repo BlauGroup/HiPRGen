@@ -623,7 +623,7 @@ def co2_test():
 
 def euvl_phase1_test():
 
-    folder = "./scratch/euvl_test"
+    folder = "./scratch/euvl_phase1_test"
     subprocess.run(["mkdir", folder])
 
     mol_json = "./data/euvl_summary_docs.json"
@@ -737,7 +737,7 @@ def euvl_phase1_test():
 
 def euvl_phase2_test():
 
-    folder = "./scratch/euvl_test"
+    folder = "./scratch/euvl_phase2_test"
     subprocess.run(["mkdir", folder])
 
     mol_json = "./data/euvl_summary_docs.json"
