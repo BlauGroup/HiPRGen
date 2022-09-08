@@ -621,7 +621,7 @@ def co2_test():
     return
 
 
-def euvl_test():
+def euvl_phase1_test():
 
     folder = "./scratch/euvl_test"
     subprocess.run(["mkdir", folder])
@@ -697,10 +697,11 @@ def euvl_test():
         mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
     )
 
-    """
-    EC_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/EC.xyz", 0)
+    tps_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tps.xyz", 1)
+    phs_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/phs.xyz", 0)
+    tf_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tf.xyz", -1)
 
-    initial_state = {EC_id: 30}
+    initial_state = {tps_id: 30, phs_id: 30, tf_id: 30}
 
     insert_initial_state(initial_state, mol_entries, folder + "/initial_state.sqlite")
 
@@ -732,7 +733,79 @@ def euvl_test():
 
     # The tally report shows reactions sorted by the number of times fired.
     reaction_tally_report(network_loader, folder + "/reaction_tally.tex")
-    """
+
+
+def euvl_phase2_test():
+
+    folder = "./scratch/euvl_test"
+    subprocess.run(["mkdir", folder])
+
+    mol_json = "./data/euvl_summary_docs.json"
+    database_entries = loadfn(mol_json)
+
+    species_decision_tree = nonmetal_species_decision_tree
+
+    mol_entries = species_filter(
+        database_entries,
+        mol_entries_pickle_location=folder + "/mol_entries.pickle",
+        species_report=folder + "/unfiltered_species_report.tex",
+        species_decision_tree=species_decision_tree,
+        coordimer_weight=lambda mol: (mol.free_energy),
+        species_logging_decision_tree=species_decision_tree,
+        generate_unfiltered_mol_pictures=False,
+    )
+
+    print(len(mol_entries), "initial mol entries")
+
+    bucket(mol_entries, folder + "/buckets.sqlite")
+
+    params = {
+        "temperature": ROOM_TEMP,
+        "electron_free_energy": 0.0,
+        "electron_species": len(mol_entries),
+    }
+
+    mol_entries = add_electron_species(
+        mol_entries,
+        mol_entries_pickle_location=folder + "/mol_entries.pickle",
+        electron_free_energy=params["electron_free_energy"],
+    )
+
+    print(len(mol_entries), "final mol entries")
+
+    dispatcher_payload = DispatcherPayload(
+        folder + "/buckets.sqlite",
+        folder + "/rn.sqlite",
+        folder + "/reaction_report.tex",
+    )
+
+    worker_payload = WorkerPayload(
+        folder + "/buckets.sqlite",
+        euvl_phase2_reaction_decision_tree,
+        params,
+        euvl_phase2_reaction_decision_tree,
+    )
+
+    dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
+    dumpfn(worker_payload, folder + "/worker_payload.json")
+
+    subprocess.run(
+        [
+            "mpirun",
+            "--use-hwthread-cpus",
+            "-n",
+            number_of_threads,
+            "python",
+            "run_network_generation.py",
+            folder + "/mol_entries.pickle",
+            folder + "/dispatcher_payload.json",
+            folder + "/worker_payload.json",
+        ]
+    )
+
+    report_generator = ReportGenerator(
+        mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
+    )
 
 
 tests = [
@@ -740,7 +813,8 @@ tests = [
     # li_test,
     # flicho_test,
     # co2_test,
-    euvl_test
+    euvl_phase1_test,
+    euvl_phase2_test,
 ]
 
 for test in tests:
