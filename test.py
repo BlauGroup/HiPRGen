@@ -809,7 +809,7 @@ tests = [
     # li_test,
     # flicho_test,
     # co2_test,
-    euvl_phase1_test,
+    # euvl_phase1_test,
     euvl_phase2_test,
 ]
 

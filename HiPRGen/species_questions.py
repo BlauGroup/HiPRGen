@@ -145,8 +145,8 @@ class add_unbroken_fragment(MSONable):
 
 
 class add_single_bond_fragments(MSONable):
-    def __init__(self):
-        pass
+    def __init__(self, allow_ring_opening=True):
+        self.allow_ring_opening = allow_ring_opening
 
     def __call__(self, mol):
 
@@ -172,7 +172,10 @@ class add_single_bond_fragments(MSONable):
                 len(fragments), 1, [edge[0:2]], fragments
             )
 
-            mol.fragment_data.append(fragment_complex)
+            if len(fragments) == 1 and not self.allow_ring_opening:
+                pass
+            else:
+                mol.fragment_data.append(fragment_complex)
 
         return False
 
@@ -476,6 +479,6 @@ nonmetal_species_decision_tree = [
     (compute_graph_hashes, Terminal.KEEP),
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(), Terminal.KEEP),
+    (add_single_bond_fragments(allow_ring_opening=False), Terminal.KEEP),
     (species_default_true(), Terminal.KEEP),
 ]
