@@ -41,7 +41,7 @@ On the LRC cluster, an environment where HiPRGen can be run is set up as follows
 ```
 cd $HOME
 module load python/3.8.2-gcc
-pip3 install --user mpi4py pymatgen
+pip install --user mpi4py pymatgen
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
 
