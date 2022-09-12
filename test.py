@@ -627,11 +627,9 @@ def euvl_phase1_test():
     subprocess.run(["mkdir", folder])
 
     mol_json = "./data/euvl_summary_docs.json"
-    # mol_json = "./data/ronald_LIBE.json"
     database_entries = loadfn(mol_json)
 
     species_decision_tree = nonmetal_species_decision_tree
-    # species_decision_tree = li_species_decision_tree
 
     mol_entries = species_filter(
         database_entries,
@@ -639,7 +637,6 @@ def euvl_phase1_test():
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.free_energy),
-        # coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
     )
@@ -651,7 +648,6 @@ def euvl_phase1_test():
     params = {
         "temperature": ROOM_TEMP,
         "electron_free_energy": 0.0,
-        # "electron_free_energy": -1.4,
         "electron_species": len(mol_entries),
     }
 
@@ -727,7 +723,6 @@ def euvl_phase1_test():
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
     )
 
-    # The tally report shows reactions sorted by the number of times fired.
     reaction_tally_report(network_loader, folder + "/reaction_tally.tex")
 
 
@@ -802,8 +797,8 @@ tests = [
     # li_test,
     # flicho_test,
     # co2_test,
-    # euvl_phase1_test,
-    euvl_phase2_test,
+    euvl_phase1_test,
+    # euvl_phase2_test,
 ]
 
 for test in tests:
