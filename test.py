@@ -758,14 +758,7 @@ def euvl_phase2_test():
     params = {
         "temperature": ROOM_TEMP,
         "electron_free_energy": 0.0,
-        "electron_species": len(mol_entries),
     }
-
-    mol_entries = add_electron_species(
-        mol_entries,
-        mol_entries_pickle_location=folder + "/mol_entries.pickle",
-        electron_free_energy=params["electron_free_energy"],
-    )
 
     print(len(mol_entries), "final mol entries")
 
