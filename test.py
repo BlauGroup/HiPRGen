@@ -38,7 +38,9 @@ from HiPRGen.mc_analysis import (
     generate_pathway_report,
     sink_report,
     consumption_report,
-    redox_report
+    redox_report,
+    coordination_report,
+    decoordination_report
 )
 
 # Since HiPRGen uses an end-to-end testing approach rather than testing
@@ -619,12 +621,6 @@ def flicho_test():
         folder + '/decoodination_report.tex',
         'Li1',
         1)
-
-
-
-    return tests_passed
-
-
 
 
 tests = [
