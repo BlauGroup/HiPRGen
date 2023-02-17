@@ -210,21 +210,27 @@ class MoleculeEntry:
         :param doc: A dict representation of an emmet document (SummaryDoc)
         :return: MoleculeEntry
         """
-
+        solvent_key = None
         if isinstance(doc["molecule"], Molecule):
             molecule = doc["molecule"]
         else:
             molecule = Molecule.from_dict(doc["molecule"])  # type: ignore
-        energy = doc["electronic_energy"]
-        enthalpy = doc["total_enthalpy"]
-        entropy = doc["total_entropy"]
+        if isinstance(doc["electronic_energy"], float):
+            energy = doc["electronic_energy"]
+            enthalpy = doc["total_enthalpy"]
+            entropy = doc["total_entropy"]
+        else:
+            solvent_key = list(doc["electronic_energy"].keys())[0]
+            energy = doc["electronic_energy"][solvent_key]
+            enthalpy = doc["total_enthalpy"][solvent_key]
+            entropy = doc["total_entropy"][solvent_key]
         entry_id = doc["molecule_id"]
         if "nbo" in doc["molecule_graph"]:
             if isinstance(doc["molecule_graph"]["nbo"], MoleculeGraph):
                 mol_graph = doc["molecule_graph"]["nbo"]
             else:
                 mol_graph = MoleculeGraph.from_dict(doc["molecule_graph"]["nbo"])
-        else:
+        elif "OpenBabelNN + metal_edge_extender" in doc["molecule_graph"]:
             if isinstance(
                 doc["molecule_graph"]["OpenBabelNN + metal_edge_extender"],
                 MoleculeGraph,
@@ -234,12 +240,38 @@ class MoleculeEntry:
                 mol_graph = MoleculeGraph.from_dict(
                     doc["molecule_graph"]["OpenBabelNN + metal_edge_extender"]
                 )
-        partial_charges_resp = doc["partial_charges"]["resp"]
-        partial_charges_mulliken = doc["partial_charges"]["mulliken"]
-        if "nbo" in doc["partial_charges"]:
-            partial_charges_nbo = doc["partial_charges"]["nbo"]
+        elif solvent_key is not None:
+            if "OpenBabelNN + metal_edge_extender" in doc["molecule_graph"][solvent_key]:
+                if isinstance(
+                    doc["molecule_graph"][solvent_key]["OpenBabelNN + metal_edge_extender"],
+                    MoleculeGraph,
+                ):
+                    mol_graph = doc["molecule_graph"][solvent_key]["OpenBabelNN + metal_edge_extender"]
+                else:
+                    mol_graph = MoleculeGraph.from_dict(
+                        doc["molecule_graph"][solvent_key]["OpenBabelNN + metal_edge_extender"]
+                    )
+
+        if solvent_key is not None:
+            partial_charges_resp = doc["partial_charges"][solvent_key]["resp"]
+            if "mulliken" in doc["partial_charges"][solvent_key]:
+                partial_charges_mulliken = doc["partial_charges"][solvent_key]["mulliken"]
+            else:
+                partial_charges_mulliken = None
+            if "nbo" in doc["partial_charges"][solvent_key]:
+                partial_charges_nbo = doc["partial_charges"][solvent_key]["nbo"]
+            else:
+                partial_charges_nbo = None
         else:
-            partial_charges_nbo = None
+            partial_charges_resp = doc["partial_charges"]["resp"]
+            if "mulliken" in doc["partial_charges"]:
+                partial_charges_mulliken = doc["partial_charges"]["mulliken"]
+            else:
+                partial_charges_mulliken = None
+            if "nbo" in doc["partial_charges"]:
+                partial_charges_nbo = doc["partial_charges"]["nbo"]
+            else:
+                partial_charges_nbo = None
         if doc.get("electron_affinity", None) is None:
             electron_affinity = 0.0
         else:

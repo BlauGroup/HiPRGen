@@ -16,6 +16,8 @@ atom_colors = {
     "S": "yellow",
     "Cl": "chartreuse",
     "E": "pink",
+    "Br": "darkred",
+    "I": "purple4",
 }
 
 
