@@ -205,26 +205,27 @@ class add_electron_species(MSONable):
             # positive dCharge means electrons are lost
             dCharge = 0.0
 
-            for i in range(reaction["number_of_reactants"]):
-                reactant_index = reaction["reactants"][i]
-                mol = mol_entries[reactant_index]
-                dCharge -= mol.charge
+            if reaction["number_of_reactants"] != 1:
+                return False
 
-            for j in range(reaction["number_of_products"]):
-                product_index = reaction["products"][j]
-                mol = mol_entries[product_index]
-                dCharge += mol.charge
+            if reaction["number_of_products"] != 1:
+                return False
+
+            dCharge -= mol_entries[reaction["reactants"][0]].charge
+            dCharge += mol_entries[reaction["products"][0]].charge
 
             if dCharge > 0:
                 reaction["products"] = (
                     reaction["products"][0],
                     params["electron_species"],
                 )
+                reaction["number_of_products"] = 2
             elif dCharge < 0:
                 reaction["reactants"] = (
                     reaction["reactants"][0],
                     params["electron_species"],
                 )
+                reaction["number_of_reactants"] = 2
             else:
                 pass
             return False
@@ -239,8 +240,22 @@ class too_many_reactants_or_products(MSONable):
     def __str__(self):
         return "too many reactants or products"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] != 1 or reaction["number_of_products"] != 1:
+            return True
+        else:
+            return False
+
+
+class more_than_one_reactant(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "more than one reactant"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] != 1:
             return True
         else:
             return False
@@ -289,7 +304,7 @@ class dcharge_too_large(MSONable):
             return False
 
 
-def marcus_barrier(reaction, mols, params):
+def marcus_barrier(reaction, mol_entries, params):
 
     """
         Okay, so Marcus Theory.The math works out like so.∆G* = λ/4 (1 +
@@ -309,8 +324,8 @@ def marcus_barrier(reaction, mols, params):
     the relative dielectric (18.5 for EC/EMC).
     """
 
-    reactant = mols[reaction["reactants"][0]]
-    product = mols[reaction["products"][0]]
+    reactant = mol_entries[reaction["reactants"][0]]
+    product = mol_entries[reaction["products"][0]]
     dCharge = product.charge - reactant.charge
     n = 1.415  # index of refraction; variable
     eps = 18.5  # dielectric constant; variable
@@ -359,9 +374,9 @@ class reactant_and_product_not_isomorphic(MSONable):
     def __str__(self):
         return "reactants and products are not covalent isomorphic"
 
-    def __call__(self, reaction, mols, params):
-        reactant = mols[reaction["reactants"][0]]
-        product = mols[reaction["products"][0]]
+    def __call__(self, reaction, mol_entries, params):
+        reactant = mol_entries[reaction["reactants"][0]]
+        product = mol_entries[reaction["products"][0]]
         if reactant.covalent_hash != product.covalent_hash:
             return True
         else:
@@ -375,7 +390,7 @@ class reaction_default_true(MSONable):
     def __str__(self):
         return "default true"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         return True
 
 
@@ -391,14 +406,14 @@ class star_count_diff_above_threshold(MSONable):
     def __str__(self):
         return "star count diff above threshold=" + str(self.threshold)
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         reactant_stars = {}
         product_stars = {}
         tags = set()
 
         for i in range(reaction["number_of_reactants"]):
             reactant_index = reaction["reactants"][i]
-            mol = mols[reactant_index]
+            mol = mol_entries[reactant_index]
             for h in mol.star_hashes.values():
                 tags.add(h)
                 if h in reactant_stars:
@@ -408,7 +423,7 @@ class star_count_diff_above_threshold(MSONable):
 
         for j in range(reaction["number_of_products"]):
             product_index = reaction["products"][j]
-            mol = mols[product_index]
+            mol = mol_entries[product_index]
             for h in mol.star_hashes.values():
                 tags.add(h)
                 if h in product_stars:
@@ -434,19 +449,19 @@ class reaction_is_covalent_decomposable(MSONable):
     def __str__(self):
         return "reaction is covalent decomposable"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
             reactant_total_hashes = set()
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
-                reactant = mols[reactant_id]
+                reactant = mol_entries[reactant_id]
                 reactant_total_hashes.add(reactant.covalent_hash)
 
             product_total_hashes = set()
             for i in range(reaction["number_of_products"]):
                 product_id = reaction["products"][i]
-                product = mols[product_id]
+                product = mol_entries[product_id]
                 product_total_hashes.add(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
@@ -457,6 +472,40 @@ class reaction_is_covalent_decomposable(MSONable):
         return False
 
 
+class reaction_is_radical_separation(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reaction is radical separation"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 2:
+            reactant_spin = mol_entries[reaction["reactants"][0]].spin_multiplicity
+            if reactant_spin == 1:
+                prod0_spin = mol_entries[reaction["products"][0]].spin_multiplicity
+                if prod0_spin != 1:
+                    return True
+        return False
+
+
+class reaction_is_charge_separation(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reaction is charge separation"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 2:
+            reactant_charge = mol_entries[reaction["reactants"][0]].charge
+            if reactant_charge == 0:
+                prod0_charge = mol_entries[reaction["products"][0]].charge
+                if prod0_charge != 0:
+                    return True
+        return False
+
+
 class metal_coordination_passthrough(MSONable):
     def __init__(self):
         pass
@@ -464,17 +513,17 @@ class metal_coordination_passthrough(MSONable):
     def __str__(self):
         return "metal coordination passthrough"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
 
         for i in range(reaction["number_of_reactants"]):
             reactant_id = reaction["reactants"][i]
-            reactant = mols[reactant_id]
+            reactant = mol_entries[reactant_id]
             if reactant.formula in m_formulas:
                 return True
 
         for i in range(reaction["number_of_products"]):
             product_id = reaction["products"][i]
-            product = mols[product_id]
+            product = mol_entries[product_id]
             if product.formula in m_formulas:
                 return True
 
@@ -488,19 +537,19 @@ class fragment_matching_found(MSONable):
     def __str__(self):
         return "fragment matching found"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
 
         reactant_fragment_indices_list = []
         product_fragment_indices_list = []
 
         if reaction["number_of_reactants"] == 1:
-            reactant = mols[reaction["reactants"][0]]
+            reactant = mol_entries[reaction["reactants"][0]]
             for i in range(len(reactant.fragment_data)):
                 reactant_fragment_indices_list.append([i])
 
         if reaction["number_of_reactants"] == 2:
-            reactant_0 = mols[reaction["reactants"][0]]
-            reactant_1 = mols[reaction["reactants"][1]]
+            reactant_0 = mol_entries[reaction["reactants"][0]]
+            reactant_1 = mol_entries[reaction["reactants"][1]]
             for i in range(len(reactant_0.fragment_data)):
                 for j in range(len(reactant_1.fragment_data)):
                     if (
@@ -512,13 +561,13 @@ class fragment_matching_found(MSONable):
                         reactant_fragment_indices_list.append([i, j])
 
         if reaction["number_of_products"] == 1:
-            product = mols[reaction["products"][0]]
+            product = mol_entries[reaction["products"][0]]
             for i in range(len(product.fragment_data)):
                 product_fragment_indices_list.append([i])
 
         if reaction["number_of_products"] == 2:
-            product_0 = mols[reaction["products"][0]]
-            product_1 = mols[reaction["products"][1]]
+            product_0 = mol_entries[reaction["products"][0]]
+            product_1 = mol_entries[reaction["products"][1]]
             for i in range(len(product_0.fragment_data)):
                 for j in range(len(product_1.fragment_data)):
                     if (
@@ -541,7 +590,7 @@ class fragment_matching_found(MSONable):
                     reactant_fragment_indices
                 ):
 
-                    fragment_complex = mols[
+                    fragment_complex = mol_entries[
                         reaction["reactants"][reactant_index]
                     ].fragment_data[frag_complex_index]
 
@@ -563,7 +612,7 @@ class fragment_matching_found(MSONable):
                     product_fragment_indices
                 ):
 
-                    fragment_complex = mols[
+                    fragment_complex = mol_entries[
                         reaction["products"][product_index]
                     ].fragment_data[frag_complex_index]
 
@@ -606,7 +655,7 @@ class single_reactant_single_product_not_atom_transfer(MSONable):
     def __str__(self):
         return "not hydrogen transfer"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         if (
             reaction["number_of_reactants"] == 1
             and reaction["number_of_products"] == 1
@@ -621,6 +670,20 @@ class single_reactant_single_product_not_atom_transfer(MSONable):
         return False
 
 
+class single_reactant_single_product(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "single reactant single product"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 1:
+            return True
+
+        return False
+
+
 class single_reactant_double_product_ring_close(MSONable):
     def __init__(self):
         pass
@@ -628,7 +691,7 @@ class single_reactant_double_product_ring_close(MSONable):
     def __str__(self):
         return "ring close"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
 
         if (
             reaction["number_of_reactants"] == 1
@@ -650,14 +713,14 @@ class concerted_metal_coordination(MSONable):
     def __str__(self):
         return "concerted metal coordination"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
 
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
-            reactant_0 = mols[reaction["reactants"][0]]
-            reactant_1 = mols[reaction["reactants"][1]]
-            product_0 = mols[reaction["products"][0]]
-            product_1 = mols[reaction["products"][1]]
+            reactant_0 = mol_entries[reaction["reactants"][0]]
+            reactant_1 = mol_entries[reaction["reactants"][1]]
+            product_0 = mol_entries[reaction["products"][0]]
+            product_1 = mol_entries[reaction["products"][1]]
 
             if (
                 reactant_0.formula in m_formulas
@@ -679,13 +742,13 @@ class concerted_metal_coordination_one_product(MSONable):
     def __str__(self):
         return "concerted metal coordination one product"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
 
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 1:
 
-            reactant_0 = mols[reaction["reactants"][0]]
-            reactant_1 = mols[reaction["reactants"][1]]
-            product = mols[reaction["products"][0]]
+            reactant_0 = mol_entries[reaction["reactants"][0]]
+            reactant_1 = mol_entries[reaction["reactants"][1]]
+            product = mol_entries[reaction["products"][0]]
 
             reactant_covalent_hashes = set(
                 [reactant_0.covalent_hash, reactant_1.covalent_hash]
@@ -708,13 +771,13 @@ class concerted_metal_coordination_one_reactant(MSONable):
     def __str__(self):
         return "concerted metal coordination one reactant"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
 
         if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 2:
 
-            product_0 = mols[reaction["products"][0]]
-            product_1 = mols[reaction["products"][1]]
-            reactant = mols[reaction["reactants"][0]]
+            product_0 = mol_entries[reaction["products"][0]]
+            product_1 = mol_entries[reaction["products"][1]]
+            reactant = mol_entries[reaction["reactants"][0]]
 
             product_covalent_hashes = set(
                 [product_0.covalent_hash, product_1.covalent_hash]
@@ -737,16 +800,16 @@ class single_reactant_with_ring_break_two(MSONable):
     def __str__(self):
         return "single reactant with a ring, break two"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         if (
             reaction["number_of_reactants"] == 1
             and reaction["number_of_products"] == 2
-            and mols[reaction["reactants"][0]].has_covalent_ring
+            and mol_entries[reaction["reactants"][0]].has_covalent_ring
         ):
 
-            reactant = mols[reaction["reactants"][0]]
-            product_1 = mols[reaction["products"][0]]
-            product_2 = mols[reaction["products"][1]]
+            reactant = mol_entries[reaction["reactants"][0]]
+            product_1 = mol_entries[reaction["products"][0]]
+            product_2 = mol_entries[reaction["products"][1]]
             for fragment_complex in reactant.ring_fragment_data:
                 if set(fragment_complex.fragment_hashes) == set(
                     [product_1.covalent_hash, product_2.covalent_hash]
@@ -763,16 +826,16 @@ class single_product_with_ring_form_two(MSONable):
     def __str__(self):
         return "single product with a ring, form two"
 
-    def __call__(self, reaction, mols, params):
+    def __call__(self, reaction, mol_entries, params):
         if (
             reaction["number_of_reactants"] == 2
             and reaction["number_of_products"] == 1
-            and mols[reaction["products"][0]].has_covalent_ring
+            and mol_entries[reaction["products"][0]].has_covalent_ring
         ):
 
-            product = mols[reaction["products"][0]]
-            reactant_1 = mols[reaction["reactants"][0]]
-            reactant_2 = mols[reaction["reactants"][1]]
+            product = mol_entries[reaction["products"][0]]
+            reactant_1 = mol_entries[reaction["reactants"][0]]
+            reactant_2 = mol_entries[reaction["reactants"][1]]
             for fragment_complex in product.ring_fragment_data:
                 if set(fragment_complex.fragment_hashes) == set(
                     [reactant_1.covalent_hash, reactant_2.covalent_hash]
@@ -841,6 +904,22 @@ co2_reaction_decision_tree = [
 ]
 
 
+euvl_phase1_reaction_decision_tree_orig = [
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (add_electron_species(), Terminal.DISCARD),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
+
+
 euvl_phase1_reaction_decision_tree = [
     (
         is_redox_reaction(),
@@ -853,6 +932,20 @@ euvl_phase1_reaction_decision_tree = [
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
+    (more_than_one_reactant(), Terminal.DISCARD),
+    (single_reactant_single_product(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(4), Terminal.DISCARD),
+    (reaction_is_radical_separation(), Terminal.DISCARD),
+    (reaction_is_charge_separation(), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
