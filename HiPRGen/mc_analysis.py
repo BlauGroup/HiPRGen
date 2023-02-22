@@ -1260,3 +1260,22 @@ def sink_report(
         report_generator.emit_newline()
 
     report_generator.finished()
+
+
+def final_state_report(
+        simulation_replayer,
+        final_state_report_path
+):
+    
+    report_generator = ReportGenerator(
+        simulation_replayer.network_loader.mol_entries,
+        final_state_report_path,
+        rebuild_mol_pictures=False)
+
+    for species_index, value in enumerate(simulation_replayer.expected_final_state):
+        if value > 0.0:
+            report_generator.emit_text("amount: " + str(value))
+            report_generator.emit_molecule(species_index)
+            report_generator.emit_newline()
+    report_generator.finished()
+
