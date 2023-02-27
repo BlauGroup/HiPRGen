@@ -1270,14 +1270,14 @@ def final_state_report(
     for species_index, value in enumerate(simulation_replayer.expected_final_state):
         if value > 0.0:
             final_state.append({"index": species_index, "value": value})
-    final_state.sort(reverse=True, key="value")
+    sorted_final_state = sorted(final_state, key=lambda x: -x["value"])
 
     report_generator = ReportGenerator(
         simulation_replayer.network_loader.mol_entries,
         final_state_report_path,
         rebuild_mol_pictures=False)
 
-    for entry in final_state:
+    for entry in sorted_final_state:
         report_generator.emit_text("amount: " + str(entry["value"]))
         report_generator.emit_molecule(entry["index"])
         report_generator.emit_newline()
