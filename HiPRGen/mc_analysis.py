@@ -750,7 +750,7 @@ def export_pathways_to_json(pathfinding, species_id, path):
 
 
 
-def generate_pathway_report(
+def pathway_report(
         pathfinding,
         species_id,
         report_file_path,
