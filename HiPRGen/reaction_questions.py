@@ -499,10 +499,10 @@ class reaction_is_charge_separation(MSONable):
     def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 2:
             reactant_charge = mol_entries[reaction["reactants"][0]].charge
-            if reactant_charge == 0:
-                prod0_charge = mol_entries[reaction["products"][0]].charge
-                if prod0_charge != 0:
-                    return True
+            prod0_charge = mol_entries[reaction["products"][0]].charge
+            prod1_charge = mol_entries[reaction["products"][1]].charge
+            if abs(prod0_charge) > abs(reactant_charge) or abs(prod1_charge) > abs(reactant_charge):
+                return True
         return False
 
 
