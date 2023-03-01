@@ -551,7 +551,7 @@ def species_report(network_loader, species_report_path):
         report_generator.emit_text(str(mol.entry_id))
         report_generator.emit_text(
             "formula: " + mol.formula)
-
+        report_generator.emit_text("free energy = " + str(mol.free_energy) + " eV")
         report_generator.emit_molecule(i)
         report_generator.emit_newline()
 
