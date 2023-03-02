@@ -1121,11 +1121,11 @@ def export_consumption_to_json(simulation_replayer, species_index, path):
             }
         reactions[reaction_id] = json_reaction
 
-        dumpfn({
-            'reactions' : reactions,
-            'producing_reactions' : producing_reactions,
-            'consuming_reactions' : consuming_reactions},
-               path)
+    dumpfn({
+        'reactions' : reactions,
+        'producing_reactions' : producing_reactions,
+        'consuming_reactions' : consuming_reactions},
+           path)
 
 def pad_time_series(time_series, max_number_of_steps):
     num_steps = time_series.shape[0]
