@@ -1144,14 +1144,21 @@ def pad_time_series(time_series, max_number_of_steps):
 
 
 
-def export_sinks_to_json(simulation_replayer, path):
-    sink_data = simulation_replayer.sink_data
+def export_full_sink_data_to_json(simulation_replayer, path):
     sink_data_json = {}
-    for i in sink_data:
+    for i in simulation_replayer.sink_data: # All molecules formed at least once are in sink_data
         mol = simulation_replayer.network_loader.mol_entries[i]
-        sink_data_json[mol.entry_id] = sink_data[i]
+        sink_data_json[mol.entry_id] = simulation_replayer.sink_data[i]
 
     dumpfn(sink_data_json, path)
+
+def export_sinks_to_json(simulation_replayer, path):
+    sinks_json = {}
+    for i in simulation_replayer.sinks: # Only molecules that pass sink_filter are in sinks
+        mol = simulation_replayer.network_loader.mol_entries[i]
+        sinks_json[mol.entry_id] = simulation_replayer.sink_data[i]
+
+    dumpfn(sinks_json, path)
 
 def export_species_report_to_json(network_loader, path):
     data = {}
