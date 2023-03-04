@@ -35,7 +35,7 @@ from HiPRGen.mc_analysis import (
     species_report,
     Pathfinding,
     SimulationReplayer,
-    generate_pathway_report,
+    pathway_report,
     sink_report,
     consumption_report,
     redox_report,
@@ -248,7 +248,7 @@ def li_test():
     # pathway frequency, but instead here we sort by pathway cost. Note
     # that the test network has ~5000 reactions while production networks
     # have between 50-100 million reactions.
-    generate_pathway_report(
+    pathway_report(
         pathfinding, LEDC_id, folder + "/LEDC_pathways.tex", sort_by_frequency=False
     )
     # Run `pdflatex LEDC_pathways.tex` in `scratch/li_test` to generate
@@ -389,11 +389,11 @@ def mg_test():
 
     pathfinding = Pathfinding(network_loader)
 
-    generate_pathway_report(
+    pathway_report(
         pathfinding, c2h6_id, folder + "/C2H6_pathways.tex", sort_by_frequency=False
     )
 
-    generate_pathway_report(
+    pathway_report(
         pathfinding, c2h4_id, folder + "/C2H4_pathways.tex", sort_by_frequency=False
     )
 

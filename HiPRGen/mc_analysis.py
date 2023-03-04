@@ -551,7 +551,7 @@ def species_report(network_loader, species_report_path):
         report_generator.emit_text(str(mol.entry_id))
         report_generator.emit_text(
             "formula: " + mol.formula)
-
+        report_generator.emit_text("free energy = " + str(mol.free_energy) + " eV")
         report_generator.emit_molecule(i)
         report_generator.emit_newline()
 
@@ -750,7 +750,7 @@ def export_pathways_to_json(pathfinding, species_id, path):
 
 
 
-def generate_pathway_report(
+def pathway_report(
         pathfinding,
         species_id,
         report_file_path,
@@ -857,6 +857,24 @@ class SimulationReplayer:
 
         self.expected_final_state = (
             self.expected_final_state / len(self.network_loader.trajectories))
+
+    def compute_trajectory_final_states(self):
+        self.final_states = {}
+        for seed in self.network_loader.trajectories:
+            state = np.zeros(self.network_loader.number_of_species, dtype=int)
+            for step in self.network_loader.trajectories[seed]:
+                reaction_index = self.network_loader.trajectories[seed][step][0]
+                time = self.network_loader.trajectories[seed][step][1]
+                reaction = self.network_loader.index_to_reaction(reaction_index)
+
+                for i in range(reaction['number_of_reactants']):
+                    reactant_index = reaction['reactants'][i]
+                    state[reactant_index] -= 1
+
+                for j in range(reaction['number_of_products']):
+                    product_index = reaction['products'][j]
+                    state[product_index] += 1
+            self.final_states[seed] = state
 
     def compute_production_consumption_info(self):
         self.consuming_reactions = {}
@@ -1121,11 +1139,11 @@ def export_consumption_to_json(simulation_replayer, species_index, path):
             }
         reactions[reaction_id] = json_reaction
 
-        dumpfn({
-            'reactions' : reactions,
-            'producing_reactions' : producing_reactions,
-            'consuming_reactions' : consuming_reactions},
-               path)
+    dumpfn({
+        'reactions' : reactions,
+        'producing_reactions' : producing_reactions,
+        'consuming_reactions' : consuming_reactions},
+           path)
 
 def pad_time_series(time_series, max_number_of_steps):
     num_steps = time_series.shape[0]
@@ -1144,14 +1162,21 @@ def pad_time_series(time_series, max_number_of_steps):
 
 
 
-def export_sinks_to_json(simulation_replayer, path):
-    sink_data = simulation_replayer.sink_data
+def export_full_sink_data_to_json(simulation_replayer, path):
     sink_data_json = {}
-    for i in sink_data:
+    for i in simulation_replayer.sink_data: # All molecules formed at least once are in sink_data
         mol = simulation_replayer.network_loader.mol_entries[i]
-        sink_data_json[mol.entry_id] = sink_data[i]
+        sink_data_json[mol.entry_id] = simulation_replayer.sink_data[i]
 
     dumpfn(sink_data_json, path)
+
+def export_sinks_to_json(simulation_replayer, path):
+    sinks_json = {}
+    for i in simulation_replayer.sinks: # Only molecules that pass sink_filter are in sinks
+        mol = simulation_replayer.network_loader.mol_entries[i]
+        sinks_json[mol.entry_id] = simulation_replayer.sink_data[i]
+
+    dumpfn(sinks_json, path)
 
 def export_species_report_to_json(network_loader, path):
     data = {}
@@ -1266,16 +1291,20 @@ def final_state_report(
         simulation_replayer,
         final_state_report_path
 ):
-    
+    final_state = []
+    for species_index, value in enumerate(simulation_replayer.expected_final_state):
+        if value > 0.0:
+            final_state.append({"index": species_index, "value": value})
+    sorted_final_state = sorted(final_state, key=lambda x: -x["value"])
+
     report_generator = ReportGenerator(
         simulation_replayer.network_loader.mol_entries,
         final_state_report_path,
         rebuild_mol_pictures=False)
 
-    for species_index, value in enumerate(simulation_replayer.expected_final_state):
-        if value > 0.0:
-            report_generator.emit_text("amount: " + str(value))
-            report_generator.emit_molecule(species_index)
-            report_generator.emit_newline()
+    for entry in sorted_final_state:
+        report_generator.emit_text("amount: " + str(entry["value"]))
+        report_generator.emit_molecule(entry["index"])
+        report_generator.emit_newline()
     report_generator.finished()
 
