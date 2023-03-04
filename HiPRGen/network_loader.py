@@ -55,11 +55,13 @@ class NetworkLoader:
         self.number_of_species = metadata[0]
         self.number_of_reactions = metadata[1]
 
-
         if initial_state_database:
             self.initial_state_con = sqlite3.connect(initial_state_database)
 
         self.reactions = {}
+        self.trajectories = {}
+        self.initial_state_dict = {}
+        self.initial_state_array = {}
 
     def get_all_redox_reactions(self):
         redox_reactions = []
@@ -93,6 +95,7 @@ class NetworkLoader:
             coordination_reactions.append(reaction)
 
         return coordination_reactions
+
 
     def get_all_decoordination_reactions(self, metal_id):
         decoordination_reactions = []
@@ -157,12 +160,11 @@ class NetworkLoader:
             self.reactions[reaction_index] = reaction
             return reaction
 
+
     def load_trajectories(self):
 
         cur = self.initial_state_con.cursor()
 
-        # trajectories[seed][step] = (reaction_id, time)
-        trajectories = {}
         for row in cur.execute(sql_get_trajectory):
             seed = row[0]
             step = row[1]
@@ -170,11 +172,9 @@ class NetworkLoader:
             time = row[3]
 
             if seed not in trajectories:
-                trajectories[seed] = {}
+                self.trajectories[seed] = {}
 
-            trajectories[seed][step] = (reaction_id, time)
-
-        self.trajectories = trajectories
+            self.trajectories[seed][step] = (reaction_id, time)
 
 
     def load_initial_state(self):
@@ -193,6 +193,17 @@ class NetworkLoader:
         for i in range(self.number_of_species):
             initial_state_array[i] = initial_state_dict[i]
 
+        if self.initial_state_dict == {} and self.initial_state_array == {}:
+            self.initial_state_dict = initial_state_dict
+            self.initial_state_array = initial_state_array
+        else:
+            for i in range(self.number_of_species):
+                if initial_state_array[i] > self.initial_state_array[i]:
+                    self.initial_state_array[i] = initial_state_array[i]
+                    self.initial_state_dict[i] = initial_state_dict[i]
 
-        self.initial_state_dict = initial_state_dict
-        self.initial_state_array = initial_state_array
+
+    def switch_initial_state_db(self, initial_state_database):
+        # NOTE: switching to a new initial state database and loading in trajectory
+        # info from it will only work if the new database has different seeds!
+        self.initial_state_con = sqlite3.connect(initial_state_database)
