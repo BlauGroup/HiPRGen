@@ -171,7 +171,7 @@ class NetworkLoader:
             reaction_id = row[2]
             time = row[3]
 
-            if seed not in trajectories:
+            if seed not in self.trajectories:
                 self.trajectories[seed] = {}
 
             self.trajectories[seed][step] = (reaction_id, time)
