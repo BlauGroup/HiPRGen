@@ -203,7 +203,7 @@ class NetworkLoader:
                     self.initial_state_dict[i] = initial_state_dict[i]
 
 
-    def switch_initial_state_db(self, initial_state_database):
+    def set_initial_state_db(self, initial_state_database):
         # NOTE: switching to a new initial state database and loading in trajectory
         # info from it will only work if the new database has different seeds!
         self.initial_state_con = sqlite3.connect(initial_state_database)
