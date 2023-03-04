@@ -858,6 +858,24 @@ class SimulationReplayer:
         self.expected_final_state = (
             self.expected_final_state / len(self.network_loader.trajectories))
 
+    def compute_trajectory_final_states(self):
+        self.final_states = {}
+        for seed in self.network_loader.trajectories:
+            state = np.zeros(self.network_loader.number_of_species, dtype=int)
+            for step in self.network_loader.trajectories[seed]:
+                reaction_index = self.network_loader.trajectories[seed][step][0]
+                time = self.network_loader.trajectories[seed][step][1]
+                reaction = self.network_loader.index_to_reaction(reaction_index)
+
+                for i in range(reaction['number_of_reactants']):
+                    reactant_index = reaction['reactants'][i]
+                    state[reactant_index] -= 1
+
+                for j in range(reaction['number_of_products']):
+                    product_index = reaction['products'][j]
+                    state[product_index] += 1
+            self.final_states[seed] = state
+
     def compute_production_consumption_info(self):
         self.consuming_reactions = {}
         self.producing_reactions = {}
