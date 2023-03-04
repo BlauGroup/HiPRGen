@@ -861,7 +861,7 @@ class SimulationReplayer:
     def compute_trajectory_final_states(self):
         self.final_states = {}
         for seed in self.network_loader.trajectories:
-            state = np.zeros(self.network_loader.number_of_species, dtype=int)
+            state = np.copy(self.network_loader.initial_state_array)
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
