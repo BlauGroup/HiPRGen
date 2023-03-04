@@ -107,7 +107,7 @@ class ReportGenerator:
 
         self.f.write(
             "\\raisebox{-.5\\height}{"
-            + "\\includegraphics[scale=0.2]{"
+            + "\\includegraphics[scale=0.18]{"
             + self.mol_pictures_folder_name
             + "/"
             + str(species_index)
