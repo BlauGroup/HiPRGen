@@ -15,7 +15,7 @@ from HiPRGen.reaction_questions import (
 )
 
 """
-Phases 3 & 4 run in paralell using MPI
+Phases 3 & 4 run in parallel using MPI
 
 Phase 3: reaction gen and filtering
 input: a bucket labeled by atom count
