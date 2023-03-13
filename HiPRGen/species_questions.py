@@ -276,6 +276,24 @@ class metal_complex(MSONable):
         return not nx.is_connected(mol.covalent_graph)
 
 
+class h_atom_filter(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, mol):
+        # if mol is H+, H0, or H-
+        return mol.formula == "H1"
+
+
+class oh_plus_filter(MSONable):
+    def __init__(self):
+        pass
+
+    def __call__(self, mol):
+        # if mol is OH+
+        return mol.formula == "H1 O1" and mol.charge == 1
+
+
 class fix_hydrogen_bonding(MSONable):
     def __init__(self):
         pass
@@ -476,6 +494,18 @@ mg_species_decision_tree = [
 nonmetal_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_free_energy(li_ec), Terminal.KEEP),
+    (compute_graph_hashes, Terminal.KEEP),
+    (add_star_hashes(), Terminal.KEEP),
+    (add_unbroken_fragment(), Terminal.KEEP),
+    (add_single_bond_fragments(allow_ring_opening=False), Terminal.KEEP),
+    (species_default_true(), Terminal.KEEP),
+]
+
+
+euvl_species_decision_tree = [
+    (fix_hydrogen_bonding(), Terminal.KEEP),
+    (h_atom_filter(), Terminal.DISCARD),
+    (oh_plus_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
