@@ -164,6 +164,50 @@ class dG_above_threshold(MSONable):
             return False
 
 
+class dG_below_threshold(MSONable):
+    def __init__(self, threshold, free_energy_type, constant_barrier):
+
+        self.threshold = threshold
+        self.free_energy_type = free_energy_type
+        self.constant_barrier = constant_barrier
+
+        if free_energy_type == "free_energy":
+            self.get_free_energy = lambda mol: mol.free_energy
+        elif free_energy_type == "solvation_free_energy":
+            self.get_free_energy = lambda mol: mol.solvation_free_energy
+        else:
+            raise Exception("unrecognized free energy type")
+
+    def __str__(self):
+        return self.free_energy_type + " dG is below threshold=" + str(self.threshold)
+
+    def __call__(self, reaction, mol_entries, params):
+
+        dG = 0.0
+
+        # positive dCharge means electrons are lost
+        dCharge = 0.0
+
+        for i in range(reaction["number_of_reactants"]):
+            reactant_index = reaction["reactants"][i]
+            mol = mol_entries[reactant_index]
+            dG -= self.get_free_energy(mol)
+            dCharge -= mol.charge
+
+        for j in range(reaction["number_of_products"]):
+            product_index = reaction["products"][j]
+            mol = mol_entries[product_index]
+            dG += self.get_free_energy(mol)
+            dCharge += mol.charge
+
+        dG += dCharge * params["electron_free_energy"]
+
+        if dG < self.threshold:
+            return True
+        else:
+            return False
+
+
 class is_redox_reaction(MSONable):
     def __init__(self):
         pass
@@ -256,6 +300,20 @@ class more_than_one_reactant(MSONable):
 
     def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] != 1:
+            return True
+        else:
+            return False
+
+
+class only_one_product(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "only one product"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_products"] == 1:
             return True
         else:
             return False
@@ -442,6 +500,36 @@ class star_count_diff_above_threshold(MSONable):
             return False
 
 
+class reaction_is_charge_transfer(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reaction is charge transfer"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
+
+            reactant_total_hashes = set()
+            for i in range(reaction["number_of_reactants"]):
+                reactant_id = reaction["reactants"][i]
+                reactant = mol_entries[reactant_id]
+                reactant_total_hashes.add(reactant.covalent_hash)
+
+            product_total_hashes = set()
+            for i in range(reaction["number_of_products"]):
+                product_id = reaction["products"][i]
+                product = mol_entries[product_id]
+                product_total_hashes.add(product.covalent_hash)
+
+            if len(reactant_total_hashes.intersection(product_total_hashes)) == 2:
+                return True
+            else:
+                return False
+
+        return False
+
+
 class reaction_is_covalent_decomposable(MSONable):
     def __init__(self):
         pass
@@ -528,6 +616,56 @@ class metal_coordination_passthrough(MSONable):
                 return True
 
         return False
+
+
+class compositions_preclude_h_transfer(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "compositions preclude h transfer"
+
+    def __call__(self, reaction, mol_entries, params):
+        reactant_compositions = []
+        for i in range(reaction["number_of_reactants"]):
+            reactant_id = reaction["reactants"][i]
+            reactant = mol_entries[reactant_id]
+            reactant_compositions.append(reactant.molecule.composition)
+            
+        product_compositions = []
+        for i in range(reaction["number_of_products"]):
+            product_id = reaction["products"][i]
+            product = mol_entries[product_id]
+            product_compositions.append(procuct.molecule.composition)
+
+        if len(reactant_compositions) != 2 or len(product_compositions) != 2:
+            return True
+
+        h_transfer_possible = True
+
+        try:
+            comp_diff = reactant_compositions[0] - product_compositions[0]
+            if comp_diff.alphabetical_formula == "H1":
+                try:
+                    other_diff = reactant_compositions[1] - product_compositions[1]
+                    if other_diff.alphabetical_formula == "H1":
+                        h_transfer_possible = True
+                except ValueError:
+                    h_transfer_possible = False
+        except ValueError:
+            try:
+                comp_diff = reactant_compositions[1] - product_compositions[0]
+                if comp_diff.alphabetical_formula == "H1":
+                    try:
+                        other_diff = reactant_compositions[0] - product_compositions[1]
+                        if other_diff.alphabetical_formula == "H1":
+                            h_transfer_possible = True
+                    except ValueError:
+                        h_transfer_possible = False
+            except ValueError:
+                h_transfer_possible = False
+
+        return not h_transfer_possible
 
 
 class fragment_matching_found(MSONable):
@@ -653,7 +791,7 @@ class single_reactant_single_product_not_atom_transfer(MSONable):
         pass
 
     def __str__(self):
-        return "not hydrogen transfer"
+        return "not intramolecular hydrogen/fluorine transfer"
 
     def __call__(self, reaction, mol_entries, params):
         if (
@@ -664,7 +802,20 @@ class single_reactant_single_product_not_atom_transfer(MSONable):
             and hydrogen_hash not in reaction["hashes"]
             and fluorine_hash not in reaction["hashes"]
         ):
+            return True
 
+        return False
+
+
+class not_h_transfer(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "not intermolecular hydrogen transfer"
+
+    def __call__(self, reaction, mol_entries, params):
+        if hydrogen_hash not in reaction["hashes"]:
             return True
 
         return False
@@ -845,6 +996,18 @@ class single_product_with_ring_form_two(MSONable):
         return False
 
 
+class sterically_hindered_reaction(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "sterically hindered reaction"
+
+    def __call__(self, reaction, mol_entries, params):
+        # WRITE ME
+        return False
+
+
 default_reaction_decision_tree = [
     (metal_metal_reaction(), Terminal.DISCARD),
     # redox branch
@@ -932,7 +1095,24 @@ euvl_phase1_reaction_decision_tree = [
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
-    (more_than_one_reactant(), Terminal.DISCARD),
+    (dG_below_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+    (
+        more_than_one_reactant(), 
+        [
+            (only_one_product(), Terminal.DISCARD),
+            (star_count_diff_above_threshold(6), Terminal.DISCARD),
+            (compositions_preclude_h_transfer(), Terminal.DISCARD),
+            (
+                fragment_matching_found(),
+                [
+                    (not_h_transfer(), Terminal.DISCARD),
+                    (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.KEEP),
+                    (reaction_default_true(), Terminal.DISCARD),
+                ],
+            ),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
     (single_reactant_single_product(), Terminal.DISCARD),
     (star_count_diff_above_threshold(4), Terminal.DISCARD),
     (reaction_is_radical_separation(), Terminal.DISCARD),
@@ -953,13 +1133,15 @@ euvl_phase1_reaction_decision_tree = [
 euvl_phase2_reaction_decision_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
-    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (reaction_is_charge_transfer(), Terminal.KEEP),
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
     (
         fragment_matching_found(),
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            # (sterically_hindered_reaction(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
