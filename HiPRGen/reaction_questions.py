@@ -636,7 +636,7 @@ class compositions_preclude_h_transfer(MSONable):
         for i in range(reaction["number_of_products"]):
             product_id = reaction["products"][i]
             product = mol_entries[product_id]
-            product_compositions.append(procuct.molecule.composition)
+            product_compositions.append(product.molecule.composition)
 
         if len(reactant_compositions) != 2 or len(product_compositions) != 2:
             return True
