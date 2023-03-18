@@ -47,4 +47,4 @@ mol_entries_dict = {}
 for i in new_mol_entries: # All molecules formed at least once are in sink_data
     mol_entries_dict[i.entry_id] = i
 print('Dumping desired molecules to a new json file...')
-dumpfn(new_mol_entries, 'euvl_test_set.json')
+dumpfn(new_mol_dict, 'euvl_test_set.json')
