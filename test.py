@@ -812,7 +812,7 @@ def euvl_phase2_test():
     phase1_network_loader = NetworkLoader(
         phase1_folder + "/rn.sqlite",
         phase1_folder + "/mol_entries.pickle",
-        phase1_folder + f"/initial_state_1000.sqlite",
+        phase1_folder + f"/initial_state.sqlite",
     )
     phase1_network_loader.load_trajectories()
     phase1_network_loader.load_initial_state()
