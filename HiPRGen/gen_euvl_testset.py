@@ -5,30 +5,29 @@ from pymatgen.analysis.local_env import OpenBabelNN
 from monty.serialization import loadfn, dumpfn
 from mol_entry import MoleculeEntry
 from initial_state import find_mol_entry_by_entry_id
+import copy
 print("Done!")
 
 print("Opening and reading species id file...")
 with open('test_species.txt') as mol_id_doc: #open the text file and copy each line as the element of a list, removing '\n'
     mol_id_list = []
     for line in mol_id_doc:
-        id_index = line.find("-")
-        mol_id_list.append(line[id_index+1:len(line)-1])
+        if line != '':
+            id_index = line.find("-")
+            mol_id_list.append(line[id_index+1:len(line)-1])
 print("Done!")
 
 print("Opening json file...")
 mol_json = "euvl_feb_full.json"
-database_entries = loadfn(mol_json)
+database_entries = loadfn(mol_json) #loads the json file to a dictionary
 print("Done!")
 
-print("Reading molecule entries from json file...")
-if "has_props" in database_entries[0].keys():
-        mol_entries= [MoleculeEntry.from_mp_doc(e) for e in database_entries]
-else:
-    mol_entries= [MoleculeEntry.from_dataset_entry(e) for e in database_entries]
+print("Reading molecule entries from json file...") #converts dictionary from loaded json file to a list
+mol_entries= [MoleculeEntry.from_mp_doc(e) for e in database_entries]
 print("Done!")
 
 
-new_mol_entries = []
+final_mol_ids = []
 
 print('copying desired molecules to a new list...')
 for mol_id in mol_id_list: #takes the list of ids, finds their corresponding molecules in the json file (as well as differently charged variants) and adds them to the list
@@ -36,15 +35,30 @@ for mol_id in mol_id_list: #takes the list of ids, finds their corresponding mol
         m_id = m.entry_id
         if m_id == mol_id:
             graph = m.mol_graph
-            for molecule in mol_entries:
-                molecule_graph = molecule.mol_graph
+            for mol_entry in mol_entries:
+                molecule_graph = mol_entry.mol_graph #test if other charges found
                 if molecule_graph.isomorphic_to(graph):
-                    new_mol_entries.append(molecule)
+                    final_mol_ids.append(mol_entry.entry_id)
 print('Done!')
-print(new_mol_entries)
+print(len(final_mol_ids)) #currently missing 3 entries
 
-mol_entries_dict = {}
-for i in new_mol_entries: # All molecules formed at least once are in sink_data
-    mol_entries_dict[i.entry_id] = i
-print('Dumping desired molecules to a new json file...')
-dumpfn(new_mol_dict, 'euvl_test_set.json')
+test_set = []
+for e in database_entries:
+    if e['molecule_id'] in final_mol_ids:
+        entry = copy.deepcopy(e)
+        val = entry.pop('nbo_population')
+        val = entry.pop('nbo_lone_pairs')
+        val = entry.pop('nbo_bonds')
+        val = entry.pop('nbo_interactions')
+        val = entry.pop('alpha_population')
+        val = entry.pop('beta_population')
+        val = entry.pop('alpha_lone_pairs')
+        val = entry.pop('beta_lone_pairs')
+        val = entry.pop('alpha_bonds')
+        val = entry.pop('beta_bonds')
+        val = entry.pop('alpha_interactions')
+        val = entry.pop('beta_interactions')
+        test_set.append(entry)
+        
+print(len(test_set))
+dumpfn(test_set, 'euvl_test_set.json')
