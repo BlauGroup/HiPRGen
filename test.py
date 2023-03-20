@@ -821,12 +821,10 @@ def euvl_phase2_test():
 
     for seed in range(1000, 2000):
 
-        print("Seed: " + str(seed))
         initial_state = {}
         for ii, val in enumerate(phase1_simulation_replayer.final_states[seed]):
             if int(val) > 0:
                 initial_state[ii] = int(val)
-        print(initial_state)
 
         insert_initial_state(
             initial_state,
@@ -851,7 +849,7 @@ def euvl_phase2_test():
     folder + "/mol_entries.pickle",
     )
 
-    for seed in range(1000, 1000+max_count):
+    for seed in range(1000, 2000):
         network_loader.set_initial_state_db(folder + "/initial_state_"+str(seed)+".sqlite")
         network_loader.load_trajectories()
     network_loader.load_initial_state()
