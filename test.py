@@ -40,6 +40,7 @@ from HiPRGen.mc_analysis import (
     sink_report,
     consumption_report,
     redox_report,
+    final_state_report,
 )
 
 # Since HiPRGen uses an end-to-end testing approach rather than testing
@@ -737,6 +738,7 @@ def euvl_phase1_test():
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
+    print(network_loader.number_of_reactions)
     if network_loader.number_of_reactions == 4921:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
@@ -872,6 +874,7 @@ def euvl_phase2_test():
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
+    print(network_loader.number_of_reactions)
     if network_loader.number_of_reactions == 4921:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
@@ -887,7 +890,7 @@ tests = [
     # flicho_test,
     # co2_test,
     euvl_phase1_test,
-    # euvl_phase2_test,
+    euvl_phase2_test,
 ]
 
 for test in tests:
