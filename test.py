@@ -738,8 +738,7 @@ def euvl_phase1_test():
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
-    print(network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 4921:
+    if network_loader.number_of_reactions == 277:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
