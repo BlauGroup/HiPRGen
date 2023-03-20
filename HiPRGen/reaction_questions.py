@@ -1100,6 +1100,7 @@ euvl_phase1_reaction_decision_tree = [
         more_than_one_reactant(), 
         [
             (only_one_product(), Terminal.DISCARD),
+            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
