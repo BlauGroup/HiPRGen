@@ -72,7 +72,7 @@ def insert_initial_state(
         initial_state_db,
         factor_zero = 1.0,
         factor_two = 1.0,
-        factor_duplicate = 1.0
+        factor_duplicate = 1.0,
 ):
     """
     initial state is a dict mapping species ids to counts.

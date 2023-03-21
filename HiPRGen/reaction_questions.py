@@ -627,41 +627,41 @@ class compositions_preclude_h_transfer(MSONable):
 
     def __call__(self, reaction, mol_entries, params):
         reactant_compositions = []
+        reactant_charges = []
         for i in range(reaction["number_of_reactants"]):
             reactant_id = reaction["reactants"][i]
             reactant = mol_entries[reactant_id]
             reactant_compositions.append(reactant.molecule.composition)
+            reactant_charges.append(reactant.molecule.charge)
             
         product_compositions = []
+        product_charges = []
         for i in range(reaction["number_of_products"]):
             product_id = reaction["products"][i]
             product = mol_entries[product_id]
             product_compositions.append(product.molecule.composition)
+            product_charges.append(product.molecule.charge)
 
         if len(reactant_compositions) != 2 or len(product_compositions) != 2:
             return True
 
-        h_transfer_possible = True
+        h_transfer_possible = None
 
         try:
             comp_diff = reactant_compositions[0] - product_compositions[0]
             if comp_diff.alphabetical_formula == "H1":
-                try:
-                    other_diff = reactant_compositions[1] - product_compositions[1]
-                    if other_diff.alphabetical_formula == "H1":
-                        h_transfer_possible = True
-                except ValueError:
+                if abs(reactant_charges[0] - product_charges[0]) > 1:
                     h_transfer_possible = False
+                else:
+                    h_transfer_possible = True
         except ValueError:
             try:
                 comp_diff = reactant_compositions[1] - product_compositions[0]
                 if comp_diff.alphabetical_formula == "H1":
-                    try:
-                        other_diff = reactant_compositions[0] - product_compositions[1]
-                        if other_diff.alphabetical_formula == "H1":
-                            h_transfer_possible = True
-                    except ValueError:
+                    if abs(reactant_charges[1] - product_charges[0]) > 1:
                         h_transfer_possible = False
+                    else:
+                        h_transfer_possible = True
             except ValueError:
                 h_transfer_possible = False
 
