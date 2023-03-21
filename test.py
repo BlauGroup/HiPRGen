@@ -732,19 +732,19 @@ def euvl_phase1_test():
     final_state_report(simulation_replayer, folder + "/final_state_report.tex")
 
     tests_passed = True
-    print(network_loader.number_of_species)
-    # if network_loader.number_of_species == 76:
-    #     print(bcolors.PASS + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
-    # else:
-    #     print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
-    #     tests_passed = False
+    print("Number of species:", network_loader.number_of_species)
+    if network_loader.number_of_species == 83:
+        print(bcolors.PASS + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
+    else:
+        print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
+        tests_passed = False
 
-    print(network_loader.number_of_reactions)
-    # if network_loader.number_of_reactions == 223:
-    #     print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
-    # else:
-    #     print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
-    #     tests_passed = False
+    print("Number of reactions:", network_loader.number_of_reactions)
+    if network_loader.number_of_reactions == 402:
+        print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
+    else:
+        print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
+        tests_passed = False
 
     return tests_passed
 
@@ -867,19 +867,19 @@ def euvl_phase2_test():
     sink_report(simulation_replayer, folder + "/sink_report.tex")
 
     tests_passed = True
-    print(network_loader.number_of_species)
-    # if network_loader.number_of_species == 69:
-    #     print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
-    # else:
-    #     print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
-    #     tests_passed = False
+    print("Number of species:", network_loader.number_of_species)
+    if network_loader.number_of_species == 82:
+        print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
+    else:
+        print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
+        tests_passed = False
 
-    print(network_loader.number_of_reactions)
-    # if network_loader.number_of_reactions == 1606:
-    #     print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
-    # else:
-    #     print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
-    #     tests_passed = False
+    print("Number of reactions:", network_loader.number_of_reactions)
+    if network_loader.number_of_reactions == 2506:
+        print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
+    else:
+        print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
+        tests_passed = False
 
     return tests_passed
 
