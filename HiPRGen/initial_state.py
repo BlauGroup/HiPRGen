@@ -1,7 +1,6 @@
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN
-from pymatgen.analysis.fragmenter import metal_edge_extender
+from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender, oxygen_edge_extender
 import sqlite3
 
 
@@ -16,6 +15,7 @@ def find_mol_entry_from_xyz_and_charge(mol_entries, xyz_file_path, charge):
 
     # correction to the molecule graph
     target_mol_graph = metal_edge_extender(target_mol_graph)
+    target_mol_graph = oxygen_edge_extender(target_mol_graph)
 
     match = False
     index = -1
