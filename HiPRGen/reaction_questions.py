@@ -61,6 +61,10 @@ fluorine_graph = nx.MultiGraph()
 fluorine_graph.add_node(0, specie="F")
 fluorine_hash = weisfeiler_lehman_graph_hash(fluorine_graph, node_attr="specie")
 
+carbon_graph = nx.MultiGraph()
+carbon_graph.add_node(0, specie="C")
+carbon_hash = weisfeiler_lehman_graph_hash(carbon_graph, node_attr="specie")
+
 
 def run_decision_tree(
     reaction, mol_entries, params, decision_tree, decision_pathway=None
@@ -680,25 +684,25 @@ class fragment_matching_found(MSONable):
         reactant_fragment_indices_list = []
         product_fragment_indices_list = []
 
-        if reaction["number_of_reactants"] == 1:
+        if reaction["number_of_reactants"] == 1: #generates list of reactant fragment indicies
             reactant = mol_entries[reaction["reactants"][0]]
             for i in range(len(reactant.fragment_data)):
                 reactant_fragment_indices_list.append([i])
 
-        if reaction["number_of_reactants"] == 2:
+        if reaction["number_of_reactants"] == 2: 
             reactant_0 = mol_entries[reaction["reactants"][0]]
             reactant_1 = mol_entries[reaction["reactants"][1]]
-            for i in range(len(reactant_0.fragment_data)):
-                for j in range(len(reactant_1.fragment_data)):
-                    if (
-                        reactant_0.fragment_data[i].number_of_bonds_broken
+            for i in range(len(reactant_0.fragment_data)): #for each fragment of one reactant
+                for j in range(len(reactant_1.fragment_data)): #look at each fragment of the other reactant
+                    if (                                                    #true only when adding fragments of one reactant with the other 
+                        reactant_0.fragment_data[i].number_of_bonds_broken  #unfragmented reactant?
                         + reactant_1.fragment_data[j].number_of_bonds_broken
-                        <= 1
-                    ):
+                        <= 1 
+                    ): 
 
-                        reactant_fragment_indices_list.append([i, j])
+                        reactant_fragment_indices_list.append([i, j]) #append a list to the list containing fragment indicies for both reactants
 
-        if reaction["number_of_products"] == 1:
+        if reaction["number_of_products"] == 1: #repeat for product indicies
             product = mol_entries[reaction["products"][0]]
             for i in range(len(product.fragment_data)):
                 product_fragment_indices_list.append([i])
@@ -716,7 +720,7 @@ class fragment_matching_found(MSONable):
 
                         product_fragment_indices_list.append([i, j])
 
-        for reactant_fragment_indices in reactant_fragment_indices_list:
+        for reactant_fragment_indices in reactant_fragment_indices_list: #iterating over all reactant and product fragment indicies
             for product_fragment_indices in product_fragment_indices_list:
                 reactant_fragment_count = 0
                 product_fragment_count = 0
@@ -724,17 +728,17 @@ class fragment_matching_found(MSONable):
                 product_bonds_broken = []
 
                 reactant_hashes = dict()
-                for reactant_index, frag_complex_index in enumerate(
+                for reactant_index, frag_complex_index in enumerate( #associates each reactant index value with a fragment_complex_index value
                     reactant_fragment_indices
                 ):
 
-                    fragment_complex = mol_entries[
+                    fragment_complex = mol_entries[                  #pulls out a fragment_complex
                         reaction["reactants"][reactant_index]
                     ].fragment_data[frag_complex_index]
 
-                    for bond in fragment_complex.bonds_broken:
+                    for bond in fragment_complex.bonds_broken:       #save what bonds are broken in this complex to reactant_bonds_broken
                         reactant_bonds_broken.append(
-                            [(reactant_index, x) for x in bond]
+                            [(reactant_index, x) for x in bond] #x is a number, bond is a list containing two numbers denoting the edge of a molecule graph
                         )
 
                     for i in range(fragment_complex.number_of_fragments):
@@ -1001,10 +1005,27 @@ class reaction_is_hindered(MSONable):
         pass
 
     def __str__(self):
-        return "sterically hindered reaction"
+        return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
-        # WRITE ME
+        if carbon_hash not in reaction.reactant_hashes: #does this filter our reactions where bonds without carbon are broken? Who knows!
+            return False
+
+        for t in reaction["reactant_bonds_broken"]: #reactant bonds broken is a list of two tuples
+            index = t[1]
+            for i in range(mol.num_atoms):
+                if mol.species[i] == "H":
+
+                    adjacent_atoms = []
+
+                    for bond in mol.graph.edges:
+                        if i in bond[0:2]: #bond is a list of two numbers
+                            if i == bond[0]:
+                                adjacent_atom = bond[1]
+                            else:
+                                adjacent_atom = bond[0]
+
+
         return False
 
 
@@ -1137,7 +1158,6 @@ euvl_phase2_reaction_decision_tree = [
     (reaction_is_charge_transfer(), Terminal.KEEP),
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
-    #(reaction_is_hindered, Terminal.DISCARD)
     (
         fragment_matching_found(),
         [
