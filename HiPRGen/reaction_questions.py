@@ -1136,7 +1136,7 @@ euvl_phase2_reaction_decision_tree = [
     (reaction_is_charge_transfer(), Terminal.KEEP),
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
-    (reaction_is_hindered, Terminal.DISCARD)
+    #(reaction_is_hindered, Terminal.DISCARD)
     (
         fragment_matching_found(),
         [
