@@ -504,6 +504,7 @@ nonmetal_species_decision_tree = [
 
 euvl_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
+    (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (h_atom_filter(), Terminal.DISCARD),
     (oh_plus_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
