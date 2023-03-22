@@ -129,7 +129,7 @@ class add_star_hashes(MSONable):
         return False
 
 
-class add_unbroken_fragment(MSONable):
+class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fragment complex"
     def __init__(self):
         pass
 
@@ -153,11 +153,11 @@ class add_single_bond_fragments(MSONable):
         if mol.formula in m_formulas:
             return False
 
-        for edge in mol.covalent_graph.edges:
+        for edge in mol.covalent_graph.edges: #iterates through each bond in a molecule
             fragments = []
             h = copy.deepcopy(mol.covalent_graph)
-            h.remove_edge(*edge)
-            connected_components = nx.algorithms.components.connected_components(h)
+            h.remove_edge(*edge) #"breaks a bond" in the molecule graph
+            connected_components = nx.algorithms.components.connected_components(h) #generates a set of nodes for each "fragment"
             for c in connected_components:
 
                 subgraph = h.subgraph(c)
@@ -166,7 +166,7 @@ class add_single_bond_fragments(MSONable):
                     subgraph, node_attr="specie"
                 )
 
-                fragments.append(fragment_hash)
+                fragments.append(fragment_hash) #adds each fragment graph to the fragment list
 
             fragment_complex = FragmentComplex(
                 len(fragments), 1, [edge[0:2]], fragments
