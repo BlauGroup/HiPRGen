@@ -116,15 +116,15 @@ class add_star_hashes(MSONable):
         pass
 
     def __call__(self, mol):
-        for i in range(mol.num_atoms):
-            if i not in mol.m_inds:
-                neighborhood = nx.generators.ego.ego_graph(
-                    mol.covalent_graph, i, 1, undirected=True
-                )
+        for i in range(mol.num_atoms): #iterates over all atoms in a molecule
+            if i not in mol.m_inds: #ignoring metal atoms
+                neighborhood = nx.generators.ego.ego_graph(   #generates an ego graph named neighborhood, with atom i at the
+                    mol.covalent_graph, i, 1, undirected=True #center, with the nodes of the graph being the atoms i is
+                )                                             #covalently bonded to
 
-                mol.star_hashes[i] = weisfeiler_lehman_graph_hash(
-                    neighborhood, node_attr="specie"
-                )
+                mol.star_hashes[i] = weisfeiler_lehman_graph_hash( #star_hashes is a dictionary, and this adds an entry to it
+                    neighborhood, node_attr="specie"               #with the atom index, i, as the key and a graph_hash (string)
+                )                                                  #as the value
 
         return False
 
