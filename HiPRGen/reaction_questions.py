@@ -684,10 +684,10 @@ class fragment_matching_found(MSONable):
         reactant_fragment_indices_list = []
         product_fragment_indices_list = []
 
-        if reaction["number_of_reactants"] == 1: #generates list of reactant fragment indicies for all fragments associated with a given reactant
-            reactant = mol_entries[reaction["reactants"][0]]
-            for i in range(len(reactant.fragment_data)):
-                reactant_fragment_indices_list.append([i])
+        if reaction["number_of_reactants"] == 1: #creates a list of the indicies pointing to FragmentComplex objects
+            reactant = mol_entries[reaction["reactants"][0]] #reactant is a mol_entry
+            for i in range(len(reactant.fragment_data)):  #fragment_data is a list of FragmentComplex objects, where each
+                reactant_fragment_indices_list.append([i])#FragmentComplex object is basically a dictionary with four keys
 
         if reaction["number_of_reactants"] == 2: 
             reactant_0 = mol_entries[reaction["reactants"][0]]
@@ -738,7 +738,7 @@ class fragment_matching_found(MSONable):
 
                     for bond in fragment_complex.bonds_broken:       #save what bonds are broken in this complex to reactant_bonds_broken
                         reactant_bonds_broken.append(
-                            [(reactant_index, x) for x in bond] #x is a number, bond is a list containing two numbers denoting the edge of a molecule graph
+                            [(reactant_index, x) for x in bond] #first element of tuple is which reactant, x is a integer, bond is a tuple containing two numbers denoting the edge of a molecule graph
                         )
 
                     for i in range(fragment_complex.number_of_fragments):
@@ -930,7 +930,7 @@ class concerted_metal_coordination_one_reactant(MSONable):
 
         if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 2:
 
-            product_0 = mol_entries[reaction["products"][0]]
+            product_0 = mol_entries[reaction["products"][0]] #use this to get a mol entry
             product_1 = mol_entries[reaction["products"][1]]
             reactant = mol_entries[reaction["reactants"][0]]
 
@@ -1011,21 +1011,44 @@ class reaction_is_hindered(MSONable):
         if carbon_hash not in reaction.reactant_hashes: #does this filter our reactions where bonds without carbon are broken? Who knows!
             return False
 
-        for t in reaction["reactant_bonds_broken"]: #reactant bonds broken is a list of two tuples
-            index = t[1]
-            for i in range(mol.num_atoms):
-                if mol.species[i] == "H":
+        reactant_0 = mol_entries[reaction["reactants"][0]]
+        reactant_1 = mol_entries[reaction["reactants"][1]]
+        product_0 = mol_entries[reaction["products"][0]]
+        product_1 = mol_entries[reaction["products"][1]]
 
-                    adjacent_atoms = []
+        hot_reactant_atoms = []
 
-                    for bond in mol.graph.edges:
-                        if i in bond[0:2]: #bond is a list of two numbers
-                            if i == bond[0]:
-                                adjacent_atom = bond[1]
-                            else:
-                                adjacent_atom = bond[0]
+        for t in reactant_bonds_broken:
+            hot_reactant_atoms.append(t[1])
 
+        hot_product_atoms = []
 
+        for t in product_bonds_broken:
+            hot_product_atoms.append(t[1])
+
+        steric_centers = []
+
+        for atom in hot_reactant_atoms, hot_product_atoms:
+            neighbors = nx.generators.ego.ego_graph(   
+                    mol.covalent_graph, atom, 1, undirected=True
+                )
+            num_neighbors = nx.algorithms.components.connected_components(neighbors)
+            if num_neighbors == 4:
+                steric_centers.append(atom)
+                break
+
+        for atom in hot_product_atoms:
+            neighbors = nx.generators.ego.ego_graph(   
+                    mol.covalent_graph, atom, 1, undirected=True
+                )
+            num_neighbors = nx.algorithms.components.connected_components(neighbors)
+            if num_neighbors == 4:
+                steric_centers.append(atom)
+                break
+
+        if len(steric_centers) >= 2:
+            return True
+            
         return False
 
 
