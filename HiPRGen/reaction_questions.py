@@ -731,12 +731,11 @@ class fragment_matching_found(MSONable):
                 for reactant_index, frag_complex_index in enumerate( #starts with reactant_index = 0 and increases with each run of the for loop, 
                     reactant_fragment_indices_list                   #while frag_complex_index iterates through reactant_fragment_indicies_list
                 ):
-                
+                    print(reactant_index)
+                    print(frag_complex_index)
                     fragment_complex = mol_entries[                  #pulls out a fragment_complex whose index matches the above
                         reaction["reactants"][reactant_index]
                     ].fragment_data[frag_complex_index]
-                    print(reactant_index)
-                    print(frag_complex_index)
 
                     for bond in fragment_complex.bonds_broken:       #save what bonds are broken in this complex to reactant_bonds_broken
                         reactant_bonds_broken.append(
