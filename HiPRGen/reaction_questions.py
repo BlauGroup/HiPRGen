@@ -1186,7 +1186,7 @@ euvl_phase2_reaction_decision_tree = [
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            # (sterically_hindered_reaction(), Terminal.DISCARD),
+            (reaction_is_hindered(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
