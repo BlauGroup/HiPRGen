@@ -168,7 +168,7 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
                 fragments.append(fragment_hash) #adds each fragment hash to the fragment hash list
 
-            print(type([edge[0:2]]))
+            print(edge[0:2])
             fragment_complex = FragmentComplex(             #saves a FragmentComplex object after both fragment_hashes have been
                 len(fragments), 1, [edge[0:2]], fragments   #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
             )                                               #of the bond broken (as a list containing one tuple), and the list of fragment hashes
