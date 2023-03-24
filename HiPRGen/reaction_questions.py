@@ -1005,29 +1005,26 @@ class reaction_is_hindered(MSONable):
         return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
-        if carbon_hash not in reaction.reactant_hashes: #does this filter our reactions where bonds without carbon are broken? Who knows!
+        if carbon_hash not in reaction["hashes"]: #does this filter our reactions where bonds without carbon are broken? Who knows!
             return False
-
-        reactant_0 = mol_entries[reaction["reactants"][0]]
-        reactant_1 = mol_entries[reaction["reactants"][1]]
-        product_0 = mol_entries[reaction["products"][0]]
-        product_1 = mol_entries[reaction["products"][1]]
 
         hot_reactant_atoms = []
 
-        for t in reactant_bonds_broken:
+        for t in reaction["reactant_bonds_broken"]:
+            hot_reactant = reaction["reactants"][t[0]]
             hot_reactant_atoms.append(t[1])
 
         hot_product_atoms = []
 
-        for t in product_bonds_broken:
+        for t in reaction["product_bonds_broken"]:
+            hot_product = reaction["products"][t[0]]
             hot_product_atoms.append(t[1])
 
         steric_centers = []
 
-        for atom in hot_reactant_atoms, hot_product_atoms:
+        for atom in hot_reactant_atoms:
             neighbors = nx.generators.ego.ego_graph(   
-                    mol.covalent_graph, atom, 1, undirected=True
+                    hot_reactant.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
             if num_neighbors == 4:
@@ -1036,7 +1033,7 @@ class reaction_is_hindered(MSONable):
 
         for atom in hot_product_atoms:
             neighbors = nx.generators.ego.ego_graph(   
-                    mol.covalent_graph, atom, 1, undirected=True
+                    hot_product.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
             if num_neighbors == 4:
