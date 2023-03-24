@@ -728,9 +728,7 @@ class fragment_matching_found(MSONable):
                 product_bonds_broken = []
 
                 reactant_hashes = dict()
-                for reactant_index, frag_complex_index in enumerate(reactant_fragment_indices_list):
-                    print(reactant_index)
-                    print(frag_complex_index)
+                for reactant_index, frag_complex_index in enumerate(reactant_fragment_indices):
                     fragment_complex = mol_entries[                  #pulls out a fragment_complex whose index matches the above
                         reaction["reactants"][reactant_index]
                     ].fragment_data[frag_complex_index]
