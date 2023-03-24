@@ -1028,6 +1028,7 @@ class reaction_is_hindered(MSONable):
                     hot_reactant.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
+            print(num_neighbors)
             if num_neighbors == 4:
                 steric_centers.append(atom)
                 break
