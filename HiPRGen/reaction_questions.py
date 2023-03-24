@@ -693,8 +693,7 @@ class fragment_matching_found(MSONable):
             reactant_1 = mol_entries[reaction["reactants"][1]]
             for i in range(len(reactant_0.fragment_data)): #for each fragment of one reactant
                 for j in range(len(reactant_1.fragment_data)): #look at each fragment of the other reactant
-                    if (                                                    #true only when adding fragments of one reactant with the other 
-                        reactant_0.fragment_data[i].number_of_bonds_broken  #unfragmented reactant?
+                    if (reactant_0.fragment_data[i].number_of_bonds_broken  #true only when at least one reactant is unfragmented
                         + reactant_1.fragment_data[j].number_of_bonds_broken
                         <= 1 
                     ): 
