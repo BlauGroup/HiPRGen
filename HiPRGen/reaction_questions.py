@@ -720,7 +720,6 @@ class fragment_matching_found(MSONable):
                         product_fragment_indices_list.append([i, j])
 
         for reactant_fragment_indices in reactant_fragment_indices_list: #iterating over all reactant and product fragment indicies
-            print(reactant_fragment_indices)
             for product_fragment_indices in product_fragment_indices_list:
                 reactant_fragment_count = 0
                 product_fragment_count = 0
@@ -1005,8 +1004,8 @@ class reaction_is_hindered(MSONable):
         return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
-        if carbon_hash not in reaction["hashes"]: #does this filter our reactions where bonds without carbon are broken? Who knows!
-            return False
+        #if carbon_hash not in reaction["hashes"]: #does this filter our reactions where bonds without carbon are broken? Who knows!
+        #    return False
 
         hot_reactant_atoms = []
 
@@ -1039,6 +1038,7 @@ class reaction_is_hindered(MSONable):
             if num_neighbors == 4:
                 steric_centers.append(atom)
                 break
+        print(steric_centers)
 
         if len(steric_centers) >= 2:
             return True
