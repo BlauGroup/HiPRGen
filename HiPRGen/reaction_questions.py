@@ -1041,11 +1041,13 @@ class reaction_is_hindered(MSONable):
             neighbors = nx.generators.ego.ego_graph(   
                     hot_product.covalent_graph, atom, 1, undirected=True
                 )
-            num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            if num_neighbors == 4:
+             for node in num_neighbors:
+                for neighbor in node:
+                    if neighbor != atom:
+                        num_neighbors_list.append(neighbor)
+            if len(num_neighbors_list) == 4:
                 steric_centers.append(atom)
                 break
-        print(steric_centers)
 
         if len(steric_centers) >= 2:
             return True
