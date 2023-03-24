@@ -1010,18 +1010,16 @@ class reaction_is_hindered(MSONable):
         hot_reactant_atoms = []
 
         for l in reaction["reactant_bonds_broken"]:
-            print(l)
             for t in l:
-                print(t)
                 hot_reactant = mol_entries[reaction["reactants"][t[0]]]
                 hot_reactant_atoms.append(t[1])
-        print(hot_reactant_atoms)
 
         hot_product_atoms = []
 
-        for t in reaction["product_bonds_broken"]:
-            hot_product = mol_entries[reaction["products"][t[0]]]
-            hot_product_atoms.append(t[1])
+        for l in reaction["product_bonds_broken"]:
+            for t in l:
+                hot_product = mol_entries[reaction["products"][t[0]]]
+                hot_product_atoms.append(t[1])
 
         steric_centers = []
 
