@@ -1012,9 +1012,9 @@ class reaction_is_hindered(MSONable):
         for l in reaction["reactant_bonds_broken"]:
             print(l)
             for t in l:
-            print(t)
-            hot_reactant = mol_entries[reaction["reactants"][t[0]]
-            hot_reactant_atoms.append(t[1])
+                print(t)
+                hot_reactant = mol_entries[reaction["reactants"][t[0]]
+                hot_reactant_atoms.append(t[1])
 
         hot_product_atoms = []
 
