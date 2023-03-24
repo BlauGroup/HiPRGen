@@ -101,8 +101,7 @@ def run_decision_tree(
             """
             unexpected node type reached.
             this is usually caused because none of the questions in some node returned True.
-            """
-        )
+            """)
 
 
 def default_rate(dG_barrier, params):
