@@ -1197,3 +1197,20 @@ euvl_phase2_reaction_decision_tree = [
     ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
+euvl_phase2_steric_filter_logging_tree = [
+    (is_redox_reaction(), Terminal.DISCARD),
+    (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+    (reaction_is_charge_transfer(), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (reaction_is_hindered(), Terminal.KEEP),
+            (reaction_default_true(), Terminal.KEEP),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
