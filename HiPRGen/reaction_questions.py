@@ -693,13 +693,13 @@ class fragment_matching_found(MSONable):
             reactant_1 = mol_entries[reaction["reactants"][1]]
             for i in range(len(reactant_0.fragment_data)): #for each fragment of one reactant
                 for j in range(len(reactant_1.fragment_data)): #look at each fragment of the other reactant
-                    if (reactant_0.fragment_data[i].number_of_bonds_broken  #true only when at least one reactant is unfragmented
+                    if (                                                    #true only when adding fragments of one reactant with the other 
+                        reactant_0.fragment_data[i].number_of_bonds_broken  #unfragmented reactant?
                         + reactant_1.fragment_data[j].number_of_bonds_broken
                         <= 1 
                     ): 
 
                         reactant_fragment_indices_list.append([i, j]) #append a list to the list containing fragment indicies for both reactants
-                        print(reactant_fragment_indices_list)
 
         if reaction["number_of_products"] == 1: #repeat for product indicies
             product = mol_entries[reaction["products"][0]]
@@ -720,6 +720,7 @@ class fragment_matching_found(MSONable):
                         product_fragment_indices_list.append([i, j])
 
         for reactant_fragment_indices in reactant_fragment_indices_list: #iterating over all reactant and product fragment indicies
+            print(reactant_fragment_indices)
             for product_fragment_indices in product_fragment_indices_list:
                 reactant_fragment_count = 0
                 product_fragment_count = 0
