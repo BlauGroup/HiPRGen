@@ -1038,6 +1038,7 @@ class reaction_is_hindered(MSONable):
                 break
 
         for atom in hot_product_atoms:
+            num_neighbors_list = []
             neighbors = nx.generators.ego.ego_graph(   
                     hot_product.covalent_graph, atom, 1, undirected=True
                 )
