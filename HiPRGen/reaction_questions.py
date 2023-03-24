@@ -594,6 +594,24 @@ class reaction_is_charge_separation(MSONable):
         return False
 
 
+class reactants_are_both_anions_or_both_cations(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reactants are both anions or both cations"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] == 2:
+            reactant0_charge = mol_entries[reaction["reactants"][0]].charge
+            reactant1_charge = mol_entries[reaction["reactants"][1]].charge
+            if reactant0_charge > 0 and reactant1_charge > 0:
+                return True
+            elif reactant0_charge < 0 and reactant1_charge < 0:
+                return True
+        return False
+
+
 class metal_coordination_passthrough(MSONable):
     def __init__(self):
         pass
@@ -1100,6 +1118,7 @@ euvl_phase1_reaction_decision_tree = [
         more_than_one_reactant(), 
         [
             (only_one_product(), Terminal.DISCARD),
+            # (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
