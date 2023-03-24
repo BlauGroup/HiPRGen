@@ -1030,6 +1030,7 @@ class reaction_is_hindered(MSONable):
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
             for node in num_neighbors:
+                print(atom)
                 print(node)
                 num_neighbors_list.append(node)
             if len(num_neighbors_list) == 4:
