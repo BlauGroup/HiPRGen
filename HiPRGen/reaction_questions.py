@@ -1041,6 +1041,7 @@ class reaction_is_hindered(MSONable):
             neighbors = nx.generators.ego.ego_graph(   
                     hot_product.covalent_graph, atom, 1, undirected=True
                 )
+            num_neighbors = nx.algorithms.components.connected_components(neighbors)
             for node in num_neighbors:
                 for neighbor in node:
                     if neighbor != atom:
