@@ -700,6 +700,7 @@ class fragment_matching_found(MSONable):
                     ): 
 
                         reactant_fragment_indices_list.append([i, j]) #append a list to the list containing fragment indicies for both reactants
+                        print(reactant_fragment_indices_list)
 
         if reaction["number_of_products"] == 1: #repeat for product indicies
             product = mol_entries[reaction["products"][0]]
