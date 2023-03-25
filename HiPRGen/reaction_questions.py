@@ -697,6 +697,8 @@ class compositions_preclude_h_transfer(MSONable):
                     h_transfer_possible = False
                 else:
                     h_transfer_possible = True
+                    reaction["reactant_losing_h"] = 0
+                    reaction["product_gaining_h"] = 0 
         except ValueError:
             try:
                 comp_diff = reactant_compositions[1] - product_compositions[0]
@@ -705,8 +707,29 @@ class compositions_preclude_h_transfer(MSONable):
                         h_transfer_possible = False
                     else:
                         h_transfer_possible = True
+                        reaction["reactant_losing_h"] = 1
+                        reaction["product_gaining_h"] = 0
             except ValueError:
-                h_transfer_possible = False
+                try:
+                    comp_diff = reactant_compositions[1] - product_compositions[1]
+                    if comp_diff.alphabetical_formula == "H1":
+                        if abs(reactant_charges[1] - product_charges[1]) > 1:
+                            h_transfer_possible = False
+                        else:
+                            h_transfer_possible = True
+                            reaction["reactant_losing_h"] = 1
+                            reaction["product_gaining_h"] = 1
+                except ValueError:
+                    try:
+                        comp_diff = reactant_compositions[0] - product_compositions[1]
+                        if comp_diff.alphabetical_formula == "H1":
+                            if abs(reactant_charges[0] - product_charges[1]) > 1:
+                                h_transfer_possible = False
+                            else:
+                                h_transfer_possible = True
+                                reaction["reactant_losing_h"] = 0
+                                reaction["product_gaining_h"] = 1
+                    except ValueError:
 
         return not h_transfer_possible
 
@@ -900,6 +923,23 @@ class single_reactant_double_product_ring_close(MSONable):
         return False
 
 
+class h_abstraction_from_closed_shell_reactant(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "h abstraction from closed shell reactant"
+
+    def __call__(self, reaction, mol_entries, params):
+
+        if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2 and hydrogen_hash in reaction["hashes"]:
+            hot_reactant = reaction["reactant_bonds_broken"][0][0]
+            if mol_entries[reaction["reactants"][hot_reactant]].spin_multiplicity == 1:
+                return True
+
+        return False
+
+
 class concerted_metal_coordination(MSONable):
     def __init__(self):
         pass
@@ -1039,12 +1079,12 @@ class single_product_with_ring_form_two(MSONable):
         return False
 
 
-class sterically_hindered_reaction(MSONable):
+class reaction_is_hindered(MSONable):
     def __init__(self):
         pass
 
     def __str__(self):
-        return "sterically hindered reaction"
+        return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
         # WRITE ME
@@ -1153,6 +1193,7 @@ euvl_phase1_reaction_decision_tree = [
                 fragment_matching_found(),
                 [
                     (not_h_transfer(), Terminal.DISCARD),
+                    # (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.KEEP),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
@@ -1188,7 +1229,7 @@ euvl_phase2_reaction_decision_tree = [
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            # (sterically_hindered_reaction(), Terminal.DISCARD),
+            # (reaction_is_hindered(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
