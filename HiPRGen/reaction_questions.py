@@ -927,11 +927,15 @@ class h_abstraction_from_closed_shell_reactant(MSONable):
 
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2 and hydrogen_hash in reaction["hashes"]:
             hot_reactant_ind = reaction["reactant_bonds_broken"][0][0][0]
+            cold_reactant_ind = 0
+            if hot_reactant_ind == 0:
+                cold_reactant_ind = 1
             hot_product_ind = reaction["product_bonds_broken"][0][0][0]
             hot_reactant = mol_entries[reaction["reactants"][hot_reactant_ind]]
+            cold_reactant = mol_entries[reaction["reactants"][cold_reactant_ind]]
             hot_product = mol_entries[reaction["products"][hot_product_ind]]
             if hot_reactant.spin_multiplicity == 1:
-                if hot_product.charge - hot_reactant.charge == 0:
+                if hot_product.charge - cold_reactant.charge == 0:
                     return True
 
         return False
@@ -947,10 +951,13 @@ class h_minus_abstraction(MSONable):
     def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2 and hydrogen_hash in reaction["hashes"]:
             hot_reactant_ind = reaction["reactant_bonds_broken"][0][0][0]
+            cold_reactant_ind = 0
+            if hot_reactant_ind == 0:
+                cold_reactant_ind = 1
             hot_product_ind = reaction["product_bonds_broken"][0][0][0]
-            hot_reactant = mol_entries[reaction["reactants"][hot_reactant_ind]]
+            cold_reactant = mol_entries[reaction["reactants"][cold_reactant_ind]]
             hot_product = mol_entries[reaction["products"][hot_product_ind]]
-            if hot_product.charge - hot_reactant.charge == -1:
+            if hot_product.charge - cold_reactant.charge == -1:
                 return True
 
         return False
