@@ -591,6 +591,13 @@ class reaction_is_charge_separation(MSONable):
             prod1_charge = mol_entries[reaction["products"][1]].charge
             if abs(prod0_charge) > abs(reactant_charge) or abs(prod1_charge) > abs(reactant_charge):
                 return True
+        if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
+            reactant0_charge = mol_entries[reaction["reactants"][0]].charge
+            reactant1_charge = mol_entries[reaction["reactants"][1]].charge
+            prod0_charge = mol_entries[reaction["products"][0]].charge
+            prod1_charge = mol_entries[reaction["products"][1]].charge
+            if reactant0_charge == 0 and reactant1_charge == 0 and abs(prod0_charge) > 0 or abs(prod1_charge) > 0:
+                return True
         return False
 
 
@@ -1137,7 +1144,8 @@ euvl_phase1_reaction_decision_tree = [
         [
             (only_one_product(), Terminal.DISCARD),
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
-            # (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
+            (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
+            # (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
