@@ -730,6 +730,7 @@ class compositions_preclude_h_transfer(MSONable):
                                 reaction["reactant_losing_h"] = 0
                                 reaction["product_gaining_h"] = 1
                     except ValueError:
+                        h_transfer_possible = False
 
         return not h_transfer_possible
 
