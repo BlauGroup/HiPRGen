@@ -596,7 +596,7 @@ class reaction_is_charge_separation(MSONable):
             reactant1_charge = mol_entries[reaction["reactants"][1]].charge
             prod0_charge = mol_entries[reaction["products"][0]].charge
             prod1_charge = mol_entries[reaction["products"][1]].charge
-            if reactant0_charge == 0 and reactant1_charge == 0 and abs(prod0_charge) > 0 or abs(prod1_charge) > 0:
+            if reactant0_charge == 0 and reactant1_charge == 0 and (abs(prod0_charge) > 0 or abs(prod1_charge)) > 0:
                 return True
         return False
 
