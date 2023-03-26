@@ -71,7 +71,7 @@ def insert_initial_state(
         mol_entries,
         initial_state_db,
         factor_zero = 1.0,
-        factor_two = 1.0,
+        factor_two = 0.5,
         factor_duplicate = 1.0,
 ):
     """
