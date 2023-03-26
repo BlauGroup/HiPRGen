@@ -1218,7 +1218,7 @@ euvl_phase1_reaction_decision_tree = [
                     (not_h_transfer(), Terminal.DISCARD),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (h_minus_abstraction(), Terminal.DISCARD),
-                    (dG_above_threshold(0.0, "free_energy", 0.03), Terminal.KEEP),
+                    (dG_above_threshold(0.0, "free_energy", 0.05), Terminal.KEEP),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
             ),
