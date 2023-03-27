@@ -1024,23 +1024,32 @@ class reaction_is_hindered(MSONable):
         steric_centers = []
 
         for atom in hot_reactant_atoms:
+            num_neighbors_list = []
             neighbors = nx.generators.ego.ego_graph(   
                     hot_reactant.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            if num_neighbors == 4:
+            for node in num_neighbors:
+                for neighbor in node:
+                    if neighbor != atom:
+                        num_neighbors_list.append(neighbor)
+            if len(num_neighbors_list) == 4:
                 steric_centers.append(atom)
                 break
 
         for atom in hot_product_atoms:
+            num_neighbors_list = []
             neighbors = nx.generators.ego.ego_graph(   
                     hot_product.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            if num_neighbors == 4:
+            for node in num_neighbors:
+                for neighbor in node:
+                    if neighbor != atom:
+                        num_neighbors_list.append(neighbor)
+            if len(num_neighbors_list) == 4:
                 steric_centers.append(atom)
                 break
-        print(steric_centers)
 
         if len(steric_centers) >= 2:
             return True
@@ -1183,6 +1192,23 @@ euvl_phase2_reaction_decision_tree = [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
             (reaction_is_hindered(), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.KEEP),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
+euvl_phase2_steric_filter_logging_tree = [
+    (is_redox_reaction(), Terminal.DISCARD),
+    (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+    (reaction_is_charge_transfer(), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (reaction_is_hindered(), Terminal.KEEP),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
