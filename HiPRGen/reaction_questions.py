@@ -109,16 +109,17 @@ def default_rate(dG_barrier, params):
 
 
 class dG_above_threshold(MSONable):
-    def __init__(self, threshold, free_energy_type, constant_barrier):
+    def __init__(self, threshold, free_energy_type, constant_barrier, barrier_factor=0):
 
         self.threshold = threshold
         self.free_energy_type = free_energy_type
         self.constant_barrier = constant_barrier
+        self.barrier_factor = barrier_factor
 
         if free_energy_type == "free_energy":
-            self.get_free_energy = lambda mol: mol.free_energy
+            self.get_free_energy = lambda mol, temperature: mol.get_free_energy(temperature)
         elif free_energy_type == "solvation_free_energy":
-            self.get_free_energy = lambda mol: mol.solvation_free_energy
+            self.get_free_energy = lambda mol, temperature: mol.solvation_correction + mol.get_free_energy(temperature)
         else:
             raise Exception("unrecognized free energy type")
 
@@ -135,20 +136,23 @@ class dG_above_threshold(MSONable):
         for i in range(reaction["number_of_reactants"]):
             reactant_index = reaction["reactants"][i]
             mol = mol_entries[reactant_index]
-            dG -= self.get_free_energy(mol)
+            dG -= self.get_free_energy(mol, params["temperature"])
             dCharge -= mol.charge
 
         for j in range(reaction["number_of_products"]):
             product_index = reaction["products"][j]
             mol = mol_entries[product_index]
-            dG += self.get_free_energy(mol)
+            dG += self.get_free_energy(mol, params["temperature"])
             dCharge += mol.charge
 
         dG += dCharge * params["electron_free_energy"]
 
         if dG > self.threshold:
             reaction["dG"] = dG
-            barrier = self.constant_barrier
+            if self.barrier_factor == 0:
+                barrier = self.constant_barrier
+            else:
+                barrier = reaction["dG"] * self.barrier_factor
             reaction["dG_barrier"] = barrier
             reaction["rate"] = default_rate(barrier, params)
             return True
@@ -172,9 +176,9 @@ class dG_below_threshold(MSONable):
         self.constant_barrier = constant_barrier
 
         if free_energy_type == "free_energy":
-            self.get_free_energy = lambda mol: mol.free_energy
+            self.get_free_energy = lambda mol, temperature: mol.get_free_energy(temperature)
         elif free_energy_type == "solvation_free_energy":
-            self.get_free_energy = lambda mol: mol.solvation_free_energy
+            self.get_free_energy = lambda mol, temperature: mol.solvation_correction + mol.get_free_energy(temperature)
         else:
             raise Exception("unrecognized free energy type")
 
@@ -191,13 +195,13 @@ class dG_below_threshold(MSONable):
         for i in range(reaction["number_of_reactants"]):
             reactant_index = reaction["reactants"][i]
             mol = mol_entries[reactant_index]
-            dG -= self.get_free_energy(mol)
+            dG -= self.get_free_energy(mol, params["temperature"])
             dCharge -= mol.charge
 
         for j in range(reaction["number_of_products"]):
             product_index = reaction["products"][j]
             mol = mol_entries[product_index]
-            dG += self.get_free_energy(mol)
+            dG += self.get_free_energy(mol, params["temperature"])
             dCharge += mol.charge
 
         dG += dCharge * params["electron_free_energy"]
@@ -1218,7 +1222,7 @@ euvl_phase1_reaction_decision_tree = [
                     (not_h_transfer(), Terminal.DISCARD),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (h_minus_abstraction(), Terminal.DISCARD),
-                    (dG_above_threshold(0.0, "free_energy", 0.05), Terminal.KEEP),
+                    (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.KEEP),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
             ),

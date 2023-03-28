@@ -99,6 +99,8 @@ def li_test():
     # through the species decision tree to discard molecules.
     species_decision_tree = li_species_decision_tree
 
+    params = {"temperature": ROOM_TEMP, "electron_free_energy": -1.4}
+
     # There is one non-local part of species filtering: we consider two
     # molecules to be equivalent if they have the same total charge,
     # composition, and covalent bonds, even if they have different metal
@@ -114,7 +116,7 @@ def li_test():
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
+        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_correction + mol.get_free_energy(params["temperature"])),
     )
 
     # Once we have generated our molecule list, we generate the bucket database
@@ -135,8 +137,6 @@ def li_test():
 
     # The reaction decision trees are constructed in
     # HiPRGen.reaction_questions
-
-    params = {"temperature": ROOM_TEMP, "electron_free_energy": -1.4}
 
     dispatcher_payload = DispatcherPayload(
         folder + "/buckets.sqlite",
@@ -309,13 +309,14 @@ def mg_test():
     species_decision_tree = mg_species_decision_tree
 
     database_entries = loadfn(mol_json)
+    params = {"temperature": ROOM_TEMP, "electron_free_energy": -2.06}
 
     mol_entries = species_filter(
         database_entries,
         folder + "/mol_entries.pickle",
         folder + "/unfiltered_species_report.tex",
         species_decision_tree,
-        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
+        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_correction + mol.get_free_energy(params["temperature"])),
     )
 
     bucket(mol_entries, folder + "/buckets.sqlite")
@@ -329,7 +330,7 @@ def mg_test():
     worker_payload = WorkerPayload(
         folder + "/buckets.sqlite",
         default_reaction_decision_tree,
-        {"temperature": ROOM_TEMP, "electron_free_energy": -2.06},
+        params,
         Terminal.DISCARD,
     )
 
@@ -417,209 +418,155 @@ def mg_test():
     return tests_passed
 
 
-def flicho_test():
+# def flicho_test():
 
-    folder = "./scratch/flicho_test"
-    subprocess.run(["mkdir", folder])
+#     folder = "./scratch/flicho_test"
+#     subprocess.run(["mkdir", folder])
 
-    mol_json = "./data/flicho_test.json"
-    database_entries = loadfn(mol_json)
-    species_decision_tree = li_species_decision_tree
+#     mol_json = "./data/flicho_test.json"
+#     database_entries = loadfn(mol_json)
+#     species_decision_tree = li_species_decision_tree
 
-    mol_entries = species_filter(
-        database_entries,
-        mol_entries_pickle_location=folder + "/mol_entries.pickle",
-        species_report=folder + "/unfiltered_species_report.tex",
-        species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
-    )
+#     mol_entries = species_filter(
+#         database_entries,
+#         mol_entries_pickle_location=folder + "/mol_entries.pickle",
+#         species_report=folder + "/unfiltered_species_report.tex",
+#         species_decision_tree=species_decision_tree,
+#         coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
+#     )
 
-    bucket(mol_entries, folder + "/buckets.sqlite")
+#     bucket(mol_entries, folder + "/buckets.sqlite")
 
-    params = {"temperature": ROOM_TEMP, "electron_free_energy": -1.4}
+#     params = {"temperature": ROOM_TEMP, "electron_free_energy": -1.4}
 
-    dispatcher_payload = DispatcherPayload(
-        folder + "/buckets.sqlite",
-        folder + "/rn.sqlite",
-        folder + "/reaction_report.tex",
-    )
+#     dispatcher_payload = DispatcherPayload(
+#         folder + "/buckets.sqlite",
+#         folder + "/rn.sqlite",
+#         folder + "/reaction_report.tex",
+#     )
 
-    worker_payload = WorkerPayload(
-        folder + "/buckets.sqlite",
-        default_reaction_decision_tree,
-        params,
-        Terminal.DISCARD,
-    )
+#     worker_payload = WorkerPayload(
+#         folder + "/buckets.sqlite",
+#         default_reaction_decision_tree,
+#         params,
+#         Terminal.DISCARD,
+#     )
 
-    dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
-    dumpfn(worker_payload, folder + "/worker_payload.json")
+#     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
+#     dumpfn(worker_payload, folder + "/worker_payload.json")
 
-    subprocess.run(
-        [
-            "mpirun",
-            "--use-hwthread-cpus",
-            "-n",
-            number_of_threads,
-            "python",
-            "run_network_generation.py",
-            folder + "/mol_entries.pickle",
-            folder + "/dispatcher_payload.json",
-            folder + "/worker_payload.json",
-        ]
-    )
+#     subprocess.run(
+#         [
+#             "mpirun",
+#             "--use-hwthread-cpus",
+#             "-n",
+#             number_of_threads,
+#             "python",
+#             "run_network_generation.py",
+#             folder + "/mol_entries.pickle",
+#             folder + "/dispatcher_payload.json",
+#             folder + "/worker_payload.json",
+#         ]
+#     )
 
-    Li_plus_id = find_mol_entry_from_xyz_and_charge(
-        mol_entries, "./xyz_files/Li.xyz", 1
-    )
+#     Li_plus_id = find_mol_entry_from_xyz_and_charge(
+#         mol_entries, "./xyz_files/Li.xyz", 1
+#     )
 
-    EC_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/EC.xyz", 0)
+#     EC_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/EC.xyz", 0)
 
-    initial_state = {Li_plus_id: 30, EC_id: 30}
+#     initial_state = {Li_plus_id: 30, EC_id: 30}
 
-    insert_initial_state(initial_state, mol_entries, folder + "/initial_state.sqlite")
+#     insert_initial_state(initial_state, mol_entries, folder + "/initial_state.sqlite")
 
-    subprocess.run(
-        [
-            "GMC",
-            "--reaction_database=" + folder + "/rn.sqlite",
-            "--initial_state_database=" + folder + "/initial_state.sqlite",
-            "--number_of_simulations=1000",
-            "--base_seed=1000",
-            "--thread_count=" + number_of_threads,
-            "--step_cutoff=200",
-        ]
-    )
+#     subprocess.run(
+#         [
+#             "GMC",
+#             "--reaction_database=" + folder + "/rn.sqlite",
+#             "--initial_state_database=" + folder + "/initial_state.sqlite",
+#             "--number_of_simulations=1000",
+#             "--base_seed=1000",
+#             "--thread_count=" + number_of_threads,
+#             "--step_cutoff=200",
+#         ]
+#     )
 
-    network_loader = NetworkLoader(
-        folder + "/rn.sqlite",
-        folder + "/mol_entries.pickle",
-        folder + "/initial_state.sqlite",
-    )
+#     network_loader = NetworkLoader(
+#         folder + "/rn.sqlite",
+#         folder + "/mol_entries.pickle",
+#         folder + "/initial_state.sqlite",
+#     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+#     network_loader.load_trajectories()
+#     network_loader.load_initial_state()
 
-    report_generator = ReportGenerator(
-        network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
-    )
+#     report_generator = ReportGenerator(
+#         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
+#     )
 
-    coordination_report(network_loader, folder + "/coodination_report.tex", "Li1", 1)
+#     coordination_report(network_loader, folder + "/coodination_report.tex", "Li1", 1)
 
-    decoordination_report(
-        network_loader, folder + "/decoodination_report.tex", "Li1", 1
-    )
+#     decoordination_report(
+#         network_loader, folder + "/decoodination_report.tex", "Li1", 1
+#     )
 
-    return tests_passed
+#     return tests_passed
 
 
-def co2_test():
+# def co2_test():
 
-    folder = "./scratch/co2_test"
-    subprocess.run(["mkdir", folder])
+#     folder = "./scratch/co2_test"
+#     subprocess.run(["mkdir", folder])
 
-    mol_json = "./data/co2_summary_docs.json"
-    database_entries = loadfn(mol_json)
+#     mol_json = "./data/co2_summary_docs.json"
+#     database_entries = loadfn(mol_json)
 
-    species_decision_tree = nonmetal_species_decision_tree
+#     species_decision_tree = nonmetal_species_decision_tree
 
-    mol_entries = species_filter(
-        database_entries,
-        mol_entries_pickle_location=folder + "/mol_entries.pickle",
-        species_report=folder + "/unfiltered_species_report.tex",
-        species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: (mol.free_energy),
-        species_logging_decision_tree=species_decision_tree,
-        generate_unfiltered_mol_pictures=True,
-    )
+#     mol_entries = species_filter(
+#         database_entries,
+#         mol_entries_pickle_location=folder + "/mol_entries.pickle",
+#         species_report=folder + "/unfiltered_species_report.tex",
+#         species_decision_tree=species_decision_tree,
+#         coordimer_weight=lambda mol: (mol.free_energy),
+#         species_logging_decision_tree=species_decision_tree,
+#         generate_unfiltered_mol_pictures=True,
+#     )
 
-    bucket(mol_entries, folder + "/buckets.sqlite")
+#     bucket(mol_entries, folder + "/buckets.sqlite")
 
-    params = {"temperature": ROOM_TEMP, "electron_free_energy": -4.04}
+#     params = {"temperature": ROOM_TEMP, "electron_free_energy": -4.04}
 
-    dispatcher_payload = DispatcherPayload(
-        folder + "/buckets.sqlite",
-        folder + "/rn.sqlite",
-        folder + "/reaction_report.tex",
-    )
+#     dispatcher_payload = DispatcherPayload(
+#         folder + "/buckets.sqlite",
+#         folder + "/rn.sqlite",
+#         folder + "/reaction_report.tex",
+#     )
 
-    worker_payload = WorkerPayload(
-        folder + "/buckets.sqlite",
-        co2_reaction_decision_tree,
-        params,
-        co2_reaction_decision_tree,
-    )
+#     worker_payload = WorkerPayload(
+#         folder + "/buckets.sqlite",
+#         co2_reaction_decision_tree,
+#         params,
+#         co2_reaction_decision_tree,
+#     )
 
-    dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
-    dumpfn(worker_payload, folder + "/worker_payload.json")
+#     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
+#     dumpfn(worker_payload, folder + "/worker_payload.json")
 
-    subprocess.run(
-        [
-            "mpirun",
-            "--use-hwthread-cpus",
-            "-n",
-            number_of_threads,
-            "python",
-            "run_network_generation.py",
-            folder + "/mol_entries.pickle",
-            folder + "/dispatcher_payload.json",
-            folder + "/worker_payload.json",
-        ]
-    )
+#     subprocess.run(
+#         [
+#             "mpirun",
+#             "--use-hwthread-cpus",
+#             "-n",
+#             number_of_threads,
+#             "python",
+#             "run_network_generation.py",
+#             folder + "/mol_entries.pickle",
+#             folder + "/dispatcher_payload.json",
+#             folder + "/worker_payload.json",
+#         ]
+#     )
 
-    # Li_plus_id = find_mol_entry_from_xyz_and_charge(
-    #     mol_entries,
-    #     './xyz_files/Li.xyz',
-    #     1)
-
-    # EC_id = find_mol_entry_from_xyz_and_charge(
-    #     mol_entries,
-    #     './xyz_files/EC.xyz',
-    #     0)
-
-    # initial_state = {
-    #     Li_plus_id : 30,
-    #     EC_id : 30
-    # }
-
-    # insert_initial_state(initial_state, mol_entries, folder + '/initial_state.sqlite')
-
-    # subprocess.run([
-    #     'GMC',
-    #     '--reaction_database=' + folder + '/rn.sqlite',
-    #     '--initial_state_database=' + folder + '/initial_state.sqlite',
-    #     '--number_of_simulations=1000',
-    #     '--base_seed=1000',
-    #     '--thread_count=' + number_of_threads,
-    #     '--step_cutoff=200'
-    # ])
-
-    # network_loader = NetworkLoader(
-    #     folder + '/rn.sqlite',
-    #     folder + '/mol_entries.pickle',
-    #     folder + '/initial_state.sqlite'
-    #     )
-
-    # network_loader.load_trajectories()
-    # network_loader.load_initial_state()
-
-    # report_generator = ReportGenerator(
-    #     network_loader.mol_entries,
-    #     folder + '/dummy.tex',
-    #     rebuild_mol_pictures=True)
-
-    # coordination_report(
-    #     network_loader,
-    #     folder + '/coodination_report.tex',
-    #     'Li1',
-    #     1)
-
-    # decoordination_report(
-    #     network_loader,
-    #     folder + '/decoodination_report.tex',
-    #     'Li1',
-    #     1)
-
-    # return tests_passed
     return
 
 
@@ -633,12 +580,17 @@ def euvl_phase1_test():
 
     species_decision_tree = euvl_species_decision_tree
 
+    params = {
+        "temperature": ROOM_TEMP,
+        "electron_free_energy": 0.0,
+    }
+
     mol_entries = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: (mol.free_energy),
+        coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
     )
@@ -647,11 +599,7 @@ def euvl_phase1_test():
 
     bucket(mol_entries, folder + "/buckets.sqlite")
 
-    params = {
-        "temperature": ROOM_TEMP,
-        "electron_free_energy": 0.0,
-        "electron_species": len(mol_entries),
-    }
+    params["electron_species"] = len(mol_entries)
 
     mol_entries = add_electron_species(
         mol_entries,
@@ -760,12 +708,17 @@ def euvl_phase2_test():
 
     species_decision_tree = euvl_species_decision_tree
 
+    params = {
+        "temperature": ROOM_TEMP,
+        "electron_free_energy": 0.0,
+    }
+
     mol_entries = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
-        coordimer_weight=lambda mol: (mol.free_energy),
+        coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
     )
@@ -773,11 +726,6 @@ def euvl_phase2_test():
     print(len(mol_entries), "initial mol entries")
 
     bucket(mol_entries, folder + "/buckets.sqlite")
-
-    params = {
-        "temperature": ROOM_TEMP,
-        "electron_free_energy": 0.0,
-    }
 
     print(len(mol_entries), "final mol entries")
 

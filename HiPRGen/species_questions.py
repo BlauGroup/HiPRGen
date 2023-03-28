@@ -351,7 +351,7 @@ class bad_metal_coordination(MSONable):
         return False
 
 
-class set_solvation_free_energy(MSONable):
+class set_solvation_correction(MSONable):
     """
     metal atoms coordinate with the surrounding solvent. We need to correct
     free energy to take this into account. The correction is
@@ -405,7 +405,7 @@ class set_solvation_free_energy(MSONable):
                 - number_of_coordination_bonds
             )
 
-        mol.solvation_free_energy = correction + mol.free_energy
+        mol.solvation_correction = correction
         return False
 
 
@@ -457,7 +457,7 @@ class charge_too_big(MSONable):
 
 li_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
-    (set_solvation_free_energy(li_ec), Terminal.KEEP),
+    (set_solvation_correction(li_ec), Terminal.KEEP),
     (charge_too_big(), Terminal.DISCARD),
     (neutral_metal_filter(0.1), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
@@ -478,7 +478,7 @@ li_species_decision_tree = [
 
 mg_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
-    (set_solvation_free_energy(mg_g2), Terminal.KEEP),
+    (set_solvation_correction(mg_g2), Terminal.KEEP),
     (neutral_metal_filter(0.5), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (metal_ion_filter(), Terminal.DISCARD),
@@ -493,7 +493,6 @@ mg_species_decision_tree = [
 
 nonmetal_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
-    (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (compute_graph_hashes, Terminal.KEEP),
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(), Terminal.KEEP),
@@ -504,7 +503,6 @@ nonmetal_species_decision_tree = [
 
 euvl_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
-    (set_solvation_free_energy(li_ec), Terminal.KEEP),
     (h_atom_filter(), Terminal.DISCARD),
     (oh_plus_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),

@@ -143,13 +143,13 @@ def species_filter(
                 "uncorrected free energy: " + str(mol.free_energy)
             )
 
-            report_generator.emit_text(
-                "number of coordination bonds: " + str(mol.number_of_coordination_bonds)
-            )
+            # report_generator.emit_text(
+            #     "number of coordination bonds: " + str(mol.number_of_coordination_bonds)
+            # )
 
-            report_generator.emit_text(
-                "corrected free energy: " + str(mol.solvation_free_energy)
-            )
+            # report_generator.emit_text(
+            #     "corrected free energy: " + str(mol.solvation_free_energy)
+            # )
 
             report_generator.emit_text("formula: " + mol.formula)
 
