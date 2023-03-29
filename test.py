@@ -681,14 +681,14 @@ def euvl_phase1_test():
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
-    if network_loader.number_of_species == 86:
+    if network_loader.number_of_species == 103:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 300:
+    if network_loader.number_of_reactions == 371:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
@@ -709,7 +709,7 @@ def euvl_phase2_test():
     species_decision_tree = euvl_species_decision_tree
 
     params = {
-        "temperature": ROOM_TEMP,
+        "temperature": ROOM_TEMP+200.0,
         "electron_free_energy": 0.0,
     }
 
@@ -816,14 +816,14 @@ def euvl_phase2_test():
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
-    if network_loader.number_of_species == 85:
+    if network_loader.number_of_species == 102:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 2781:
+    if network_loader.number_of_reactions == 4079:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
