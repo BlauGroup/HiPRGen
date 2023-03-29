@@ -1030,7 +1030,7 @@ class reaction_is_hindered(MSONable):
                 print(neighbor)
                 neighbor_index = neighbor[2]
                 print(neighbor_index)
-                print hot_reactant.mol_graph.to_dict()
+                print(hot_reactant.mol_graph.to_dict())
                 # specie = hot_reactant.mol_graph['species'[neighbor_index]]
         #     num_neighbors_list = []
         #     neighbors = nx.generators.ego.ego_graph(   
