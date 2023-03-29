@@ -1025,12 +1025,9 @@ class reaction_is_hindered(MSONable):
 
         for atom in hot_reactant_atoms:
             neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
-            print(neighbor_list)
+            print(hot_reactant.as_dict())
             for neighbor in neighbor_list:
-                print(neighbor)
                 neighbor_index = neighbor[2]
-                print(neighbor_index)
-                print(hot_reactant.mol_graph.to_dict())
                 # specie = hot_reactant.mol_graph['species'[neighbor_index]]
         #     num_neighbors_list = []
         #     neighbors = nx.generators.ego.ego_graph(   
