@@ -1031,8 +1031,8 @@ class reaction_is_hindered(MSONable):
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
             for node_set in num_neighbors:
                 for node in node_set:
-                    specie = nx.get_node_attributes(node, 'specie')
-                    print(specie)
+                    print(hot_reactant.mol_graph)
+                    specie = hot_reactant.mol_graph[species[node]]
                     if neighbor != atom and specie == 'C':
                         num_neighbors_list.append(neighbor)
             if len(num_neighbors_list) == 3:
