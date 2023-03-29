@@ -1024,7 +1024,7 @@ class reaction_is_hindered(MSONable):
         steric_centers = []
 
         for atom in hot_reactant_atoms:
-            neighbor_list = hot_reactant.get_connected_sites(atom)
+            neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
             print(neighbor_list)
             for neighbor in neighbor_list:
                 print(neighbor)
