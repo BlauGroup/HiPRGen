@@ -1024,35 +1024,43 @@ class reaction_is_hindered(MSONable):
         steric_centers = []
 
         for atom in hot_reactant_atoms:
-            num_neighbors_list = []
-            neighbors = nx.generators.ego.ego_graph(   
-                    hot_reactant.covalent_graph, atom, 1, undirected=True
-                )
-            num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            for node_set in num_neighbors:
-                for node in node_set:
-                    print(hot_reactant.mol_graph)
-                    specie = hot_reactant.mol_graph[species[node]]
-                    if neighbor != atom and specie == 'C':
-                        num_neighbors_list.append(neighbor)
-            if len(num_neighbors_list) == 3:
-                steric_centers.append(atom)
-                break
+            neighbor_list = hot_reactant.get_connected_sites(atom)
+            print(neighbor_list)
+            for neighbor in neighbor_list:
+                print(neighbor)
+                neighbor_index = neighbor[2]
+                print(neighbor_index)
+                print hot_reactant.mol_graph.to_dict()
+                # specie = hot_reactant.mol_graph['species'[neighbor_index]]
+        #     num_neighbors_list = []
+        #     neighbors = nx.generators.ego.ego_graph(   
+        #             hot_reactant.covalent_graph, atom, 1, undirected=True
+        #         )
+        #     num_neighbors = nx.algorithms.components.connected_components(neighbors)
+        #     for node_set in num_neighbors:
+        #         for node in node_set:
+        #             print(hot_reactant.mol_graph)
+        #             specie = hot_reactant.mol_graph[species[node]]
+        #             if neighbor != atom and specie == 'C':
+        #                 num_neighbors_list.append(neighbor)
+        #     if len(num_neighbors_list) == 3:
+        #         steric_centers.append(atom)
+        #         break
 
-        for atom in hot_product_atoms:
-            num_neighbors_list = []
-            neighbors = nx.generators.ego.ego_graph(   
-                    hot_product.covalent_graph, atom, 1, undirected=True
-                )
-            num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            for node_set in num_neighbors:
-                for node in node_set:
-                    specie = nx.get_node_attributes(node, 'specie')
-                    if neighbor != atom and specie == 'C':
-                        num_neighbors_list.append(neighbor)
-            if len(num_neighbors_list) == 3:
-                steric_centers.append(atom)
-                break
+        # for atom in hot_product_atoms:
+        #     num_neighbors_list = []
+        #     neighbors = nx.generators.ego.ego_graph(   
+        #             hot_product.covalent_graph, atom, 1, undirected=True
+        #         )
+        #     num_neighbors = nx.algorithms.components.connected_components(neighbors)
+        #     for node_set in num_neighbors:
+        #         for node in node_set:
+        #             specie = nx.get_node_attributes(node, 'specie')
+        #             if neighbor != atom and specie == 'C':
+        #                 num_neighbors_list.append(neighbor)
+        #     if len(num_neighbors_list) == 3:
+        #         steric_centers.append(atom)
+        #         break
 
         if len(steric_centers) >= 2:
             return True
