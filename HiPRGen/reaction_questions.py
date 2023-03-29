@@ -1009,14 +1009,14 @@ class reaction_is_hindered(MSONable):
 
         hot_reactant_atoms = []
 
-        for l in reaction["reactant_bonds_broken"]:
+        for l in reaction["reactant_bonds_broken"]: #finds the indicies for the atoms in the broken bond
             for t in l:
                 hot_reactant = mol_entries[reaction["reactants"][t[0]]]
                 hot_reactant_atoms.append(t[1])
 
         hot_product_atoms = []
 
-        for l in reaction["product_bonds_broken"]:
+        for l in reaction["product_bonds_broken"]: #finds the indicies for the atoms in the formed bond
             for t in l:
                 hot_product = mol_entries[reaction["products"][t[0]]]
                 hot_product_atoms.append(t[1])
@@ -1029,11 +1029,13 @@ class reaction_is_hindered(MSONable):
                     hot_reactant.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            for node in num_neighbors:
-                for neighbor in node:
-                    if neighbor != atom:
+            for node_set in num_neighbors:
+                for node in node_set:
+                    specie = nx.get_node_attributes(node, 'specie')
+                    print(specie)
+                    if neighbor != atom and specie == 'C':
                         num_neighbors_list.append(neighbor)
-            if len(num_neighbors_list) == 4:
+            if len(num_neighbors_list) == 3:
                 steric_centers.append(atom)
                 break
 
@@ -1043,11 +1045,12 @@ class reaction_is_hindered(MSONable):
                     hot_product.covalent_graph, atom, 1, undirected=True
                 )
             num_neighbors = nx.algorithms.components.connected_components(neighbors)
-            for node in num_neighbors:
-                for neighbor in node:
-                    if neighbor != atom:
+            for node_set in num_neighbors:
+                for node in node_set:
+                    specie = nx.get_node_attributes(node, 'specie')
+                    if neighbor != atom and specie == 'C':
                         num_neighbors_list.append(neighbor)
-            if len(num_neighbors_list) == 4:
+            if len(num_neighbors_list) == 3:
                 steric_centers.append(atom)
                 break
 
