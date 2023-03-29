@@ -1024,11 +1024,13 @@ class reaction_is_hindered(MSONable):
         steric_centers = []
 
         for atom in hot_reactant_atoms:
-            neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
-            for neighbor in neighbor_list:
-                neighbor_index = neighbor[2]
-                species = hot_reactant.nodes[neighbor_index['species']]
-                print(species)
+            print(hot_reactant.mol_graph.get_coordination_of_site(atom))
+            if hot_reactant.mol_graph.get_coordination_of_site(atom) == 4:
+                neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
+                for neighbor in neighbor_list:
+                    neighbor_index = neighbor[2]
+                    species = hot_reactant.nodes[neighbor_index['species']]
+                    print(hot_reactant.molgraph.asdict())
                 # specie = hot_reactant.mol_graph['species'[neighbor_index]]
         #     num_neighbors_list = []
         #     neighbors = nx.generators.ego.ego_graph(   
