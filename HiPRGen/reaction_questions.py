@@ -1024,13 +1024,13 @@ class reaction_is_hindered(MSONable):
         num_carbon_neighbors = 0
 
         for atom in hot_reactant_atoms:
-            if hot_reactant.mol_graph.get_coordination_of_site(atom) == 4:
+            if hot_reactant.mol_graph.get_coordination_of_site(atom) == 4: #only care about sp3 hybidized carbons
                 neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
                     neighbor_index = neighbor[2]
-                    if hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 4:
-                        num_carbon_neighbors += 1
-        for atom in hot_product_atoms:
+                    if hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 4: #if neighbor is also sp3 hybridized
+                        num_carbon_neighbors += 1 #we consider it to affect hindrance
+        for atom in hot_product_atoms: #repeat for products
             if hot_product.mol_graph.get_coordination_of_site(atom) == 4:
                 neighbor_list = hot_product.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
@@ -1053,7 +1053,7 @@ class reaction_is_hindered(MSONable):
         #                 if specie == 'C':
         #                     num_carbon_neighbors += 1
 
-        if num_carbon_neighbors >= 7:
+        if num_carbon_neighbors >= 7: #7 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
             return True
                 # specie = hot_reactant.mol_graph['species'[neighbor_index]]
         #     num_neighbors_list = []
