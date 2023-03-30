@@ -1053,7 +1053,7 @@ class reaction_is_hindered(MSONable):
         #                 if specie == 'C':
         #                     num_carbon_neighbors += 1
 
-        if num_carbon_neighbors >= 6:
+        if num_carbon_neighbors >= 7:
             return True
                 # specie = hot_reactant.mol_graph['species'[neighbor_index]]
         #     num_neighbors_list = []
