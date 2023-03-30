@@ -20,7 +20,7 @@ with open('test_species.txt') as mol_id_doc: #open the text file and copy each l
 print("Done!")
 
 print("Opening json file...")
-mol_json = "merged.json"
+mol_json = "032923.json"
 database_entries = loadfn(mol_json) #loads the json file to a list of dictionaries
 print("Done!")
 
@@ -30,7 +30,7 @@ print("Done!")
 
 final_mol_ids = []
 
-print('copying desired molecules to a new list...')
+print('Copying desired molecules to a new list...')
 for mol_id in mol_id_list: #takes the list of ids, finds their corresponding molecules in the json file 
     for mol_entry in mol_entries:
         m_id = mol_entry.entry_id
@@ -53,4 +53,16 @@ for entry in database_entries:
                     val = new_entry.pop(name)
         test_set.append(new_entry)
             
-dumpfn(test_set, 'euvl_test_set.json')
+dumpfn(test_set, 'euvl_test_set.json') 
+
+new_mol_json = loadfn('euvl_test_set.json')
+new_mol_entries= [MoleculeEntry.from_mp_doc(e) for e in new_mol_json]
+
+new_id_list = []
+
+for molecule in new_mol_entries:
+    new_id_list.append(molecule.entry_id)
+
+new_id_set = set(new_id_list)
+mol_id_set = set(mol_id_list)
+print(mol_id_set - new_id_set)
