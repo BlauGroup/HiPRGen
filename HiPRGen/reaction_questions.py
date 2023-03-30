@@ -2,6 +2,7 @@ import math
 from HiPRGen.mol_entry import MoleculeEntry
 from functools import partial
 import itertools
+import copy
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 from HiPRGen.constants import Terminal, ROOM_TEMP, KB, PLANCK, m_formulas
@@ -782,6 +783,7 @@ class fragment_matching_found(MSONable):
 
                         product_fragment_indices_list.append([i, j])
 
+        viable_fragment_matches = []
         for reactant_fragment_indices in reactant_fragment_indices_list: #iterating over all reactant and product fragment indicies
             for product_fragment_indices in product_fragment_indices_list:
                 reactant_fragment_count = 0
@@ -838,13 +840,55 @@ class fragment_matching_found(MSONable):
                     continue
 
                 if reactant_hashes == product_hashes:
-                    reaction["reactant_bonds_broken"] = reactant_bonds_broken
-                    reaction["product_bonds_broken"] = product_bonds_broken
-                    reaction["hashes"] = reactant_hashes
-                    reaction["reactant_fragment_count"] = reactant_fragment_count
-                    reaction["product_fragment_count"] = product_fragment_count
+                    if hydrogen_hash in reactant_hashes:
+                        reaction["reactant_bonds_broken"] = reactant_bonds_broken
+                        reaction["product_bonds_broken"] = product_bonds_broken
+                        reaction["hashes"] = reactant_hashes
+                        reaction["reactant_fragment_count"] = reactant_fragment_count
+                        reaction["product_fragment_count"] = product_fragment_count
+                        return True
+                    else:
+                        tmp = {}
+                        tmp["reactant_bonds_broken"] = reactant_bonds_broken
+                        tmp["product_bonds_broken"] = product_bonds_broken
+                        tmp["hashes"] = reactant_hashes
+                        tmp["reactant_fragment_count"] = reactant_fragment_count
+                        tmp["product_fragment_count"] = product_fragment_count
+                        viable_fragment_matches.append(tmp)
 
-                    return True
+        if len(viable_fragment_matches) > 0:
+            min_frag_size = 1000000000
+            if len(viable_fragment_matches) == 1:
+                best_matching = viable_fragment_matches[0]
+            else:
+                for viable_match in viable_fragment_matches:
+                    if len(viable_match["reactant_bonds_broken"]) == 0:
+                        for reactant_index in reaction["reactants"]:
+                            reactant = mol_entries[reactant_index]
+                            if len(reactant.molecule) < min_frag_size:
+                                min_frag_size = len(reactant.molecule)
+                                best_matching = copy.deepcopy(viable_match)
+                    else:
+                        for l in viable_match["reactant_bonds_broken"]:
+                            hot_reactant = mol_entries[reaction["reactants"][l[0][0]]]
+                            hot_reactant_graph = copy.deepcopy(hot_reactant.covalent_graph)
+                            edge = (l[0][1],l[1][1])
+                            hot_reactant_graph.remove_edge(*edge)
+                            connected_components = nx.algorithms.components.connected_components(hot_reactant_graph)
+                            for c in connected_components:
+                                subgraph = hot_reactant_graph.subgraph(c)
+                                # if subgraph.number_of_nodes() == 1:
+                                #     for node in subgraph:
+                                #         print(nx.get_node_attributes(hot_reactant_graph, "specie")[node])
+                                if subgraph.number_of_nodes() < min_frag_size:
+                                    min_frag_size = subgraph.number_of_nodes()
+                                    best_matching = copy.deepcopy(viable_match)
+            reaction["reactant_bonds_broken"] = best_matching["reactant_bonds_broken"]
+            reaction["product_bonds_broken"] = best_matching["product_bonds_broken"]
+            reaction["hashes"] = best_matching["hashes"]
+            reaction["reactant_fragment_count"] = best_matching["reactant_fragment_count"]
+            reaction["product_fragment_count"] = best_matching["product_fragment_count"]
+            return True
 
         return False
 
@@ -1299,20 +1343,21 @@ euvl_phase2_reaction_decision_tree = [
     ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
-# euvl_phase2_steric_filter_logging_tree = [
-#     (is_redox_reaction(), Terminal.DISCARD),
-#     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
-#     (reaction_is_charge_transfer(), Terminal.DISCARD),
-#     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
-#     (star_count_diff_above_threshold(6), Terminal.DISCARD),
-#     (
-#         fragment_matching_found(),
-#         [
-#             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
-#             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-#             (reaction_is_hindered(), Terminal.KEEP),
-#             (reaction_default_true(), Terminal.KEEP),
-#         ],
-#     ),
-#     (reaction_default_true(), Terminal.DISCARD),
-# ]
+
+euvl_phase2_steric_filter_logging_tree = [
+    (is_redox_reaction(), Terminal.DISCARD),
+    (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+    (reaction_is_charge_transfer(), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (reaction_is_hindered(), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
