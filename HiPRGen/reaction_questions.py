@@ -1028,19 +1028,21 @@ class reaction_is_hindered(MSONable):
                 neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
                     neighbor_index = neighbor[2]
-                    node_list = hot_reactant.mol_graph.as_dict()['graphs']['nodes']
-                    specie = node_list[neighbor_index]['specie']
-                    if specie == 'C':
-                        num_carbon_neighbors += 1
+                    if neighbor_index != atom:
+                        node_list = hot_reactant.mol_graph.as_dict()['graphs']['nodes']
+                        specie = node_list[neighbor_index]['specie']
+                        if specie == 'C':
+                            num_carbon_neighbors += 1
         for atom in hot_product_atoms:
             if hot_product.mol_graph.get_coordination_of_site(atom) == 4:
                 neighbor_list = hot_product.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
-                    neighbor_index = neighbor[2]
-                    node_list = hot_product.mol_graph.as_dict()['graphs']['nodes']
-                    specie = node_list[neighbor_index]['specie']
-                    if specie == 'C':
-                        num_carbon_neighbors += 1
+                    if neighbor_index != atom:
+                        neighbor_index = neighbor[2]
+                        node_list = hot_product.mol_graph.as_dict()['graphs']['nodes']
+                        specie = node_list[neighbor_index]['specie']
+                        if specie == 'C':
+                            num_carbon_neighbors += 1
 
         if num_carbon_neighbors >= 7:
             return True
