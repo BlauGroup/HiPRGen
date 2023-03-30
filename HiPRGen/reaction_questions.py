@@ -61,6 +61,10 @@ fluorine_graph = nx.MultiGraph()
 fluorine_graph.add_node(0, specie="F")
 fluorine_hash = weisfeiler_lehman_graph_hash(fluorine_graph, node_attr="specie")
 
+carbon_graph = nx.MultiGraph()
+carbon_graph.add_node(0, specie="C")
+carbon_hash = weisfeiler_lehman_graph_hash(carbon_graph, node_attr="specie")
+
 
 def run_decision_tree(
     reaction, mol_entries, params, decision_tree, decision_pathway=None
@@ -97,8 +101,7 @@ def run_decision_tree(
             """
             unexpected node type reached.
             this is usually caused because none of the questions in some node returned True.
-            """
-        )
+            """)
 
 
 def default_rate(dG_barrier, params):
@@ -743,25 +746,25 @@ class fragment_matching_found(MSONable):
         reactant_fragment_indices_list = []
         product_fragment_indices_list = []
 
-        if reaction["number_of_reactants"] == 1:
-            reactant = mol_entries[reaction["reactants"][0]]
-            for i in range(len(reactant.fragment_data)):
-                reactant_fragment_indices_list.append([i])
+        if reaction["number_of_reactants"] == 1: #creates a list of the indicies pointing to FragmentComplex objects
+            reactant = mol_entries[reaction["reactants"][0]] #reactant is a mol_entry
+            for i in range(len(reactant.fragment_data)):  #fragment_data is a list of FragmentComplex objects, where each
+                reactant_fragment_indices_list.append([i]) #FragmentComplex object is basically a dictionary with four keys
 
-        if reaction["number_of_reactants"] == 2:
+        if reaction["number_of_reactants"] == 2: 
             reactant_0 = mol_entries[reaction["reactants"][0]]
             reactant_1 = mol_entries[reaction["reactants"][1]]
-            for i in range(len(reactant_0.fragment_data)):
-                for j in range(len(reactant_1.fragment_data)):
-                    if (
-                        reactant_0.fragment_data[i].number_of_bonds_broken
+            for i in range(len(reactant_0.fragment_data)): #for each fragment of one reactant
+                for j in range(len(reactant_1.fragment_data)): #look at each fragment of the other reactant
+                    if (                                                    #true only when adding fragments of one reactant with the other 
+                        reactant_0.fragment_data[i].number_of_bonds_broken  #unfragmented reactant?
                         + reactant_1.fragment_data[j].number_of_bonds_broken
-                        <= 1
-                    ):
+                        <= 1 
+                    ): 
 
-                        reactant_fragment_indices_list.append([i, j])
+                        reactant_fragment_indices_list.append([i, j]) #append a list to the list containing fragment indicies for both reactants
 
-        if reaction["number_of_products"] == 1:
+        if reaction["number_of_products"] == 1: #repeat for product indicies
             product = mol_entries[reaction["products"][0]]
             for i in range(len(product.fragment_data)):
                 product_fragment_indices_list.append([i])
@@ -779,7 +782,7 @@ class fragment_matching_found(MSONable):
 
                         product_fragment_indices_list.append([i, j])
 
-        for reactant_fragment_indices in reactant_fragment_indices_list:
+        for reactant_fragment_indices in reactant_fragment_indices_list: #iterating over all reactant and product fragment indicies
             for product_fragment_indices in product_fragment_indices_list:
                 reactant_fragment_count = 0
                 product_fragment_count = 0
@@ -787,17 +790,14 @@ class fragment_matching_found(MSONable):
                 product_bonds_broken = []
 
                 reactant_hashes = dict()
-                for reactant_index, frag_complex_index in enumerate(
-                    reactant_fragment_indices
-                ):
-
-                    fragment_complex = mol_entries[
+                for reactant_index, frag_complex_index in enumerate(reactant_fragment_indices):
+                    fragment_complex = mol_entries[                  #pulls out a fragment_complex whose index matches the above
                         reaction["reactants"][reactant_index]
                     ].fragment_data[frag_complex_index]
 
-                    for bond in fragment_complex.bonds_broken:
+                    for bond in fragment_complex.bonds_broken:       #save what bonds are broken in this complex to reactant_bonds_broken
                         reactant_bonds_broken.append(
-                            [(reactant_index, x) for x in bond]
+                            [(reactant_index, x) for x in bond] #first element of tuple is which reactant, x is a integer, bond is a tuple containing two numbers denoting the edge of a molecule graph
                         )
 
                     for i in range(fragment_complex.number_of_fragments):
@@ -1036,7 +1036,7 @@ class concerted_metal_coordination_one_reactant(MSONable):
 
         if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 2:
 
-            product_0 = mol_entries[reaction["products"][0]]
+            product_0 = mol_entries[reaction["products"][0]] #use this to get a mol entry
             product_1 = mol_entries[reaction["products"][1]]
             reactant = mol_entries[reaction["reactants"][0]]
 
@@ -1114,7 +1114,43 @@ class reaction_is_hindered(MSONable):
         return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
-        # WRITE ME
+        #if carbon_hash not in reaction["hashes"]: #does this filter our reactions where bonds without carbon are broken? Who knows!
+        #    return False
+
+        hot_reactant_atoms = []
+
+        for l in reaction["reactant_bonds_broken"]: #finds the indicies for the atoms in the broken bond
+            for t in l:
+                hot_reactant = mol_entries[reaction["reactants"][t[0]]]
+                hot_reactant_atoms.append(t[1])
+
+        hot_product_atoms = []
+
+        for l in reaction["product_bonds_broken"]: #finds the indicies for the atoms in the formed bond
+            for t in l:
+                hot_product = mol_entries[reaction["products"][t[0]]]
+                hot_product_atoms.append(t[1])
+
+        num_carbon_neighbors = 0
+
+        for atom in hot_reactant_atoms:
+            if hot_reactant.mol_graph.get_coordination_of_site(atom) == 4: #only care about sp3 hybidized carbons
+                neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
+                for neighbor in neighbor_list:
+                    neighbor_index = neighbor[2]
+                    if hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 4: #if neighbor is also sp3 hybridized
+                        num_carbon_neighbors += 1 #we consider it to affect hindrance
+        for atom in hot_product_atoms: #repeat for products
+            if hot_product.mol_graph.get_coordination_of_site(atom) == 4:
+                neighbor_list = hot_product.mol_graph.get_connected_sites(atom)
+                for neighbor in neighbor_list:
+                    neighbor_index = neighbor[2]
+                    if hot_product.mol_graph.get_coordination_of_site(neighbor_index) == 4:
+                        num_carbon_neighbors += 1
+
+        if num_carbon_neighbors >= 7: #7 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
+            return True
+               
         return False
 
 
@@ -1257,9 +1293,26 @@ euvl_phase2_reaction_decision_tree = [
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            # (reaction_is_hindered(), Terminal.DISCARD),
+            (reaction_is_hindered(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
+# euvl_phase2_steric_filter_logging_tree = [
+#     (is_redox_reaction(), Terminal.DISCARD),
+#     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+#     (reaction_is_charge_transfer(), Terminal.DISCARD),
+#     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+#     (star_count_diff_above_threshold(6), Terminal.DISCARD),
+#     (
+#         fragment_matching_found(),
+#         [
+#             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+#             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+#             (reaction_is_hindered(), Terminal.KEEP),
+#             (reaction_default_true(), Terminal.KEEP),
+#         ],
+#     ),
+#     (reaction_default_true(), Terminal.DISCARD),
+# ]

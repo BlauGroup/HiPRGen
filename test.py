@@ -29,6 +29,7 @@ from HiPRGen.reaction_questions import (
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
     euvl_phase2_reaction_decision_tree,
+    euvl_phase2_steric_filter_logging_tree
 )
 
 from HiPRGen.mc_analysis import (
@@ -739,7 +740,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         euvl_phase2_reaction_decision_tree,
         params,
-        euvl_phase2_reaction_decision_tree,
+        euvl_phase2_steric_filter_logging_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -833,8 +834,8 @@ def euvl_phase2_test():
 
 
 tests = [
-    # mg_test,
-    # li_test,
+    #mg_test,
+    #li_test,
     # flicho_test,
     # co2_test,
     euvl_phase1_test,
