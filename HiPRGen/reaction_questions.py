@@ -1040,7 +1040,7 @@ class reaction_is_hindered(MSONable):
 
 #do graph and mol_graph indicies match?
 
-        if reactant_numb_carbon_neighbors >= 3 and product_num_carbon_neighbors >= 3: #6 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
+        if reactant_num_carbon_neighbors >= 3 and product_num_carbon_neighbors >= 3: #6 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
             return True
 
         return False
