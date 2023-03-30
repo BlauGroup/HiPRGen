@@ -1037,57 +1037,10 @@ class reaction_is_hindered(MSONable):
                     neighbor_index = neighbor[2]
                     if hot_product.mol_graph.get_coordination_of_site(neighbor_index) == 4:
                         num_carbon_neighbors += 1
-        #             if neighbor_index != atom:
-        #                 node_list = hot_reactant.mol_graph.as_dict()['graphs']['nodes']
-        #                 specie = node_list[neighbor_index]['specie']
-        #                 if specie == 'C':
-        #                     num_carbon_neighbors += 1
-        # for atom in hot_product_atoms:
-        #     if hot_product.mol_graph.get_coordination_of_site(atom) == 4:
-        #         neighbor_list = hot_product.mol_graph.get_connected_sites(atom)
-        #         for neighbor in neighbor_list:
-        #             neighbor_index = neighbor[2]
-        #             if neighbor_index != atom:
-        #                 node_list = hot_product.mol_graph.as_dict()['graphs']['nodes']
-        #                 specie = node_list[neighbor_index]['specie']
-        #                 if specie == 'C':
-        #                     num_carbon_neighbors += 1
 
         if num_carbon_neighbors >= 7: #7 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
             return True
-                # specie = hot_reactant.mol_graph['species'[neighbor_index]]
-        #     num_neighbors_list = []
-        #     neighbors = nx.generators.ego.ego_graph(   
-        #             hot_reactant.covalent_graph, atom, 1, undirected=True
-        #         )
-        #     num_neighbors = nx.algorithms.components.connected_components(neighbors)
-        #     for node_set in num_neighbors:
-        #         for node in node_set:
-        #             print(hot_reactant.mol_graph)
-        #             specie = hot_reactant.mol_graph[species[node]]
-        #             if neighbor != atom and specie == 'C':
-        #                 num_neighbors_list.append(neighbor)
-        #     if len(num_neighbors_list) == 3:
-        #         steric_centers.append(atom)
-        #         break
-
-        # for atom in hot_product_atoms:
-        #     num_neighbors_list = []
-        #     neighbors = nx.generators.ego.ego_graph(   
-        #             hot_product.covalent_graph, atom, 1, undirected=True
-        #         )
-        #     num_neighbors = nx.algorithms.components.connected_components(neighbors)
-        #     for node_set in num_neighbors:
-        #         for node in node_set:
-        #             specie = nx.get_node_attributes(node, 'specie')
-        #             if neighbor != atom and specie == 'C':
-        #                 num_neighbors_list.append(neighbor)
-        #     if len(num_neighbors_list) == 3:
-        #         steric_centers.append(atom)
-        #         break
-        # if len(steric_centers) >= 2:
-        #     return True
-            
+               
         return False
 
 
@@ -1231,20 +1184,20 @@ euvl_phase2_reaction_decision_tree = [
     ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
-euvl_phase2_steric_filter_logging_tree = [
-    (is_redox_reaction(), Terminal.DISCARD),
-    (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
-    (reaction_is_charge_transfer(), Terminal.DISCARD),
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
-    (star_count_diff_above_threshold(6), Terminal.DISCARD),
-    (
-        fragment_matching_found(),
-        [
-            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
-            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            (reaction_is_hindered(), Terminal.KEEP),
-            (reaction_default_true(), Terminal.KEEP),
-        ],
-    ),
-    (reaction_default_true(), Terminal.DISCARD),
-]
+# euvl_phase2_steric_filter_logging_tree = [
+#     (is_redox_reaction(), Terminal.DISCARD),
+#     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+#     (reaction_is_charge_transfer(), Terminal.DISCARD),
+#     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+#     (star_count_diff_above_threshold(6), Terminal.DISCARD),
+#     (
+#         fragment_matching_found(),
+#         [
+#             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+#             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+#             (reaction_is_hindered(), Terminal.KEEP),
+#             (reaction_default_true(), Terminal.KEEP),
+#         ],
+#     ),
+#     (reaction_default_true(), Terminal.DISCARD),
+# ]
