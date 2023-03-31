@@ -28,7 +28,7 @@ from HiPRGen.reaction_questions import (
     default_reaction_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
-    euvl_phase1_reaction_logging_tree
+    euvl_phase1_reaction_logging_tree,
     euvl_phase2_reaction_decision_tree,
     euvl_phase2_steric_filter_logging_tree
 )
