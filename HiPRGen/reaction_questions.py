@@ -1362,11 +1362,11 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
-    (dG_below_threshold(0.0, "free_energy", 0.0), Terminal.KEEP),
+    (dG_below_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (
         more_than_one_reactant(), 
         [
-            (only_one_product(), Terminal.DISCARD),
+            (only_one_product(), Terminal.KEEP),
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
             (reaction_is_charge_separation(), Terminal.DISCARD),
