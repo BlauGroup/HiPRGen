@@ -1358,7 +1358,7 @@ euvl_phase1_reaction_logging_tree = [
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
