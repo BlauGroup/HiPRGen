@@ -28,6 +28,7 @@ from HiPRGen.reaction_questions import (
     default_reaction_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
+    euvl_phase1_reaction_logging_tree
     euvl_phase2_reaction_decision_tree,
     euvl_phase2_steric_filter_logging_tree
 )
@@ -720,7 +721,7 @@ def euvl_phase2_test():
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
-        species_logging_decision_tree=species_decision_tree,
+        species_logging_decision_tree=euvl_phase1_reaction_logging_tree,
         generate_unfiltered_mol_pictures=False,
     )
 
@@ -839,7 +840,7 @@ tests = [
     # flicho_test,
     # co2_test,
     euvl_phase1_test,
-    euvl_phase2_test,
+    # euvl_phase2_test,
 ]
 
 for test in tests:

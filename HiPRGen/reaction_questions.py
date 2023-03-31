@@ -1158,6 +1158,7 @@ class reaction_is_hindered(MSONable):
         return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
+
         hot_reactant_atoms = []
 
         for l in reaction["reactant_bonds_broken"]: #finds the indicies for the atoms in the broken bond
@@ -1334,6 +1335,72 @@ euvl_phase1_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
+euvl_phase1_reaction_decision_tree_orig = [
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (add_electron_species(), Terminal.DISCARD),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
+
+euvl_phase1_reaction_logging_tree = [
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.KEEP),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (add_electron_species(), Terminal.DISCARD),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (dG_below_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+    (
+        more_than_one_reactant(), 
+        [
+            (only_one_product(), Terminal.DISCARD),
+            (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
+            (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
+            (reaction_is_charge_separation(), Terminal.DISCARD),
+            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+            (star_count_diff_above_threshold(6), Terminal.DISCARD),
+            (compositions_preclude_h_transfer(), Terminal.DISCARD),
+            (
+                fragment_matching_found(),
+                [
+                    (not_h_transfer(), Terminal.DISCARD),
+                    (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
+                    (h_minus_abstraction(), Terminal.DISCARD),
+                    (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.DISCARD),
+                    (reaction_default_true(), Terminal.DISCARD),
+                ],
+            ),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (single_reactant_single_product(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(4), Terminal.DISCARD),
+    (reaction_is_radical_separation(), Terminal.DISCARD),
+    (reaction_is_charge_separation(), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    
+    (reaction_default_true(), Terminal.DISCARD),
+]
 
 euvl_phase2_reaction_decision_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
