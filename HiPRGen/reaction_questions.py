@@ -1182,7 +1182,7 @@ class reaction_is_hindered(MSONable):
                     neighbor_index = neighbor[2]
                     if hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 4: #if neighbor is also sp3 hybridized
                         reactant_num_carbon_neighbors += 1 #we consider it to affect hindrance
-                    elif hot_reactant.mol_grah.get_coordination_of_site(neighbor_index) == 1:
+                    elif hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 1:
                         reactant_num_hydrogens += 1
                         if reactant_num_hydrogens == 3:
                             reaction_methyl_test.append(atom)
