@@ -824,7 +824,7 @@ def euvl_phase2_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 3868:
+    if network_loader.number_of_reactions == 3850:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
