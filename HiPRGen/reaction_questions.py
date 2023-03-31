@@ -1354,8 +1354,8 @@ euvl_phase1_reaction_logging_tree = [
     (
         is_redox_reaction(),
         [
-            (too_many_reactants_or_products(), Terminal.KEEP),
-            (dcharge_too_large(), Terminal.DISCARD),
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.KEEP),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
             (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
