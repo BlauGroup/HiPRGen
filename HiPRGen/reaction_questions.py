@@ -1158,9 +1158,6 @@ class reaction_is_hindered(MSONable):
         return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
-        #if carbon_hash not in reaction["hashes"]: #does this filter our reactions where bonds without carbon are broken? Who knows!
-        #    return False
-
         hot_reactant_atoms = []
 
         for l in reaction["reactant_bonds_broken"]: #finds the indicies for the atoms in the broken bond
@@ -1175,26 +1172,36 @@ class reaction_is_hindered(MSONable):
                 hot_product = mol_entries[reaction["products"][t[0]]]
                 hot_product_atoms.append(t[1])
 
+        reaction_methyl_test = []
         reactant_num_carbon_neighbors = 0
         for atom in hot_reactant_atoms:
+            reactant_num_hydrogens = 0
             if hot_reactant.mol_graph.get_coordination_of_site(atom) == 4: #only care about sp3 hybidized carbons
                 neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
                     neighbor_index = neighbor[2]
                     if hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 4: #if neighbor is also sp3 hybridized
                         reactant_num_carbon_neighbors += 1 #we consider it to affect hindrance
+                    elif hot_reactant.mol_grah.get_coordination_of_site(neighbor_index) == 1:
+                        reactant_num_hydrogens += 1
+                        if reactant_num_hydrogens == 3:
+                            reaction_methyl_test.append(atom)
+
         product_num_carbon_neighbors = 0
         for atom in hot_product_atoms: #repeat for products
+            product_num_hydrogens = 0
             if hot_product.mol_graph.get_coordination_of_site(atom) == 4:
                 neighbor_list = hot_product.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
                     neighbor_index = neighbor[2]
                     if hot_product.mol_graph.get_coordination_of_site(neighbor_index) == 4:
                         product_num_carbon_neighbors += 1
+                    elif hot_product.mol_grah.get_coordination_of_site(neighbor_index) == 1:
+                        product_num_hydrogens += 1
+                        if product_num_hydrogens == 3:
+                            reaction_methyl_test.append(atom)
 
-#do graph and mol_graph indicies match?
-
-        if reactant_num_carbon_neighbors >= 3 and product_num_carbon_neighbors >= 3: #6 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
+        if reactant_num_carbon_neighbors >= 3 and product_num_carbon_neighbors >= 3 and len(reaction_methyl_test) < 2: #6 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
             return True
 
         return False
