@@ -721,7 +721,7 @@ def euvl_phase2_test():
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
-        species_logging_decision_tree=euvl_phase1_reaction_logging_tree,
+        species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
     )
 
@@ -825,7 +825,7 @@ def euvl_phase2_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 3850:
+    if network_loader.number_of_reactions == 3862:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
@@ -840,7 +840,7 @@ tests = [
     # flicho_test,
     # co2_test,
     euvl_phase1_test,
-    # euvl_phase2_test,
+    euvl_phase2_test,
 ]
 
 for test in tests:
