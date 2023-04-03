@@ -1366,9 +1366,9 @@ euvl_phase1_reaction_logging_tree = [
     (
         more_than_one_reactant(), 
         [
-            (only_one_product(), Terminal.KEEP),
-            (reactants_are_both_anions_or_both_cations(), Terminal.KEEP),
-            (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
+            (only_one_product(), Terminal.DISCARD),
+            (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
+            (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.KEEP),
             (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
