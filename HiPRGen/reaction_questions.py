@@ -699,11 +699,11 @@ class compositions_preclude_h_transfer(MSONable):
         h_transfer_possible = None
 
         comp_diff = reactant_compositions[0] - product_compositions[0]
-            if comp_diff.alphabetical_formula == "H1":
-                if abs(reactant_charges[0] - product_charges[0]) > 1:
-                    h_transfer_possible = False
-                else:
-                    h_transfer_possible = True
+        if comp_diff.alphabetical_formula == "H1":
+            if abs(reactant_charges[0] - product_charges[0]) > 1:
+                h_transfer_possible = False
+            else:
+                h_transfer_possible = True
             else:
                 comp_diff = reactant_compositions[0] - product_compositions[1]
                 if comp_diff.alphabetical_formula == "H1":
