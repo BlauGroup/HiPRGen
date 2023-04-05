@@ -720,8 +720,8 @@ class compositions_preclude_h_transfer(MSONable):
             if "H" in new_dict:
                 if len(new_dict.keys()) == 1:
                     if new_dict["H"] == 1:
-                        H_transfer_possible = True
-                        print('reaction saved')
+                        return True
+
             
         # new_el_map: dict[SpeciesLike, float] = collections.defaultdict(float)
         # new_el_map.update(self)
