@@ -716,7 +716,7 @@ class compositions_preclude_h_transfer(MSONable):
                 print(product_dictionary)
                 print(new_dict)
             else:
-                new_dict['H'] = reactant_dictionary['H']
+                new_dict['H'] = int(reactant_dictionary['H'])
             if "H" in new_dict:
                 if len(new_dict.keys()) == 1:
                     if new_dict["H"] == 1:
