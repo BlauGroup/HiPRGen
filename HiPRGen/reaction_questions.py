@@ -699,15 +699,19 @@ class compositions_preclude_h_transfer(MSONable):
 
         h_transfer_possible = None
 
-        for reactant_dictionary in reactant_compositions:
+        reactant_dictionary = reaction_compositions[0]
+
+        for product_dictionary in product_compositions:
             new_dict = {}
-            for product_dictionary in product_compositions:
-                for k, v in product_dictionary.items():
-                    try:
-                        if int(reactant_dictionary[k] - v) != 0:
+            for k, v in product_dictionary.items():
+                try:
+                    if int(reactant_dictionary[k] - v) != 0:
                             new_dict[k] = int(reactant_dictionary[k] - v)
-                    except KeyError:
-                        new_dict[k] = int(-v)
+                except KeyError:
+                    new_dict[k] = int(-v)
+            print(reactant_dictionary)
+            print(product_dictionary)
+            print(new_dict)
             if "H" in new_dict:
                 if new_dict["H"] == 1 or new_dict["H"] == -1:
                     H_transfer_possible = True
