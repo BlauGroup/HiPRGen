@@ -683,7 +683,6 @@ class compositions_preclude_h_transfer(MSONable):
             reactant_id = reaction["reactants"][i]
             reactant = mol_entries[reactant_id]
             reactant_compositions.append(reactant.molecule.composition.as_dict())
-            print(reactant.molecule.composition.as_dict())
             reactant_charges.append(reactant.molecule.charge)
             
         product_compositions = []
@@ -713,8 +712,10 @@ class compositions_preclude_h_transfer(MSONable):
             print(product_dictionary)
             print(new_dict)
             if "H" in new_dict:
-                if new_dict["H"] == 1 or new_dict["H"] == -1:
-                    H_transfer_possible = True
+                if len(new_dict.keys()) == 1:
+                    if new_dict["H"] == 1 or new_dict["H"] == -1:
+                        H_transfer_possible = True
+                        print('reaction saved')
             
         # new_el_map: dict[SpeciesLike, float] = collections.defaultdict(float)
         # new_el_map.update(self)
