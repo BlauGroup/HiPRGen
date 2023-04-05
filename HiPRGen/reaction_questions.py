@@ -699,7 +699,7 @@ class compositions_preclude_h_transfer(MSONable):
 
         h_transfer_possible = None
 
-        reactant_dictionary = reaction_compositions[0]
+        reactant_dictionary = reactant_compositions[0]
 
         for product_dictionary in product_compositions:
             new_dict = {}
