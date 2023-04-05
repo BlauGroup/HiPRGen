@@ -708,7 +708,7 @@ class compositions_preclude_h_transfer(MSONable):
                         if reactant_dictionary[k] -v > 0:
                             new_dict[k] = int(reactant_dictionary[k] - v)
                         else:
-                            new_dict[k] = v - reactant_dictionary
+                            new_dict[k] = v - reactant_dictionary[k]
                 except KeyError:
                     new_dict[k] = int(-v)
             print(reactant_dictionary)
