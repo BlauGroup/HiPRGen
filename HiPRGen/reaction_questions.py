@@ -538,7 +538,7 @@ class reaction_is_charge_transfer(MSONable):
         return False
 
 
-class reaction_is_covalent_decomposable(MSONable):
+class reaction_is_covalent_decomposable(MSONable): #removes electron transfers and A+B->A+C reactions
     def __init__(self):
         pass
 
@@ -682,7 +682,7 @@ class compositions_preclude_h_transfer(MSONable):
         for i in range(reaction["number_of_reactants"]):
             reactant_id = reaction["reactants"][i]
             reactant = mol_entries[reactant_id]
-            reactant_compositions.append(reactant.molecule.composition)
+            reactant_compositions.append(reactant.molecule.composition.as_dict())
             reactant_charges.append(reactant.molecule.charge)
             
         product_compositions = []
@@ -690,7 +690,7 @@ class compositions_preclude_h_transfer(MSONable):
         for i in range(reaction["number_of_products"]):
             product_id = reaction["products"][i]
             product = mol_entries[product_id]
-            product_compositions.append(product.molecule.composition)
+            product_compositions.append(product.molecule.composition.as_dict())
             product_charges.append(product.molecule.charge)
 
         if len(reactant_compositions) != 2 or len(product_compositions) != 2:
@@ -698,39 +698,83 @@ class compositions_preclude_h_transfer(MSONable):
 
         h_transfer_possible = None
 
-        try:
-            comp_diff = reactant_compositions[0] - product_compositions[0]
-            if comp_diff.alphabetical_formula == "H1":
-                if abs(reactant_charges[0] - product_charges[0]) > 1:
-                    h_transfer_possible = False
-                else:
-                    h_transfer_possible = True
-        except ValueError:
-            try:
-                comp_diff = reactant_compositions[1] - product_compositions[0]
-                if comp_diff.alphabetical_formula == "H1":
-                    if abs(reactant_charges[1] - product_charges[0]) > 1:
-                        h_transfer_possible = False
-                    else:
-                        h_transfer_possible = True
-            except ValueError:
-                try:
-                    comp_diff = reactant_compositions[1] - product_compositions[1]
-                    if comp_diff.alphabetical_formula == "H1":
-                        if abs(reactant_charges[1] - product_charges[1]) > 1:
-                            h_transfer_possible = False
-                        else:
-                            h_transfer_possible = True
-                except ValueError:
+        reactant_dictionary = reactant_compositions[0]
+
+        for product_dictionary in product_compositions:
+            new_dict = {}
+            if "H" in product_dictionary:
+                for k, v in product_dictionary.items():
                     try:
-                        comp_diff = reactant_compositions[0] - product_compositions[1]
-                        if comp_diff.alphabetical_formula == "H1":
-                            if abs(reactant_charges[0] - product_charges[1]) > 1:
-                                h_transfer_possible = False
+                        if int(reactant_dictionary[k] - v) != 0:
+                            if reactant_dictionary[k] -v > 0:
+                                new_dict[k] = int(reactant_dictionary[k] - v)
                             else:
-                                h_transfer_possible = True
-                    except ValueError:
-                        h_transfer_possible = False
+                                new_dict[k] = v - reactant_dictionary[k]
+                    except KeyError:
+                        new_dict[k] = int(-v)
+                print(reactant_dictionary)
+                print(product_dictionary)
+                print(new_dict)
+            else:
+                new_dict['H'] = int(reactant_dictionary['H'])
+            if "H" in new_dict:
+                if len(new_dict.keys()) == 1:
+                    if new_dict["H"] == 1:
+                        return False
+
+            
+        # new_el_map: dict[SpeciesLike, float] = collections.defaultdict(float)
+        # new_el_map.update(self)
+        # for k, v in other.items():
+        #     new_el_map[get_el_sp(k)] -= v
+        
+        # for k, v in product_compositions[0].items():
+        #     new_dict[reactant_compositions[0](k)] -= v
+        # if comp_diff.alphabetical_formula == "H1":
+        #     if abs(reactant_charges[0] - product_charges[0]) > 1:
+        #         h_transfer_possible = False
+        #     else:
+        #         h_transfer_possible = True
+        # else:
+        #     comp_diff = reactant_compositions[0] - product_compositions[1]
+        #     if comp_diff.alphabetical_formula == "H1":
+        #         if abs(reactant_charges[0] - product_charges[0]) > 1:
+        #             h_transfer_possible = False
+        #         else:
+        #             h_transfer_possible = True
+        # # try:
+        #     comp_diff = reactant_compositions[0] - product_compositions[0]
+        #     if comp_diff.alphabetical_formula == "H1":
+        #         if abs(reactant_charges[0] - product_charges[0]) > 1:
+        #             h_transfer_possible = False
+        #         else:
+        #             h_transfer_possible = True
+        # except ValueError:
+        #     try:
+        #         comp_diff = reactant_compositions[1] - product_compositions[0]
+        #         if comp_diff.alphabetical_formula == "H1":
+        #             if abs(reactant_charges[1] - product_charges[0]) > 1:
+        #                 h_transfer_possible = False
+        #             else:
+        #                 h_transfer_possible = True
+        #     except ValueError:
+        #         try:
+        #             comp_diff = reactant_compositions[1] - product_compositions[1]
+        #             if comp_diff.alphabetical_formula == "H1":
+        #                 if abs(reactant_charges[1] - product_charges[1]) > 1:
+        #                     h_transfer_possible = False
+        #                 else:
+        #                     h_transfer_possible = True
+        #         except ValueError:
+        #             try:
+        #                 comp_diff = reactant_compositions[0] - product_compositions[1]
+        #                 if comp_diff.alphabetical_formula == "H1":
+        #                     if abs(reactant_charges[0] - product_charges[1]) > 1:
+        #                         h_transfer_possible = False
+        #                     else:
+        #                         h_transfer_possible = True
+        #             except ValueError:
+        #                 h_transfer_possible = False
 
         return not h_transfer_possible
 
@@ -1366,13 +1410,13 @@ euvl_phase1_reaction_logging_tree = [
     (
         more_than_one_reactant(), 
         [
-            (only_one_product(), Terminal.KEEP),
+            (only_one_product(), Terminal.DISCARD),
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
             (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
-            (compositions_preclude_h_transfer(), Terminal.DISCARD),
+            (compositions_preclude_h_transfer(), Terminal.KEEP),
             (
                 fragment_matching_found(),
                 [
