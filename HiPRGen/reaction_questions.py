@@ -538,7 +538,7 @@ class reaction_is_charge_transfer(MSONable):
         return False
 
 
-class reaction_is_covalent_decomposable(MSONable):
+class reaction_is_covalent_decomposable(MSONable): #removes electron transfers and A+B->A+C reactions
     def __init__(self):
         pass
 
@@ -677,62 +677,30 @@ class compositions_preclude_h_transfer(MSONable):
         return "compositions preclude h transfer"
 
     def __call__(self, reaction, mol_entries, params):
-        reactant_compositions = []
-        reactant_charges = []
-        for i in range(reaction["number_of_reactants"]):
-            reactant_id = reaction["reactants"][i]
-            reactant = mol_entries[reactant_id]
-            reactant_compositions.append(reactant.molecule.composition)
-            reactant_charges.append(reactant.molecule.charge)
-            
-        product_compositions = []
-        product_charges = []
-        for i in range(reaction["number_of_products"]):
-            product_id = reaction["products"][i]
-            product = mol_entries[product_id]
-            product_compositions.append(product.molecule.composition)
-            product_charges.append(product.molecule.charge)
-
-        if len(reactant_compositions) != 2 or len(product_compositions) != 2:
+        if reaction["number_of_reactants"] != 2 or reaction["number_of_products"] != 2:
             return True
 
-        h_transfer_possible = None
+        reactant_0 = mol_entries[reaction["reactants"][0]]
+        reactant_dictionary = reactant_0.molecule.composition.as_dict()
+            
+        product_compositions = []
+        for i in range(reaction["number_of_products"]):
+            product = mol_entries[reaction["products"][i]]
+            product_compositions.append(product.molecule.composition.as_dict())
 
-        try:
-            comp_diff = reactant_compositions[0] - product_compositions[0]
-            if comp_diff.alphabetical_formula == "H1":
-                if abs(reactant_charges[0] - product_charges[0]) > 1:
-                    h_transfer_possible = False
-                else:
-                    h_transfer_possible = True
-        except ValueError:
-            try:
-                comp_diff = reactant_compositions[1] - product_compositions[0]
-                if comp_diff.alphabetical_formula == "H1":
-                    if abs(reactant_charges[1] - product_charges[0]) > 1:
-                        h_transfer_possible = False
-                    else:
-                        h_transfer_possible = True
-            except ValueError:
-                try:
-                    comp_diff = reactant_compositions[1] - product_compositions[1]
-                    if comp_diff.alphabetical_formula == "H1":
-                        if abs(reactant_charges[1] - product_charges[1]) > 1:
-                            h_transfer_possible = False
-                        else:
-                            h_transfer_possible = True
-                except ValueError:
-                    try:
-                        comp_diff = reactant_compositions[0] - product_compositions[1]
-                        if comp_diff.alphabetical_formula == "H1":
-                            if abs(reactant_charges[0] - product_charges[1]) > 1:
-                                h_transfer_possible = False
-                            else:
-                                h_transfer_possible = True
-                    except ValueError:
-                        h_transfer_possible = False
+        for product_dictionary in product_compositions:
+            new_dict = {}
+            all_elements = set(reactant_dictionary.keys()).union(set(product_dictionary.keys()))
+            for elem in all_elements:
+                diff = abs(reactant_dictionary.get(elem, 0.0) - product_dictionary.get(elem, 0.0))
+                if diff != 0.0:
+                    new_dict[elem] = diff
+            if "H" in new_dict:
+                if len(new_dict.keys()) == 1:
+                    if new_dict["H"] == 1.0:
+                        return False
 
-        return not h_transfer_possible
+        return True
 
 
 class fragment_matching_found(MSONable):
@@ -1485,7 +1453,7 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
-            (compositions_preclude_h_transfer(), Terminal.DISCARD),
+            (compositions_preclude_h_transfer(), Terminal.KEEP),
             (
                 fragment_matching_found(),
                 [
