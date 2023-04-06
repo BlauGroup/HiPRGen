@@ -11,15 +11,100 @@ from HiPRGen.constants import ROOM_TEMP, metals
 from itertools import permutations, product
 
 
+class FragmentObject:
+    def __init__(
+            self,
+            fragment_hash,
+            atom_ids,
+            neighborhood_hashes,
+            graph,
+            hot_atoms
+    ):
+        self.fragment_hash = fragment_hash
+        self.atom_ids = atom_ids
+        self.neighborhood_hashes = neighborhood_hashes
+        self.graph = graph
+        self.hot_atoms = hot_atoms
+
+def sym_iterator(n):
+    return permutations(range(n), r=n)
+
+
+def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=False):
+    groups_by_hash = {}
+
+    for left_index in fragment_1.atom_ids:
+
+        neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
+        if neighborhood_hash not in groups_by_hash:
+            groups_by_hash[neighborhood_hash] = ([],[])
+
+        groups_by_hash[neighborhood_hash][0].append(left_index)
+
+
+    for right_index in fragment_2.atom_ids:
+
+        neighborhood_hash = fragment_2.neighborhood_hashes[right_index]
+        if neighborhood_hash not in groups_by_hash:
+            groups_by_hash[neighborhood_hash] = ([],[])
+
+        groups_by_hash[neighborhood_hash][1].append(right_index)
+
+    groups = list(groups_by_hash.values())
+
+    product_sym_iterator = product(*[sym_iterator(len(p[0])) for p in groups])
+
+    mappings = []
+
+    for product_perm in product_sym_iterator:
+        mapping = {}
+        for perm, vals in zip(product_perm, groups):
+            for i, j in enumerate(perm):
+                mapping[vals[0][i]] = vals[1][j]
+
+        isomorphism = True
+        for edge in fragment_1.graph.edges:
+            u = mapping[edge[0]]
+            v = mapping[edge[1]]
+            if not fragment_2.graph.has_edge(u,v):
+                isomorphism = False
+                break
+
+
+        if isomorphism:
+            mappings.append(mapping)
+
+            if return_one:
+                return mappings
+
+    return mappings
+
+
+def find_hot_atom_preserving_fragment_map(fragment_1, fragment_2, mappings):
+
+    for mapping in mappings:
+        hot_atom_preserving = False
+        for hot_atom in fragment_1.hot_atoms:
+            if mapping[hot_atom] in fragment_2.hot_atoms:
+                hot_atom_preserving = True
+                break
+
+        if hot_atom_preserving:
+            return mapping
+
+    return None
+
+
 class FragmentComplex:
     def __init__(
-        self, number_of_fragments, number_of_bonds_broken, bonds_broken, fragment_hashes
+        self, number_of_fragments, number_of_bonds_broken, bonds_broken, fragment_hashes, fragment_objects=None,
     ):
 
         self.number_of_fragments = number_of_fragments
         self.number_of_bonds_broken = number_of_bonds_broken
         self.bonds_broken = bonds_broken
         self.fragment_hashes = fragment_hashes
+        self.fragment_objects = fragment_objects
 
 
 class MoleculeEntry:
