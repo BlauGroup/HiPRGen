@@ -682,7 +682,7 @@ class compositions_preclude_h_transfer(MSONable):
         for i in range(reaction["number_of_reactants"]):
             reactant_id = reaction["reactants"][i]
             reactant = mol_entries[reactant_id]
-            reactant_compositions.append(reactant.molecule.composition.as_dict())
+            reactant_compositions.append(reactant.molecule.composition.as_dict()) #saves the composition as a dictionary to a list we will iterate over later
             reactant_charges.append(reactant.molecule.charge)
             
         product_compositions = []
@@ -705,16 +705,13 @@ class compositions_preclude_h_transfer(MSONable):
             if "H" in product_dictionary:
                 for k, v in product_dictionary.items():
                     try:
-                        if int(reactant_dictionary[k] - v) != 0:
-                            if reactant_dictionary[k] -v > 0:
+                        if int(reactant_dictionary[k] - v) != 0: #need to use integers to avoid testing float equality
+                            if reactant_dictionary[k] > v: #this if/else statement ensures we get 1 H in our new dictionary when H atom transfer occurs 
                                 new_dict[k] = int(reactant_dictionary[k] - v)
                             else:
-                                new_dict[k] = v - reactant_dictionary[k]
+                                new_dict[k] = int(v - reactant_dictionary[k])
                     except KeyError:
                         new_dict[k] = int(-v)
-                print(reactant_dictionary)
-                print(product_dictionary)
-                print(new_dict)
             else:
                 new_dict['H'] = int(reactant_dictionary['H'])
             if "H" in new_dict:
