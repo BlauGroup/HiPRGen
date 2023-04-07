@@ -198,41 +198,51 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
                 fragment_hashes.append(fragment_hash) #adds each fragment hash to the fragment hash list
 
-                if self.neighborhood_width is not None:
-                    neighborhood_hashes = {}
-                    for i in c:
-                        hash_list = []
-                        for d in range(self.neighborhood_width):
-                            neighborhood = nx.generators.ego.ego_graph(
+            equivalent_fragments_already_found = False
+            for fragment_complex in mol.fragment_data:
+                if len(fragment_hashes) == len(fragment_complex.fragment_hashes):
+                    if set(fragment_hashes) == set(fragment_complex.fragment_hashes):
+                        equivalent_fragments_already_found = True
+
+            if not equivalent_fragments_already_found:
+
+                if len(fragment_hashes) == 1 and not self.allow_ring_opening:
+                    pass
+
+                else:
+                    for c in connected_components:
+                        if self.neighborhood_width is not None:
+                            neighborhood_hashes = {}
+                            for i in c:
+                                hash_list = []
+                                for d in range(self.neighborhood_width):
+                                    neighborhood = nx.generators.ego.ego_graph(
+                                        subgraph,
+                                        i,
+                                        d,
+                                        undirected=True)
+
+                                    neighborhood_hash = weisfeiler_lehman_graph_hash(
+                                        neighborhood,
+                                        node_attr='specie')
+
+                                    hash_list.append(neighborhood_hash)
+
+                                neighborhood_hashes[i] = hash(tuple(hash_list))
+                            fragment_object = FragmentObject(
+                                fragment_hash,
+                                c,
+                                neighborhood_hashes,
                                 subgraph,
-                                i,
-                                d,
-                                undirected=True)
+                                [i for i in c if i in edge[0:2]]
+                            )
+                            fragment_objects.append(fragment_object)
 
-                            neighborhood_hash = weisfeiler_lehman_graph_hash(
-                                neighborhood,
-                                node_attr='specie')
+                    fragment_complex = FragmentComplex(                                          #saves a FragmentComplex object after both fragment_hashes have been
+                        len(fragment_hashes), 1, [edge[0:2]], fragment_hashes, fragment_objects  #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
+                    )                                                                            #of the bond broken (as a list containing one tuple), and the list of fragment hashes
 
-                            hash_list.append(neighborhood_hash)
-
-                        neighborhood_hashes[i] = hash(tuple(hash_list))
-                    fragment_object = FragmentObject(
-                        fragment_hash,
-                        c,
-                        neighborhood_hashes,
-                        subgraph,
-                        [i for i in c if i in edge[0:2]]
-                    )
-                    fragment_objects.append(fragment_object)
-
-            fragment_complex = FragmentComplex(                                          #saves a FragmentComplex object after both fragment_hashes have been
-                len(fragment_hashes), 1, [edge[0:2]], fragment_hashes, fragment_objects  #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
-            )                                                                            #of the bond broken (as a list containing one tuple), and the list of fragment hashes
-
-            if len(fragment_hashes) == 1 and not self.allow_ring_opening:
-                pass
-            else:
-                mol.fragment_data.append(fragment_complex) #append the above FragmentComplex object to the molecule's fragment_data list
+                    mol.fragment_data.append(fragment_complex) #append the above FragmentComplex object to the molecule's fragment_data list
 
         return False
 
@@ -558,6 +568,7 @@ nonmetal_species_decision_tree = [
     (species_default_true(), Terminal.KEEP),
 ]
 
+width = 5
 
 euvl_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
@@ -565,7 +576,7 @@ euvl_species_decision_tree = [
     (oh_plus_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(neighborhood_width=3), Terminal.KEEP),
-    (add_single_bond_fragments(allow_ring_opening=False, neighborhood_width=3), Terminal.KEEP),
+    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    (add_single_bond_fragments(allow_ring_opening=False, neighborhood_width=width), Terminal.KEEP),
     (species_default_true(), Terminal.KEEP),
 ]

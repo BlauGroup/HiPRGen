@@ -1,8 +1,9 @@
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
+import copy
 from HiPRGen.species_questions import run_decision_tree
 from HiPRGen.constants import Terminal
 import networkx as nx
@@ -187,6 +188,30 @@ def species_filter(
 
     for i, e in enumerate(mol_entries):
         e.ind = i
+
+
+    log_message("mapping fragments")
+    fragment_dict = {}
+    for mol in mol_entries:
+        print(mol.entry_id)
+        for fragment_complex in mol.fragment_data:
+            print(" ", fragment_complex.bonds_broken)
+            for ii, fragment in enumerate(fragment_complex.fragment_objects):
+                print("  ", fragment.atom_ids)
+                assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
+                if fragment.fragment_hash not in fragment_dict:
+                    fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
+                    mapping = {}
+                    for atom_id in fragment.atom_ids:
+                        mapping[atom_id] = atom_id
+                    fragment_complex.fragment_mappings.append(mapping) # needs to change to capture all viable mappings
+                else:
+                    all_mappings = find_fragment_atom_mappings(
+                        fragment,
+                        fragment_dict[fragment.fragment_hash])
+                    print("   len(all_mappings)", len(all_mappings))
+
+
 
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json

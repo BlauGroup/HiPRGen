@@ -105,6 +105,7 @@ class FragmentComplex:
         self.bonds_broken = bonds_broken
         self.fragment_hashes = fragment_hashes
         self.fragment_objects = fragment_objects
+        self.fragment_mappings = []
 
 
 class MoleculeEntry:
