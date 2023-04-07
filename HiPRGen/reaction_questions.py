@@ -1361,7 +1361,7 @@ euvl_phase1_reaction_logging_tree = [
     (
         fragment_matching_found(),
         [
-            (single_reactant_double_product_ring_close(), Terminal.KEEP),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
@@ -1389,8 +1389,8 @@ euvl_phase2_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase2_steric_filter_logging_tree = [
-    (is_redox_reaction(), Terminal.DISCARD),
+euvl_phase2_logging_tree = [
+    (is_redox_reaction(), Terminal.KEEP),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
     (reaction_is_charge_transfer(), Terminal.DISCARD),

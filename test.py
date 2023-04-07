@@ -721,7 +721,7 @@ def euvl_phase2_test():
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
-        species_logging_decision_tree=species_decision_tree,
+        species_logging_decision_tree=euvl_phase2_logging_tree,
         generate_unfiltered_mol_pictures=False,
     )
 
