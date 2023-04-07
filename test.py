@@ -578,6 +578,7 @@ def euvl_phase1_test():
     subprocess.run(["mkdir", folder])
 
     mol_json = "./data/mini_euvl_test_set.json"
+    # mol_json = "./data/euvl_test_set.json"
     database_entries = loadfn(mol_json)
 
     species_decision_tree = euvl_species_decision_tree
@@ -835,8 +836,8 @@ def euvl_phase2_test():
 
 
 tests = [
-    #mg_test,
-    #li_test,
+    # mg_test,
+    # li_test,
     # flicho_test,
     # co2_test,
     euvl_phase1_test,

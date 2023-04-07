@@ -201,15 +201,10 @@ def species_filter(
                 assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
                 if fragment.fragment_hash not in fragment_dict:
                     fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
-                    mapping = {}
-                    for atom_id in fragment.atom_ids:
-                        mapping[atom_id] = atom_id
-                    fragment_complex.fragment_mappings.append(mapping) # needs to change to capture all viable mappings
-                else:
-                    all_mappings = find_fragment_atom_mappings(
-                        fragment,
-                        fragment_dict[fragment.fragment_hash])
-                    print("   len(all_mappings)", len(all_mappings))
+                all_mappings = find_fragment_atom_mappings(
+                    fragment,
+                    fragment_dict[fragment.fragment_hash])
+                print("   len(all_mappings)", len(all_mappings))
 
 
 
