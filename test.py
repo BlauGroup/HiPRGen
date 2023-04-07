@@ -621,7 +621,7 @@ def euvl_phase1_test():
         folder + "/buckets.sqlite",
         euvl_phase1_reaction_decision_tree,
         params,
-        euvl_phase1_reaction_logging_tree
+        euvl_phase1_reaction_decision_tree
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -840,7 +840,7 @@ tests = [
     # flicho_test,
     # co2_test,
     euvl_phase1_test,
-    # euvl_phase2_test,
+    euvl_phase2_test,
 ]
 
 for test in tests:
