@@ -1346,7 +1346,7 @@ euvl_phase1_reaction_logging_tree = [
                 [
                     (not_h_transfer(), Terminal.DISCARD),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
-                    (h_minus_abstraction(), Terminal.KEEP),
+                    (h_minus_abstraction(), Terminal.DISCARD),
                     (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.DISCARD),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
@@ -1354,7 +1354,7 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
-    (single_reactant_single_product(), Terminal.DISCARD),
+    (single_reactant_single_product(), Terminal.KEEP),
     (star_count_diff_above_threshold(4), Terminal.DISCARD),
     (reaction_is_radical_separation(), Terminal.DISCARD),
     (reaction_is_charge_separation(), Terminal.DISCARD),
