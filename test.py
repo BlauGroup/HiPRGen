@@ -721,7 +721,7 @@ def euvl_phase2_test():
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
-        species_logging_decision_tree=euvl_phase2_logging_tree,
+        species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
     )
 
@@ -741,7 +741,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         euvl_phase2_reaction_decision_tree,
         params,
-        euvl_phase2_steric_filter_logging_tree,
+        euvl_phase2_logging_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
