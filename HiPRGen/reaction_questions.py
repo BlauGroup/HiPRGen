@@ -1345,8 +1345,8 @@ euvl_phase1_reaction_logging_tree = [
                 fragment_matching_found(),
                 [
                     (not_h_transfer(), Terminal.DISCARD),
-                    (h_abstraction_from_closed_shell_reactant(), Terminal.KEEP),
-                    (h_minus_abstraction(), Terminal.DISCARD),
+                    (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
+                    (h_minus_abstraction(), Terminal.KEEP),
                     (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.DISCARD),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
