@@ -1354,8 +1354,8 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
-    (single_reactant_single_product(), Terminal.KEEP),
-    (star_count_diff_above_threshold(4), Terminal.DISCARD),
+    (single_reactant_single_product(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(4), Terminal.KEEP),
     (reaction_is_radical_separation(), Terminal.DISCARD),
     (reaction_is_charge_separation(), Terminal.DISCARD),
     (
