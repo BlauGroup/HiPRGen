@@ -1357,11 +1357,11 @@ euvl_phase1_reaction_logging_tree = [
     (single_reactant_single_product(), Terminal.DISCARD),
     (star_count_diff_above_threshold(4), Terminal.DISCARD),
     (reaction_is_radical_separation(), Terminal.DISCARD),
-    (reaction_is_charge_separation(), Terminal.KEEP),
+    (reaction_is_charge_separation(), Terminal.DISCARD),
     (
         fragment_matching_found(),
         [
-            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.KEEP),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
