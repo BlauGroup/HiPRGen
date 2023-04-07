@@ -1340,11 +1340,11 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
-            (compositions_preclude_h_transfer(), Terminal.KEEP),
+            (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
                 fragment_matching_found(),
                 [
-                    (not_h_transfer(), Terminal.DISCARD),
+                    (not_h_transfer(), Terminal.KEEP),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (h_minus_abstraction(), Terminal.DISCARD),
                     (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.DISCARD),
