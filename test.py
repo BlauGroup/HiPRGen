@@ -28,6 +28,7 @@ from HiPRGen.reaction_questions import (
     default_reaction_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
+    euvl_phase1_reaction_logging_tree,
     euvl_phase2_reaction_decision_tree,
     euvl_phase2_steric_filter_logging_tree
 )
@@ -620,7 +621,7 @@ def euvl_phase1_test():
         folder + "/buckets.sqlite",
         euvl_phase1_reaction_decision_tree,
         params,
-        euvl_phase1_reaction_decision_tree,
+        euvl_phase1_reaction_logging_tree
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -689,7 +690,7 @@ def euvl_phase1_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 374:
+    if network_loader.number_of_reactions == 550:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
@@ -824,7 +825,7 @@ def euvl_phase2_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 3868:
+    if network_loader.number_of_reactions == 3862:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)

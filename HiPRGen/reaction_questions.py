@@ -538,7 +538,7 @@ class reaction_is_charge_transfer(MSONable):
         return False
 
 
-class reaction_is_covalent_decomposable(MSONable):
+class reaction_is_covalent_decomposable(MSONable): #removes electron transfers and A+B->A+C reactions
     def __init__(self):
         pass
 
@@ -677,62 +677,30 @@ class compositions_preclude_h_transfer(MSONable):
         return "compositions preclude h transfer"
 
     def __call__(self, reaction, mol_entries, params):
-        reactant_compositions = []
-        reactant_charges = []
-        for i in range(reaction["number_of_reactants"]):
-            reactant_id = reaction["reactants"][i]
-            reactant = mol_entries[reactant_id]
-            reactant_compositions.append(reactant.molecule.composition)
-            reactant_charges.append(reactant.molecule.charge)
-            
-        product_compositions = []
-        product_charges = []
-        for i in range(reaction["number_of_products"]):
-            product_id = reaction["products"][i]
-            product = mol_entries[product_id]
-            product_compositions.append(product.molecule.composition)
-            product_charges.append(product.molecule.charge)
-
-        if len(reactant_compositions) != 2 or len(product_compositions) != 2:
+        if reaction["number_of_reactants"] != 2 or reaction["number_of_products"] != 2:
             return True
 
-        h_transfer_possible = None
+        reactant_0 = mol_entries[reaction["reactants"][0]]
+        reactant_dictionary = reactant_0.molecule.composition.as_dict()
+            
+        product_compositions = []
+        for i in range(reaction["number_of_products"]):
+            product = mol_entries[reaction["products"][i]]
+            product_compositions.append(product.molecule.composition.as_dict())
 
-        try:
-            comp_diff = reactant_compositions[0] - product_compositions[0]
-            if comp_diff.alphabetical_formula == "H1":
-                if abs(reactant_charges[0] - product_charges[0]) > 1:
-                    h_transfer_possible = False
-                else:
-                    h_transfer_possible = True
-        except ValueError:
-            try:
-                comp_diff = reactant_compositions[1] - product_compositions[0]
-                if comp_diff.alphabetical_formula == "H1":
-                    if abs(reactant_charges[1] - product_charges[0]) > 1:
-                        h_transfer_possible = False
-                    else:
-                        h_transfer_possible = True
-            except ValueError:
-                try:
-                    comp_diff = reactant_compositions[1] - product_compositions[1]
-                    if comp_diff.alphabetical_formula == "H1":
-                        if abs(reactant_charges[1] - product_charges[1]) > 1:
-                            h_transfer_possible = False
-                        else:
-                            h_transfer_possible = True
-                except ValueError:
-                    try:
-                        comp_diff = reactant_compositions[0] - product_compositions[1]
-                        if comp_diff.alphabetical_formula == "H1":
-                            if abs(reactant_charges[0] - product_charges[1]) > 1:
-                                h_transfer_possible = False
-                            else:
-                                h_transfer_possible = True
-                    except ValueError:
-                        h_transfer_possible = False
+        for product_dictionary in product_compositions:
+            new_dict = {}
+            all_elements = set(reactant_dictionary.keys()).union(set(product_dictionary.keys()))
+            for elem in all_elements:
+                diff = abs(reactant_dictionary.get(elem, 0.0) - product_dictionary.get(elem, 0.0))
+                if diff != 0.0:
+                    new_dict[elem] = diff
+            if "H" in new_dict:
+                if len(new_dict.keys()) == 1:
+                    if new_dict["H"] == 1.0:
+                        return False
 
-        return not h_transfer_possible
+        return True
 
 
 class fragment_matching_found(MSONable):
@@ -1158,8 +1126,6 @@ class reaction_is_hindered(MSONable):
         return "reaction is hindered"
 
     def __call__(self, reaction, mol_entries, params):
-        #if carbon_hash not in reaction["hashes"]: #does this filter our reactions where bonds without carbon are broken? Who knows!
-        #    return False
 
         hot_reactant_atoms = []
 
@@ -1175,26 +1141,36 @@ class reaction_is_hindered(MSONable):
                 hot_product = mol_entries[reaction["products"][t[0]]]
                 hot_product_atoms.append(t[1])
 
+        reaction_methyl_test = []
         reactant_num_carbon_neighbors = 0
         for atom in hot_reactant_atoms:
+            reactant_num_hydrogens = 0
             if hot_reactant.mol_graph.get_coordination_of_site(atom) == 4: #only care about sp3 hybidized carbons
                 neighbor_list = hot_reactant.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
                     neighbor_index = neighbor[2]
                     if hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 4: #if neighbor is also sp3 hybridized
                         reactant_num_carbon_neighbors += 1 #we consider it to affect hindrance
+                    elif hot_reactant.mol_graph.get_coordination_of_site(neighbor_index) == 1:
+                        reactant_num_hydrogens += 1
+                        if reactant_num_hydrogens == 3:
+                            reaction_methyl_test.append(atom)
+
         product_num_carbon_neighbors = 0
         for atom in hot_product_atoms: #repeat for products
+            product_num_hydrogens = 0
             if hot_product.mol_graph.get_coordination_of_site(atom) == 4:
                 neighbor_list = hot_product.mol_graph.get_connected_sites(atom)
                 for neighbor in neighbor_list:
                     neighbor_index = neighbor[2]
                     if hot_product.mol_graph.get_coordination_of_site(neighbor_index) == 4:
                         product_num_carbon_neighbors += 1
+                    elif hot_product.mol_graph.get_coordination_of_site(neighbor_index) == 1:
+                        product_num_hydrogens += 1
+                        if product_num_hydrogens == 3:
+                            reaction_methyl_test.append(atom)
 
-#do graph and mol_graph indicies match?
-
-        if reactant_num_carbon_neighbors >= 3 and product_num_carbon_neighbors >= 3: #6 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
+        if reactant_num_carbon_neighbors >= 3 and product_num_carbon_neighbors >= 3 and len(reaction_methyl_test) < 2: #6 was chosen as the cutoff to prevent tertiary/quaternary carbons from reacting
             return True
 
         return False
@@ -1327,6 +1303,72 @@ euvl_phase1_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
+euvl_phase1_reaction_decision_tree_orig = [
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (add_electron_species(), Terminal.DISCARD),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
+
+euvl_phase1_reaction_logging_tree = [
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (add_electron_species(), Terminal.DISCARD),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (dG_below_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+    (
+        more_than_one_reactant(), 
+        [
+            (only_one_product(), Terminal.DISCARD),
+            (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
+            (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
+            (reaction_is_charge_separation(), Terminal.DISCARD),
+            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+            (star_count_diff_above_threshold(6), Terminal.DISCARD),
+            (compositions_preclude_h_transfer(), Terminal.KEEP),
+            (
+                fragment_matching_found(),
+                [
+                    (not_h_transfer(), Terminal.DISCARD),
+                    (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
+                    (h_minus_abstraction(), Terminal.DISCARD),
+                    (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.DISCARD),
+                    (reaction_default_true(), Terminal.DISCARD),
+                ],
+            ),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (single_reactant_single_product(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(4), Terminal.DISCARD),
+    (reaction_is_radical_separation(), Terminal.DISCARD),
+    (reaction_is_charge_separation(), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    
+    (reaction_default_true(), Terminal.DISCARD),
+]
 
 euvl_phase2_reaction_decision_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
