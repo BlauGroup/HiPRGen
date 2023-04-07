@@ -30,7 +30,7 @@ from HiPRGen.reaction_questions import (
     euvl_phase1_reaction_decision_tree,
     euvl_phase1_reaction_logging_tree,
     euvl_phase2_reaction_decision_tree,
-    euvl_phase2_steric_filter_logging_tree
+    euvl_phase2_logging_tree
 )
 
 from HiPRGen.mc_analysis import (
