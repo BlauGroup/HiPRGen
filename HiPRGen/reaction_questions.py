@@ -1391,7 +1391,7 @@ euvl_phase1_reaction_decision_tree = [
                     (not_h_transfer(), Terminal.DISCARD),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (h_minus_abstraction(), Terminal.DISCARD),
-                    # (hot_atom_preserving_mapping_not_found(), Terminal.DISCARD),
+                    (hot_atom_preserving_mapping_not_found(), Terminal.DISCARD),
                     (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.KEEP),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
@@ -1407,7 +1407,7 @@ euvl_phase1_reaction_decision_tree = [
         fragment_matching_found(),
         [
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            # (hot_atom_preserving_mapping_not_found(), Terminal.DISCARD),
+            (hot_atom_preserving_mapping_not_found(), Terminal.DISCARD),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
         ],
