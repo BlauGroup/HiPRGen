@@ -1401,7 +1401,7 @@ euvl_phase2_logging_tree = [
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            (reaction_is_hindered(), Terminal.KEEP),
+            (reaction_is_hindered(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
