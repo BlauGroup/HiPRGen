@@ -519,18 +519,24 @@ class reaction_is_charge_transfer(MSONable):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
             reactant_total_hashes = set()
+            reactant_hash_list = []
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
                 reactant = mol_entries[reactant_id]
                 reactant_total_hashes.add(reactant.covalent_hash)
+                reactant_hash_list.append(reactant.covalent_hash)
 
             product_total_hashes = set()
+            product_hash_list = []
             for i in range(reaction["number_of_products"]):
                 product_id = reaction["products"][i]
                 product = mol_entries[product_id]
                 product_total_hashes.add(product.covalent_hash)
+                product_hash_list.append(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) == 2:
+                return True
+            elif len(reactant_total_hashes.intersection(product_total_hashes)) == 1 and reactant_hash_list[0] == reactant_hash_list[1] and product_hash_list[0] == product_hash_list[1]:
                 return True
             else:
                 return False
