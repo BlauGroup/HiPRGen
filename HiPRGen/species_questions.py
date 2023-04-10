@@ -188,13 +188,19 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
             h = copy.deepcopy(mol.covalent_graph)
             h.remove_edge(*edge) #"breaks a bond" in the molecule graph
             connected_components = nx.algorithms.components.connected_components(h) #generates a set of nodes for each "fragment"
+            list_of_c_dicts = []
             for c in connected_components:
-
+                tmp = {}
                 subgraph = h.subgraph(c) #generates a subgraph from one set of nodes (this is a fragment graph)
 
                 fragment_hash = weisfeiler_lehman_graph_hash( #saves the hash of this graph
                     subgraph, node_attr="specie"
                 )
+
+                tmp["c"] = copy.deepcopy(c)
+                tmp["subgraph"] = copy.deepcopy(subgraph)
+                tmp["fragment_hash"] = copy.deepcopy(fragment_hash)
+                list_of_c_dicts.append(tmp)
 
                 fragment_hashes.append(fragment_hash) #adds each fragment hash to the fragment hash list
 
@@ -210,8 +216,12 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                     pass
 
                 else:
-                    for c in connected_components:
-                        if self.neighborhood_width is not None:
+                    
+                    if self.neighborhood_width is not None:
+                        for entry in list_of_c_dicts:
+                            c = entry["c"]
+                            subgraph = entry["subgraph"]
+                            fragment_hash = entry["fragment_hash"]
                             neighborhood_hashes = {}
                             for i in c:
                                 hash_list = []
@@ -237,6 +247,9 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                                 [i for i in c if i in edge[0:2]]
                             )
                             fragment_objects.append(fragment_object)
+
+                    if self.neighborhood_width is not None:
+                        assert len(fragment_objects) == len(fragment_hashes)
 
                     fragment_complex = FragmentComplex(                                          #saves a FragmentComplex object after both fragment_hashes have been
                         len(fragment_hashes), 1, [edge[0:2]], fragment_hashes, fragment_objects  #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
@@ -568,7 +581,7 @@ nonmetal_species_decision_tree = [
     (species_default_true(), Terminal.KEEP),
 ]
 
-width = 5
+width = 6
 
 euvl_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),

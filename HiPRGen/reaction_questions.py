@@ -886,7 +886,6 @@ class hot_atom_preserving_mapping_not_found(MSONable):
         # compute all ways to match up the fragments and store in fragment_mappings
         fragments_by_hash = {}
         bond_change = len(reaction["reactant_bonds_broken"]) + len(reaction["product_bonds_broken"])
-        # print("bond_change", bond_change)
         for i in range(reaction["number_of_reactants"]):
             for fragment in reaction["reactant_fragment_objects"][i]:
                 tag = fragment.fragment_hash
@@ -895,7 +894,6 @@ class hot_atom_preserving_mapping_not_found(MSONable):
                     fragments_by_hash[tag] = ([],[])
 
                 fragments_by_hash[tag][0].append((i,fragment))
-
 
         for j in range(reaction["number_of_products"]):
             for fragment in reaction["product_fragment_objects"][j]:
@@ -906,9 +904,7 @@ class hot_atom_preserving_mapping_not_found(MSONable):
 
                 fragments_by_hash[tag][1].append((j,fragment))
 
-        # print("fragments_by_hash", fragments_by_hash)
         fragments = fragments_by_hash.values()
-        # print("fragments", fragments)
         product_sym_iterator = itertools.product(*[sym_iterator(len(f[0])) for f in fragments])
 
         fragment_mappings = []
@@ -1439,7 +1435,7 @@ euvl_phase1_reaction_logging_tree = [
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
@@ -1453,7 +1449,7 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
-            (compositions_preclude_h_transfer(), Terminal.KEEP),
+            (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
                 fragment_matching_found(),
                 [

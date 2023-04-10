@@ -205,6 +205,7 @@ def species_filter(
     #                 fragment,
     #                 fragment_dict[fragment.fragment_hash])
     #             print("   len(all_mappings)", len(all_mappings))
+    #             fragment_complex.fragment_mappings = all_mappings
 
 
 
