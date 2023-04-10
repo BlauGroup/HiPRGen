@@ -1399,8 +1399,8 @@ euvl_phase2_logging_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
-    (reaction_is_charge_transfer(), Terminal.KEEP),
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (reaction_is_charge_transfer(), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.KEEP),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
     (
         fragment_matching_found(),
