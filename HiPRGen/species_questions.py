@@ -154,7 +154,7 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
             return False
 
         for edge in mol.covalent_graph.edges: #iterates through each bond in a molecule graph by iterating through a list of tuples
-            fragments = []
+            fragment_hashes = []
             h = copy.deepcopy(mol.covalent_graph)
             h.remove_edge(*edge) #"breaks a bond" in the molecule graph
             connected_components = nx.algorithms.components.connected_components(h) #generates a set of nodes for each "fragment"
@@ -166,16 +166,25 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                     subgraph, node_attr="specie"
                 )
 
-                fragments.append(fragment_hash) #adds each fragment hash to the fragment hash list
+                fragment_hashes.append(fragment_hash) #adds each fragment hash to the fragment hash list
 
-            fragment_complex = FragmentComplex(             #saves a FragmentComplex object after both fragment_hashes have been
-                len(fragments), 1, [edge[0:2]], fragments   #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
-            )                                               #of the bond broken (as a list containing one tuple), and the list of fragment hashes
+            equivalent_fragments_already_found = False
+            for fragment_complex in mol.fragment_data:
+                if len(fragment_hashes) == len(fragment_complex.fragment_hashes):
+                    if set(fragment_hashes) == set(fragment_complex.fragment_hashes):
+                        equivalent_fragments_already_found = True
 
-            if len(fragments) == 1 and not self.allow_ring_opening:
-                pass
-            else:
-                mol.fragment_data.append(fragment_complex) #append the above FragmentComplex object to the molecule's fragment_data list
+            if not equivalent_fragments_already_found:
+
+                if len(fragment_hashes) == 1 and not self.allow_ring_opening:
+                    pass
+                else:
+
+                    fragment_complex = FragmentComplex(                         #saves a FragmentComplex object after both fragment_hashes have been
+                        len(fragment_hashes), 1, [edge[0:2]], fragment_hashes   #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
+                    )                                                           #of the bond broken (as a list containing one tuple), and the list of fragment hashes
+
+                    mol.fragment_data.append(fragment_complex) #append the above FragmentComplex object to the molecule's fragment_data list
 
         return False
 
