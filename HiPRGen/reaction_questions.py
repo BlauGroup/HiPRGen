@@ -571,7 +571,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                 product_total_hashes.add(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
-                if compositions_preclude_h_transfer():
+                if compositions_preclude_h_transfer(reaction, mol_entries, params):
                     return True
             else:
                 return False
