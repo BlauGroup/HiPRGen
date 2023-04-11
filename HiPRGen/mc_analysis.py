@@ -1115,8 +1115,8 @@ class SimulationReplayer:
         mol = self.network_loader.mol_entries[species_index]
         if (number_of_consuming_reactions + number_of_producing_reactions > 0  and
             ratio > 1.5 and
-            expected_value > 0.1 and
-            mol.spin_multiplicity == 1):
+            expected_value > 0.1):# and
+            #mol.spin_multiplicity == 1):
             return True
         else:
             return False
