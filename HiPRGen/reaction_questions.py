@@ -579,6 +579,8 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                     charge_set.add(reaction_dict[hash_id])
                 if len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 if charges of the hashes are different
                     return True
+                else:
+                    return False
                 # reactant_0 = mol_entries[reaction["reactants"][0]]
                 # reactant_dictionary = reactant_0.molecule.composition.as_dict()
                     
