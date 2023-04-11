@@ -560,7 +560,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                 reactant_id = reaction["reactants"][i]
                 reactant = mol_entries[reactant_id]
                 charge = reactant.charge
-                hash_charges.append((reactant.covalenthash, charge))
+                hash_charges.append((reactant.covalent_hash, charge))
                 reactant_total_hashes.add(reactant.covalent_hash)
 
             product_total_hashes = set()
@@ -568,7 +568,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                 product_id = reaction["products"][i]
                 product = mol_entries[product_id]
                 charge = product.charge
-                reaction_dict[product.covalent_hash] = charge
+                hash_charges.append((product.covalent_hash, charge))
                 product_total_hashes.add(product.covalent_hash)
 
             overlap = reactant_total_hashes.intersection(product_total_hashes)
