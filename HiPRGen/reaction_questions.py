@@ -544,7 +544,7 @@ class reaction_is_charge_transfer(MSONable):
         return False
 
 
-class reaction_is_covalent_decomposable(MSONable): #removes electron transfers and A+B->A+C reactions
+class reaction_is_covalent_decomposable(compositions_preclude_h_transfer): #removes electron transfers and A+B->A+C reactions
     def __init__(self):
         pass
 
@@ -571,7 +571,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                 product_total_hashes.add(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
-                if reaction.compositions_preclude_h_transfer():
+                if compositions_preclude_h_transfer():
                     return True
             else:
                 return False
