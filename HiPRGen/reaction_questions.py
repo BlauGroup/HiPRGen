@@ -555,19 +555,24 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
             reactant_total_hashes = set()
+            # reactant_charges = []
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
                 reactant = mol_entries[reactant_id]
+                # reactant_charges.append(reactant.charge)
                 reactant_total_hashes.add(reactant.covalent_hash)
 
             product_total_hashes = set()
+            product_charges = []
             for i in range(reaction["number_of_products"]):
                 product_id = reaction["products"][i]
                 product = mol_entries[product_id]
+                # product_charges.append(product.charge)
                 product_total_hashes.add(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
-                return True
+                if compositions_preclude_h_transfer():
+                    return True
             else:
                 return False
 
