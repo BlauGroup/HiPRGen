@@ -554,24 +554,31 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
     def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
+            reaction_dict = {}
             reactant_total_hashes = set()
-            reactant_charges = []
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
                 reactant = mol_entries[reactant_id]
-                reactant_charges.append(reactant.charge)
+                charge = reactant.charge
+                reaction_dict[reactant.covalent_hash] = charge
                 reactant_total_hashes.add(reactant.covalent_hash)
 
             product_total_hashes = set()
-            product_charges = []
             for i in range(reaction["number_of_products"]):
                 product_id = reaction["products"][i]
                 product = mol_entries[product_id]
-                product_charges.append(product.charge)
+                charge = product.charge
+                reaction_dict[product.covalent_hash] = charge
                 product_total_hashes.add(product.covalent_hash)
 
-            if len(reactant_total_hashes.intersection(product_total_hashes)) > 0 and reactant_charges == product_charges:
-                return True
+            overlap = reactant_total_hashes.intersection(product_total_hashes)
+            charge_set = set()
+
+            if len(overlap) > 0:
+                for hash_id in overlap:
+                    charge_set.add(reaction_dict[hash_id])
+                if len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 if charges of the hashes are different
+                    return True
                 # reactant_0 = mol_entries[reaction["reactants"][0]]
                 # reactant_dictionary = reactant_0.molecule.composition.as_dict()
                     
