@@ -570,9 +570,8 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                 product_charges.append(product.charge)
                 product_total_hashes.add(product.covalent_hash)
 
-            if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
-                if reactant_charges == product_charges:
-                    return True
+            if len(reactant_total_hashes.intersection(product_total_hashes)) > 0 and reactant_charges == product_charges:
+                return True
                 # reactant_0 = mol_entries[reaction["reactants"][0]]
                 # reactant_dictionary = reactant_0.molecule.composition.as_dict()
                     
@@ -593,7 +592,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
                 #             if new_dict["H"] == 1.0:
                 #                 return False
 
-                return True
+                # return True
             else:
                 return False
 
