@@ -554,7 +554,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
     def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
-            hash_charges = []
+            hash_charges = [] #associates each hash with its charge
             reactant_total_hashes = set()
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
@@ -574,18 +574,13 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
             overlap = reactant_total_hashes.intersection(product_total_hashes)
             charge_set = set()
 
-            if len(overlap) > 0:
-                for hash_id in overlap:
-                    for t in hash_charges:
-                        if hash_id in t:
-                            charge_set.add(t[1]) 
-                print(hash_charges)
-                print(overlap)
-                print(charge_set)
-                if len(overlap) == 1 and len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 
-                    return True #if charges of the hashes are different
-                # elif len(overlap) == 2: #is this necessarily true?
-                #     return True
+            if len(overlap) == 1:
+                hash_id = overlap[0]:
+                for t in hash_charges:
+                    if hash_id in t:
+                        charge_set.add(t[1]) 
+                if len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 if charges of the hashes are different
+                    return True 
 
         return False
 
