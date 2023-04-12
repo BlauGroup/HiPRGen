@@ -544,7 +544,7 @@ class reaction_is_charge_transfer(MSONable):
         return False
 
 
-class reaction_is_covalent_decomposable(MSONable): #removes electron transfers and A+B->A+C reactions
+class reaction_is_covalent_charge_decomposable(MSONable):
     def __init__(self):
         pass
 
@@ -568,6 +568,38 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
 
             if len(reactant_charge_hashes.intersection(product_charge_hashes)) == 1:
                 return True
+
+        return False
+
+
+class reaction_is_covalent_decomposable(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reaction is covalent decomposable"
+
+    def __call__(self, reaction, mols, params):
+        if (reaction['number_of_reactants'] == 2 and
+            reaction['number_of_products'] == 2):
+
+
+            reactant_total_hashes = set()
+            for i in range(reaction['number_of_reactants']):
+                reactant_id = reaction['reactants'][i]
+                reactant = mols[reactant_id]
+                reactant_total_hashes.add(reactant.covalent_hash)
+
+            product_total_hashes = set()
+            for i in range(reaction['number_of_products']):
+                product_id = reaction['products'][i]
+                product = mols[product_id]
+                product_total_hashes.add(product.covalent_hash)
+
+            if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
+                return True
+            else:
+                return False
 
         return False
 
@@ -1197,7 +1229,6 @@ default_reaction_decision_tree = [
     # (single_reactant_with_ring_break_two(), Terminal.KEEP),
     # (single_product_with_ring_form_two(), Terminal.KEEP),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
-    (reaction_is_charge_transfer(), Terminal.DISCARD),
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
     (concerted_metal_coordination(), Terminal.DISCARD),
     (concerted_metal_coordination_one_product(), Terminal.DISCARD),
@@ -1240,22 +1271,6 @@ co2_reaction_decision_tree = [
 ]
 
 
-euvl_phase1_reaction_decision_tree_orig = [
-    (
-        is_redox_reaction(),
-        [
-            (too_many_reactants_or_products(), Terminal.DISCARD),
-            (dcharge_too_large(), Terminal.DISCARD),
-            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-            (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
-            (reaction_default_true(), Terminal.DISCARD),
-        ],
-    ),
-    (reaction_default_true(), Terminal.DISCARD),
-]
-
-
 euvl_phase1_reaction_decision_tree = [
     (
         is_redox_reaction(),
@@ -1276,7 +1291,7 @@ euvl_phase1_reaction_decision_tree = [
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
             (reaction_is_charge_separation(), Terminal.DISCARD),
-            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+            (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
@@ -1308,20 +1323,6 @@ euvl_phase1_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase1_reaction_decision_tree_orig = [
-    (
-        is_redox_reaction(),
-        [
-            (too_many_reactants_or_products(), Terminal.DISCARD),
-            (dcharge_too_large(), Terminal.DISCARD),
-            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-            (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
-            (reaction_default_true(), Terminal.DISCARD),
-        ],
-    ),
-    (reaction_default_true(), Terminal.DISCARD),
-]
 
 euvl_phase1_reaction_logging_tree = [
     (
@@ -1343,7 +1344,7 @@ euvl_phase1_reaction_logging_tree = [
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
             (reaction_is_charge_separation(), Terminal.DISCARD),
-            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+            (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
