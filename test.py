@@ -687,7 +687,7 @@ def euvl_phase1_test():
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
-    if network_loader.number_of_species == 103:
+    if network_loader.number_of_species == 104:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
@@ -822,14 +822,14 @@ def euvl_phase2_test():
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
-    if network_loader.number_of_species == 102:
+    if network_loader.number_of_species == 103:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 4571:
+    if network_loader.number_of_reactions == 3912:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
@@ -840,11 +840,11 @@ def euvl_phase2_test():
 
 tests = [
     # mg_test,
-    li_test,
+    # li_test,
     # flicho_test,
     # co2_test,
-    # euvl_phase1_test,
-    # euvl_phase2_test,
+    euvl_phase1_test,
+    euvl_phase2_test,
 ]
 
 for test in tests:
