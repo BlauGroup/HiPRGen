@@ -575,6 +575,7 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
             charge_set = set()
 
             if len(overlap) > 0:
+                print(overlap)
                 for hash_id in overlap:
                     for t in hash_charges:
                         if hash_id in t:
