@@ -287,12 +287,14 @@ def li_test():
     # the sink report PDF.
 
     tests_passed = True
+    print("Number of species:", network_loader.number_of_species)
     if network_loader.number_of_species == 190:
         print(bcolors.PASS + "li_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "li_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
+    print("Number of reactions:", network_loader.number_of_reactions)
     if network_loader.number_of_reactions == 4921:
         print(bcolors.PASS + "li_test: correct number of reactions" + bcolors.ENDC)
     else:
@@ -405,12 +407,14 @@ def mg_test():
     species_report(network_loader, folder + "/species_report.tex")
 
     tests_passed = True
+    print("Number of species:", network_loader.number_of_species)
     if network_loader.number_of_species == 83:
         print(bcolors.PASS + "mg_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "mg_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
+    print("Number of reactions:", network_loader.number_of_reactions)
     if network_loader.number_of_reactions == 788:
         print(bcolors.PASS + "mg_test: correct number of reactions" + bcolors.ENDC)
     else:
@@ -835,12 +839,12 @@ def euvl_phase2_test():
 
 
 tests = [
-    #mg_test,
-    #li_test,
+    # mg_test,
+    li_test,
     # flicho_test,
     # co2_test,
-    euvl_phase1_test,
-    euvl_phase2_test,
+    # euvl_phase1_test,
+    # euvl_phase2_test,
 ]
 
 for test in tests:

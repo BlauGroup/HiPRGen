@@ -1197,6 +1197,7 @@ default_reaction_decision_tree = [
     # (single_reactant_with_ring_break_two(), Terminal.KEEP),
     # (single_product_with_ring_form_two(), Terminal.KEEP),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (reaction_is_charge_transfer(), Terminal.DISCARD),
     (reaction_is_covalent_decomposable(), Terminal.DISCARD),
     (concerted_metal_coordination(), Terminal.DISCARD),
     (concerted_metal_coordination_one_product(), Terminal.DISCARD),
