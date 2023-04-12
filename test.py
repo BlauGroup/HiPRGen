@@ -705,7 +705,7 @@ def euvl_phase1_test():
 
 def euvl_phase2_test():
 
-    phase1_folder = "./scratch/euvl_phase1_test"
+    phase1_folder = "./euvl_phase1_test"
     folder = "./scratch/euvl_phase2_test"
     subprocess.run(["mkdir", folder])
 
@@ -843,7 +843,7 @@ tests = [
     # li_test,
     # flicho_test,
     # co2_test,
-    euvl_phase1_test,
+    # euvl_phase1_test,
     euvl_phase2_test,
 ]
 
