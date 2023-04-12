@@ -575,12 +575,13 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
             charge_set = set()
 
             if len(overlap) > 0:
-                print(overlap)
                 for hash_id in overlap:
                     for t in hash_charges:
                         if hash_id in t:
                             charge_set.add(t[1]) 
-                if len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 if charges of the hashes are different
+                if len(overlap) == 1 and len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 if charges of the hashes are different
+                    return True
+                elif len(overlap) == 2
                     return True
 
         return False
