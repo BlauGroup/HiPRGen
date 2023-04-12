@@ -554,22 +554,33 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
     def __call__(self, reaction, mol_entries, params):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
+            hash_charges = [] #associates each hash with its charge
             reactant_total_hashes = set()
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
                 reactant = mol_entries[reactant_id]
+                charge = reactant.charge
+                hash_charges.append((reactant.covalent_hash, charge))
                 reactant_total_hashes.add(reactant.covalent_hash)
 
             product_total_hashes = set()
             for i in range(reaction["number_of_products"]):
                 product_id = reaction["products"][i]
                 product = mol_entries[product_id]
+                charge = product.charge
+                hash_charges.append((product.covalent_hash, charge))
                 product_total_hashes.add(product.covalent_hash)
 
-            if len(reactant_total_hashes.intersection(product_total_hashes)) > 0:
-                return True
-            else:
-                return False
+            overlap = reactant_total_hashes.intersection(product_total_hashes)
+            charge_set = set()
+
+            if len(overlap) == 1:
+                hash_id = overlap[0]:
+                for t in hash_charges:
+                    if hash_id in t:
+                        charge_set.add(t[1]) 
+                if len(charge_set) == 1: #sets cannot contain duplicate elements, so this will only be >1 if charges of the hashes are different
+                    return True 
 
         return False
 
@@ -1346,7 +1357,7 @@ euvl_phase1_reaction_logging_tree = [
             (reaction_is_charge_separation(), Terminal.DISCARD),
             (reaction_is_covalent_decomposable(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
-            (compositions_preclude_h_transfer(), Terminal.KEEP),
+            (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
                 fragment_matching_found(),
                 [
@@ -1395,19 +1406,19 @@ euvl_phase2_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase2_steric_filter_logging_tree = [
+euvl_phase2_logging_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
     (reaction_is_charge_transfer(), Terminal.DISCARD),
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.KEEP),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
     (
         fragment_matching_found(),
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            (reaction_is_hindered(), Terminal.KEEP),
+            (reaction_is_hindered(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),

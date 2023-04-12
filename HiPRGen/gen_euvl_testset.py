@@ -11,12 +11,11 @@ print("Done!")
 #list of mol_ids for species you want to find with each mol_id occupying its own line. Must have an empty line
 #at the end of the file, but empty lines will not be copied.
 print("Opening and reading species id file...")
-with open('test_species.txt') as mol_id_doc: #open the text file and copy each line as the element of a list, removing '\n'
+with open('atom_mapping_set.txt') as mol_id_doc: #open the text file and copy each line as the element of a list, removing '\n'
     mol_id_list = []
     for line in mol_id_doc:
-        if line.strip(): #excludes lines
-            id_index = line.find("-")
-            mol_id_list.append(line[id_index+1:len(line)-1])
+        if line.strip(): #excludes empty lines
+            mol_id_list.append(line[0:len(line)-1])
 print("Done!")
 
 print("Opening json file...")
@@ -53,9 +52,9 @@ for entry in database_entries:
                     val = new_entry.pop(name)
         test_set.append(new_entry)
             
-dumpfn(test_set, 'euvl_test_set.json') 
+dumpfn(test_set, 'atom_mapping_set.json') 
 
-new_mol_json = loadfn('euvl_test_set.json')
+new_mol_json = loadfn('atom_mapping_set.json')
 new_mol_entries= [MoleculeEntry.from_mp_doc(e) for e in new_mol_json]
 
 new_id_list = []
@@ -65,4 +64,9 @@ for molecule in new_mol_entries:
 
 new_id_set = set(new_id_list)
 mol_id_set = set(mol_id_list)
-print(mol_id_set - new_id_set)
+differences = mol_id_set - new_id_set
+if differences == set():
+    print('All desired entries successfully copied')
+else:
+    for elem in differences:
+        print('entry ', elem, ' not copied successfully')
