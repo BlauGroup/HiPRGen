@@ -56,6 +56,7 @@ class bcolors:
 # set and a magnesium set. Since the lithium test set is older, we shall
 # document that instead of the mg test set.
 
+
 if os.path.isdir('./scratch'):
     subprocess.run(['rm', '-r', './scratch'])
 
@@ -76,7 +77,6 @@ def li_test():
     # through the species decision tree to discard molecules.
     species_decision_tree = li_species_decision_tree
 
-
     # There is one non-local part of species filtering: we consider two
     # molecules to be equivalent if they have the same total charge,
     # composition, and covalent bonds, even if they have different metal
@@ -95,12 +95,10 @@ def li_test():
         coordimer_weight=lambda mol: (mol.penalty, mol.solvation_free_energy),
     )
 
-
     # Once we have generated our molecule list, we generate the bucket database
-    # which is how we break up the reaction filtering amongst all avaliable workers.
-    # It gets stored in the buckets.sqlite database.
+    # which is how we break up the reaction filtering amongst all avaliable
+    # workers. It gets stored in the buckets.sqlite database.
     bucket(mol_entries, folder + '/buckets.sqlite')
-
 
     # Reaction filtering is paralellized using MPI, so we need to spawn
     # an MPI instance to run it. This is why we can't just start
@@ -117,8 +115,8 @@ def li_test():
     # HiPRGen.reaction_questions
 
     params = {
-        'temperature' : ROOM_TEMP,
-        'electron_free_energy' : -1.4
+        'temperature': ROOM_TEMP,
+        'electron_free_energy': -1.4
     }
 
     dispatcher_payload = DispatcherPayload(
@@ -133,7 +131,6 @@ def li_test():
         params,
         Terminal.DISCARD
     )
-
 
     # The dispatcher and worker payloads are passed through the MPI barrier
     # as JSON blobs dispatcher_payload and worker_payload
@@ -215,8 +212,8 @@ def mg_test():
         folder + '/buckets.sqlite',
         default_reaction_decision_tree,
         {
-            'temperature' : ROOM_TEMP,
-            'electron_free_energy' : -2.06
+            'temperature': ROOM_TEMP,
+            'electron_free_energy': -2.06
         },
         Terminal.DISCARD
     )
