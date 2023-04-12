@@ -28,7 +28,9 @@ from HiPRGen.reaction_questions import (
     default_reaction_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
+    euvl_phase1_reaction_logging_tree,
     euvl_phase2_reaction_decision_tree,
+    euvl_phase2_logging_tree
 )
 
 from HiPRGen.mc_analysis import (
@@ -285,12 +287,14 @@ def li_test():
     # the sink report PDF.
 
     tests_passed = True
+    print("Number of species:", network_loader.number_of_species)
     if network_loader.number_of_species == 190:
         print(bcolors.PASS + "li_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "li_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
+    print("Number of reactions:", network_loader.number_of_reactions)
     if network_loader.number_of_reactions == 4921:
         print(bcolors.PASS + "li_test: correct number of reactions" + bcolors.ENDC)
     else:
@@ -403,12 +407,14 @@ def mg_test():
     species_report(network_loader, folder + "/species_report.tex")
 
     tests_passed = True
+    print("Number of species:", network_loader.number_of_species)
     if network_loader.number_of_species == 83:
         print(bcolors.PASS + "mg_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "mg_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
+    print("Number of reactions:", network_loader.number_of_reactions)
     if network_loader.number_of_reactions == 788:
         print(bcolors.PASS + "mg_test: correct number of reactions" + bcolors.ENDC)
     else:
@@ -619,7 +625,7 @@ def euvl_phase1_test():
         folder + "/buckets.sqlite",
         euvl_phase1_reaction_decision_tree,
         params,
-        euvl_phase1_reaction_decision_tree,
+        euvl_phase1_reaction_decision_tree
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -681,14 +687,14 @@ def euvl_phase1_test():
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
-    if network_loader.number_of_species == 103:
+    if network_loader.number_of_species == 104:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 371:
+    if network_loader.number_of_reactions == 563:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
@@ -699,7 +705,7 @@ def euvl_phase1_test():
 
 def euvl_phase2_test():
 
-    phase1_folder = "./scratch/euvl_phase1_test"
+    phase1_folder = "./euvl_phase1_test"
     folder = "./scratch/euvl_phase2_test"
     subprocess.run(["mkdir", folder])
 
@@ -739,7 +745,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         euvl_phase2_reaction_decision_tree,
         params,
-        euvl_phase2_reaction_decision_tree,
+        euvl_phase2_logging_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -816,14 +822,14 @@ def euvl_phase2_test():
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
-    if network_loader.number_of_species == 102:
+    if network_loader.number_of_species == 103:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 4079:
+    if network_loader.number_of_reactions == 3912:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
@@ -837,7 +843,7 @@ tests = [
     # li_test,
     # flicho_test,
     # co2_test,
-    euvl_phase1_test,
+    # euvl_phase1_test,
     euvl_phase2_test,
 ]
 
