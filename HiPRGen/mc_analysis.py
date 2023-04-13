@@ -855,6 +855,8 @@ class SimulationReplayer:
 
             self.expected_final_state += state
 
+        print(self.expected_final_state)
+        print(len(self.network_loader.trajectories))
         self.expected_final_state = (
             self.expected_final_state / len(self.network_loader.trajectories))
 
