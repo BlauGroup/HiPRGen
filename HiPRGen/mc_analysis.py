@@ -527,7 +527,7 @@ def reaction_tally_report(
     for (reaction_index, number) in sorted(
             reaction_tally.items(), key=lambda pair: -pair[1]):
         if number > cutoff:
-            report_generator.emit_text(str(number) + " occourances of:")
+            report_generator.emit_text(str(number) + " occurrences of:")
             report_generator.emit_reaction(
                 network_loader.index_to_reaction(reaction_index),
                 label=str(reaction_index)
