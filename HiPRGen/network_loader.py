@@ -161,23 +161,7 @@ class NetworkLoader:
             return reaction
 
 
-    def load_trajectories(self):
-
-        cur = self.initial_state_con.cursor()
-
-        for row in cur.execute(sql_get_trajectory):
-            seed = row[0]
-            step = row[1]
-            reaction_id = row[2]
-            time = row[3]
-
-            if seed not in self.trajectories:
-                self.trajectories[seed] = {}
-
-            self.trajectories[seed][step] = (reaction_id, time)
-
-
-    def load_initial_state(self):
+    def load_initial_state_and_trajectories(self):
 
         cur = self.initial_state_con.cursor()
         initial_state_dict = {}
@@ -193,14 +177,25 @@ class NetworkLoader:
         for i in range(self.number_of_species):
             initial_state_array[i] = initial_state_dict[i]
 
-        if self.initial_state_dict == {} and self.initial_state_array == {}:
+        if self.initial_state_dict == {}:
             self.initial_state_dict = initial_state_dict
-            self.initial_state_array = initial_state_array
         else:
             for i in range(self.number_of_species):
-                if initial_state_array[i] > self.initial_state_array[i]:
-                    self.initial_state_array[i] = initial_state_array[i]
+                if initial_state_dict[i] > self.initial_state_dict[i]:
                     self.initial_state_dict[i] = initial_state_dict[i]
+
+        for row in cur.execute(sql_get_trajectory):
+            seed = row[0]
+            step = row[1]
+            reaction_id = row[2]
+            time = row[3]
+
+            if seed not in self.trajectories:
+                self.trajectories[seed] = {}
+                self.initial_state_array[seed] = initial_state_array
+
+            self.trajectories[seed][step] = (reaction_id, time)
+                    
 
 
     def set_initial_state_db(self, initial_state_database):

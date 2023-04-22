@@ -770,8 +770,7 @@ def euvl_phase2_test():
         phase1_folder + "/mol_entries.pickle",
         phase1_folder + f"/initial_state.sqlite",
     )
-    phase1_network_loader.load_trajectories()
-    phase1_network_loader.load_initial_state()
+    phase1_network_loader.load_initial_state_and_trajectories()
     phase1_simulation_replayer = SimulationReplayer(phase1_network_loader)
     phase1_simulation_replayer.compute_trajectory_final_states()
 
@@ -807,8 +806,7 @@ def euvl_phase2_test():
 
     for seed in range(1000, 2000):
         network_loader.set_initial_state_db(folder + "/initial_state_"+str(seed)+".sqlite")
-        network_loader.load_trajectories()
-    network_loader.load_initial_state()
+        network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -819,6 +817,29 @@ def euvl_phase2_test():
     final_state_report(simulation_replayer, folder + "/final_state_report.tex")
 
     sink_report(simulation_replayer, folder + "/sink_report.tex")
+
+    tps_plus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tps.xyz", 1)
+    phs_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/phs.xyz", 0)
+    tba_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tba.xyz", 0)
+    nf_minus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/nf.xyz", -1)
+
+    important_species = [tps_plus1_id, phs_0_id, tba_0_id, nf_minus1_id]
+
+    for mol_id in simulation_replayer.sinks:
+        if mol_id not in important_species:
+            important_species.append(mol_id)
+
+    phase1_simulation_replayer.time_series_graph(
+        seeds=[i for i in range(1000,2000)],
+        species_of_interest=important_species,
+        path=os.path.join(folder,"phase1_time_series")
+    )
+
+    simulation_replayer.time_series_graph(
+        seeds=[i for i in range(1000,1000+1000*int(number_of_threads))],
+        species_of_interest=important_species,
+        path=os.path.join(folder,"phase2_time_series")
+    )
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)

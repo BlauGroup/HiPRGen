@@ -839,7 +839,7 @@ class SimulationReplayer:
         )
 
         for seed in self.network_loader.trajectories:
-            state = np.copy(self.network_loader.initial_state_array)
+            state = np.copy(self.network_loader.initial_state_array[seed])
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
@@ -861,7 +861,7 @@ class SimulationReplayer:
     def compute_trajectory_final_states(self):
         self.final_states = {}
         for seed in self.network_loader.trajectories:
-            state = np.copy(self.network_loader.initial_state_array)
+            state = np.copy(self.network_loader.initial_state_array[seed])
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
@@ -906,13 +906,13 @@ class SimulationReplayer:
                         self.producing_reactions[product_index][reaction_index] += 1
 
     def compute_state_time_series(self, seed):
-        state_dimension_size = len(self.network_loader.initial_state_array)
+        state_dimension_size = len(self.network_loader.initial_state_array[seed])
         step_dimension_size = len(self.network_loader.trajectories[seed])
         time_series = np.zeros(
             (step_dimension_size, state_dimension_size),
             dtype=int)
 
-        state = np.copy(self.network_loader.initial_state_array)
+        state = np.copy(self.network_loader.initial_state_array[seed])
         for step in self.network_loader.trajectories[seed]:
             reaction_index = self.network_loader.trajectories[seed][step][0]
             time = self.network_loader.trajectories[seed][step][1]
