@@ -832,13 +832,15 @@ def euvl_phase2_test():
     phase1_simulation_replayer.time_series_graph(
         seeds=[i for i in range(1000,2000)],
         species_of_interest=important_species,
-        path=os.path.join(folder,"phase1_time_series")
+        path=os.path.join(folder,"phase1_time_series"),
+        custom_y_max=36
     )
 
     simulation_replayer.time_series_graph(
         seeds=[i for i in range(1000,1000+1000*int(number_of_threads))],
         species_of_interest=important_species,
-        path=os.path.join(folder,"phase2_time_series")
+        path=os.path.join(folder,"phase2_time_series"),
+        custom_y_max=36
     )
 
     tests_passed = True

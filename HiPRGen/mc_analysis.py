@@ -936,9 +936,10 @@ class SimulationReplayer:
             seeds,
             species_of_interest,
             path,
+            custom_y_max=None,
             colors = list(mcolors.TABLEAU_COLORS.values()),
             styles = ['solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot'],
-            internal_index_labels=True
+            internal_index_labels=True,
     ):
 
 
@@ -983,15 +984,19 @@ class SimulationReplayer:
             gridspec_kw={'height_ratios':[2,2,1]})
 
         y_max = 0
-        for step in range(total_time_series.shape[0]):
-            for species_index in species_of_interest:
-                y_max = max(y_max, total_time_series[step,species_index])
+        if custom_y_max is None:
+            for step in range(total_time_series.shape[0]):
+                for species_index in species_of_interest:
+                    y_max = max(y_max, total_time_series[step,species_index])
+            y_max += 1
+        else:
+            y_max = custom_y_max
 
         ax0.set_xlim([0,total_time_series.shape[0]])
-        ax0.set_ylim([0,y_max+1])
+        ax0.set_ylim([0,y_max])
 
         ax1.set_xlim([0,total_time_series.shape[0]])
-        ax1.set_ylim([0,(y_max+1)/10])
+        ax1.set_ylim([0,(y_max)/10])
 
 
         ticks = np.arange(0, total_time_series.shape[0])
