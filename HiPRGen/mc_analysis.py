@@ -937,7 +937,7 @@ class SimulationReplayer:
             species_of_interest,
             path,
             colors = list(mcolors.TABLEAU_COLORS.values()),
-            styles = ['solid', 'dotted', 'dashed', 'dashdot'],
+            styles = ['solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot'],
             internal_index_labels=True
     ):
 
