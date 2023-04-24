@@ -937,6 +937,7 @@ class SimulationReplayer:
             species_of_interest,
             path,
             custom_y_max=None,
+            custom_colorstyle_list=None,
             colors = list(mcolors.TABLEAU_COLORS.values()),
             styles = ['solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot'],
             internal_index_labels=True,
@@ -971,11 +972,16 @@ class SimulationReplayer:
 
         line_dict = {}
         i = 0
-        for species_index in species_of_interest:
-            r = i % len(colors)
-            q = i // len(colors)
-            line_dict[species_index] = (colors[r], styles[q])
-            i += 1
+        if custom_colorstyle_list is None:
+            for species_index in species_of_interest:
+                r = i % len(colors)
+                q = i // len(colors)
+                line_dict[species_index] = (colors[r], styles[q])
+                i += 1
+        else:
+            for species_index in species_of_interest:
+                line_dict[species_index] = (custom_colorstyle_list[i][0], custom_colorstyle_list[i][1])
+                i += 1
 
 
         fig, (ax0, ax1, ax2) = plt.subplots(

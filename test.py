@@ -3,8 +3,9 @@ import sys
 import subprocess
 import sqlite3
 import pickle
+import copy
 
-
+import matplotlib.colors as mcolors
 from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.initial_state import find_mol_entry_from_xyz_and_charge
 from monty.serialization import loadfn, dumpfn
@@ -823,24 +824,40 @@ def euvl_phase2_test():
     tba_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tba.xyz", 0)
     nf_minus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/nf.xyz", -1)
 
-    important_species = [tps_plus1_id, phs_0_id, tba_0_id, nf_minus1_id]
+    phase2_important_species = [tps_plus1_id, phs_0_id, tba_0_id, nf_minus1_id]
 
+    colors = list(mcolors.TABLEAU_COLORS.values())
+    phase2_colorstyle_list = []
+    for ii, species in enumerate(phase2_important_species):        
+        phase2_colorstyle_list.append([colors[ii], "solid"])
+
+    ii = 0
     for mol_id in simulation_replayer.sinks:
-        if mol_id not in important_species:
-            important_species.append(mol_id)
+        if mol_id not in phase2_important_species:
+            phase2_important_species.append(mol_id)
+            phase2_colorstyle_list.append([colors[ii%len(colors)], "dashed"])
+            ii += 1
+
+    phase1_important_species = copy.deepcopy(phase2_important_species)
+    phase1_important_species.append(len(mol_entries))
+
+    phase1_colorstyle_list = copy.deepcopy(phase2_colorstyle_list)
+    phase1_colorstyle_list.append(["black", "dotted"])
 
     phase1_simulation_replayer.time_series_graph(
         seeds=[i for i in range(1000,2000)],
-        species_of_interest=important_species,
+        species_of_interest=phase1_important_species,
         path=os.path.join(folder,"phase1_time_series"),
-        custom_y_max=36
+        custom_y_max=36,
+        custom_colorstyle_list=phase1_colorstyle_list
     )
 
     simulation_replayer.time_series_graph(
         seeds=[i for i in range(1000,1000+1000*int(number_of_threads))],
-        species_of_interest=important_species,
+        species_of_interest=phase2_important_species,
         path=os.path.join(folder,"phase2_time_series"),
-        custom_y_max=36
+        custom_y_max=36,
+        custom_colorstyle_list=phase2_colorstyle_list
     )
 
     tests_passed = True
