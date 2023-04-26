@@ -219,8 +219,7 @@ def li_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+    network_loader.load_initial_state_and_trajectories()
 
     # HiPRGen has analysis tools to understand what happened in our simulation.
     # The output files are written into the same folder in which the reaction
@@ -386,8 +385,7 @@ def mg_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+    network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -504,8 +502,7 @@ def mg_test():
 #         folder + "/initial_state.sqlite",
 #     )
 
-#     network_loader.load_trajectories()
-#     network_loader.load_initial_state()
+#     network_loader.load_initial_state_and_trajectories()
 
 #     report_generator = ReportGenerator(
 #         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -674,8 +671,7 @@ def euvl_phase1_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+    network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
