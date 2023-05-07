@@ -1,0 +1,1 @@
+{"@module": "HiPRGen.reaction_filter_payloads", "@class": "DispatcherPayload", "@version": null, "bucket_db_file": "./scratch/euvl_phase1_test/buckets.sqlite", "reaction_network_db_file": "./scratch/euvl_phase1_test/rn.sqlite", "report_file": "./scratch/euvl_phase1_test/reaction_report.tex", "commit_frequency": 1000, "checkpoint_interval": 10}

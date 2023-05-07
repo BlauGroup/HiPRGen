@@ -519,18 +519,24 @@ class reaction_is_charge_transfer(MSONable):
         if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
 
             reactant_total_hashes = set()
+            reactant_hash_list = []
             for i in range(reaction["number_of_reactants"]):
                 reactant_id = reaction["reactants"][i]
                 reactant = mol_entries[reactant_id]
                 reactant_total_hashes.add(reactant.covalent_hash)
+                reactant_hash_list.append(reactant.covalent_hash)
 
             product_total_hashes = set()
+            product_hash_list = []
             for i in range(reaction["number_of_products"]):
                 product_id = reaction["products"][i]
                 product = mol_entries[product_id]
                 product_total_hashes.add(product.covalent_hash)
+                product_hash_list.append(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) == 2:
+                return True
+            elif len(reactant_total_hashes.intersection(product_total_hashes)) == 1 and reactant_hash_list[0] == reactant_hash_list[1] and product_hash_list[0] == product_hash_list[1]:
                 return True
             else:
                 return False
@@ -538,7 +544,96 @@ class reaction_is_charge_transfer(MSONable):
         return False
 
 
-class reaction_is_covalent_decomposable(MSONable): #removes electron transfers and A+B->A+C reactions
+class reaction_is_covalent_charge_decomposable(MSONable): # Remove A + B -> A + C, where A on both
+                                                          # sides has the same charge
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reaction is covalent charge decomposable"
+
+    def __call__(self, reaction, mol_entries, params):
+        if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
+
+            reactant_charge_hashes = set()
+            for i in range(reaction["number_of_reactants"]):
+                reactant_id = reaction["reactants"][i]
+                reactant = mol_entries[reactant_id]
+                reactant_charge_hashes.add(reactant.covalent_hash + "_"+ str(reactant.charge))
+
+            product_charge_hashes = set()
+            for i in range(reaction["number_of_products"]):
+                product_id = reaction["products"][i]
+                product = mol_entries[product_id]
+                product_charge_hashes.add(product.covalent_hash + "_" + str(product.charge))
+
+            if len(reactant_charge_hashes.intersection(product_charge_hashes)) == 1:
+                return True
+
+        return False
+
+
+class reaction_is_coupled_electron_fragment_transfer(MSONable): # Remove A + B+ -> C+ + B
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "reaction is coupled electron fragment transfer"
+
+    def __call__(self, reaction, mol_entries, params):
+        if (reaction['number_of_reactants'] == 2 and
+            reaction['number_of_products'] == 2):
+
+            reactants = []
+            reactant_charge_hashes = set()
+            reactant_hashes = set()
+            for i in range(reaction["number_of_reactants"]):
+                reactant_id = reaction["reactants"][i]
+                # print("reactant_id", reactant_id)
+                reactant = mol_entries[reactant_id]
+                reactants.append(reactant)
+                reactant_hashes.add(reactant.covalent_hash)
+                reactant_charge_hashes.add(reactant.covalent_hash + "_"+ str(reactant.charge))
+
+            product_charge_hashes = set()
+            product_hashes = set()
+            for i in range(reaction["number_of_products"]):
+                product_id = reaction["products"][i]
+                # print("product_id", product_id)
+                product = mol_entries[product_id]
+                product_hashes.add(product.covalent_hash)
+                product_charge_hashes.add(product.covalent_hash + "_" + str(product.charge))
+
+            if len(reactant_charge_hashes.intersection(product_charge_hashes)) == 0 and len(reactant_hashes.intersection(product_hashes)) > 0:
+                bigger_reactant = None
+                smaller_hash = None
+                try:
+                    comp_diff = reactants[0].molecule.composition - reactants[1].molecule.composition
+                    bigger_reactant = 0
+                    smaller_hash = reactants[1].covalent_hash
+                except ValueError:
+                    try:
+                        comp_diff = reactants[1].molecule.composition - reactants[0].molecule.composition
+                        bigger_reactant = 1
+                        smaller_hash = reactants[0].covalent_hash
+                    except ValueError:
+                        return True
+                # print("bigger_reactant", bigger_reactant)
+                for frag_complex in reactants[bigger_reactant].fragment_data:
+                    if smaller_hash in frag_complex.fragment_hashes:
+                        # print("hash found!")
+                        # print(huh)
+                        return False
+                return True
+
+
+        return False
+
+
+class reaction_is_covalent_decomposable(MSONable): # Remove A + B -> A + C, even if A has different
+                                                   # charges on each side AND removes charge tranfer
+                                                   # e.g. A+ + B -> A + B+
     def __init__(self):
         pass
 
@@ -546,17 +641,19 @@ class reaction_is_covalent_decomposable(MSONable): #removes electron transfers a
         return "reaction is covalent decomposable"
 
     def __call__(self, reaction, mol_entries, params):
-        if reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
+        if (reaction['number_of_reactants'] == 2 and
+            reaction['number_of_products'] == 2):
+
 
             reactant_total_hashes = set()
-            for i in range(reaction["number_of_reactants"]):
-                reactant_id = reaction["reactants"][i]
+            for i in range(reaction['number_of_reactants']):
+                reactant_id = reaction['reactants'][i]
                 reactant = mol_entries[reactant_id]
                 reactant_total_hashes.add(reactant.covalent_hash)
 
             product_total_hashes = set()
-            for i in range(reaction["number_of_products"]):
-                product_id = reaction["products"][i]
+            for i in range(reaction['number_of_products']):
+                product_id = reaction['products'][i]
                 product = mol_entries[product_id]
                 product_total_hashes.add(product.covalent_hash)
 
@@ -1003,6 +1100,26 @@ class not_h_transfer(MSONable):
         return False
 
 
+class fragments_are_not_2A_B(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "fragments are not A + A + B"
+
+    def __call__(self, reaction, mol_entries, params):
+        if len(reaction["hashes"].keys()) == 2:
+            number_of_fragments = 0
+            for frag_hash in reaction["hashes"]:
+                number_of_fragments += reaction["hashes"][frag_hash]
+            if number_of_fragments == 3:
+                return False
+            else:
+                return True
+        else:
+            return True
+
+
 class single_reactant_single_product(MSONable):
     def __init__(self):
         pass
@@ -1342,22 +1459,6 @@ co2_reaction_decision_tree = [
 ]
 
 
-euvl_phase1_reaction_decision_tree_orig = [
-    (
-        is_redox_reaction(),
-        [
-            (too_many_reactants_or_products(), Terminal.DISCARD),
-            (dcharge_too_large(), Terminal.DISCARD),
-            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-            (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
-            (reaction_default_true(), Terminal.DISCARD),
-        ],
-    ),
-    (reaction_default_true(), Terminal.DISCARD),
-]
-
-
 euvl_phase1_reaction_decision_tree = [
     (
         is_redox_reaction(),
@@ -1378,7 +1479,8 @@ euvl_phase1_reaction_decision_tree = [
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
             (reaction_is_charge_separation(), Terminal.DISCARD),
-            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+            (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
+            (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
@@ -1412,20 +1514,6 @@ euvl_phase1_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase1_reaction_decision_tree_orig = [
-    (
-        is_redox_reaction(),
-        [
-            (too_many_reactants_or_products(), Terminal.DISCARD),
-            (dcharge_too_large(), Terminal.DISCARD),
-            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
-            (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
-            (reaction_default_true(), Terminal.DISCARD),
-        ],
-    ),
-    (reaction_default_true(), Terminal.DISCARD),
-]
 
 euvl_phase1_reaction_logging_tree = [
     (
@@ -1447,7 +1535,8 @@ euvl_phase1_reaction_logging_tree = [
             (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
             (two_closed_shell_reactants_and_two_open_shell_products(), Terminal.DISCARD),
             (reaction_is_charge_separation(), Terminal.DISCARD),
-            (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+            (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
+            (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
             (star_count_diff_above_threshold(6), Terminal.DISCARD),
             (compositions_preclude_h_transfer(), Terminal.DISCARD),
             (
@@ -1486,7 +1575,8 @@ euvl_phase2_reaction_decision_tree = [
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
     (reaction_is_charge_transfer(), Terminal.KEEP),
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
+    (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
     (
         fragment_matching_found(),
@@ -1494,25 +1584,40 @@ euvl_phase2_reaction_decision_tree = [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
             (reaction_is_hindered(), Terminal.DISCARD),
+            (
+                reaction_is_covalent_decomposable(),
+                [
+                    (fragments_are_not_2A_B(), Terminal.DISCARD),
+                    (reaction_default_true(), Terminal.KEEP),
+                ],
+            ),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase2_steric_filter_logging_tree = [
+euvl_phase2_logging_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
     (reaction_is_charge_transfer(), Terminal.DISCARD),
-    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
+    (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
     (star_count_diff_above_threshold(6), Terminal.DISCARD),
     (
         fragment_matching_found(),
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            (reaction_is_hindered(), Terminal.KEEP),
+            (reaction_is_hindered(), Terminal.DISCARD),
+            (
+                reaction_is_covalent_decomposable(),
+                [
+                    (fragments_are_not_2A_B(), Terminal.DISCARD),
+                    (reaction_default_true(), Terminal.KEEP),
+                ],
+            ),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
