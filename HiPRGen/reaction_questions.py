@@ -858,6 +858,7 @@ class fragment_matching_found(MSONable):
 
                 reactant_hashes = dict()
                 reactant_fragment_objects = dict()
+                reactant_fragment_mappings = dict()
                 for reactant_index, frag_complex_index in enumerate(reactant_fragment_indices):
                     fragment_complex = mol_entries[                  #pulls out a fragment_complex whose index matches the above
                         reaction["reactants"][reactant_index]
@@ -877,9 +878,11 @@ class fragment_matching_found(MSONable):
                             reactant_hashes[tag] = 1
 
                     reactant_fragment_objects[reactant_index] = fragment_complex.fragment_objects
+                    reactant_fragment_mappings[reactant_index] = fragment_complex.fragment_mappings
 
                 product_hashes = dict()
                 product_fragment_objects = dict()
+                product_fragment_mappings = dict()
                 for product_index, frag_complex_index in enumerate(
                     product_fragment_indices
                 ):
@@ -900,6 +903,7 @@ class fragment_matching_found(MSONable):
                             product_hashes[tag] = 1
 
                     product_fragment_objects[product_index] = fragment_complex.fragment_objects
+                    product_fragment_mappings[product_index] = fragment_complex.fragment_mappings
 
                 # don't consider fragmentations with both a ring opening and closing
                 if (
@@ -918,7 +922,9 @@ class fragment_matching_found(MSONable):
                         reaction["reactant_fragment_count"] = reactant_fragment_count
                         reaction["product_fragment_count"] = product_fragment_count
                         reaction["reactant_fragment_objects"] = reactant_fragment_objects
+                        reaction["reactant_fragment_mappings"] = reactant_fragment_mappings
                         reaction["product_fragment_objects"] = product_fragment_objects
+                        reaction["product_fragment_mappings"] = product_fragment_mappings
                         return True
                     else:
                         tmp = {}
@@ -928,7 +934,9 @@ class fragment_matching_found(MSONable):
                         tmp["reactant_fragment_count"] = reactant_fragment_count
                         tmp["product_fragment_count"] = product_fragment_count
                         tmp["reactant_fragment_objects"] = reactant_fragment_objects
+                        tmp["reactant_fragment_mappings"] = reactant_fragment_mappings
                         tmp["product_fragment_objects"] = product_fragment_objects
+                        tmp["product_fragment_mappings"] = product_fragment_mappings
                         viable_fragment_matches.append(tmp)
 
         if len(viable_fragment_matches) > 0:
@@ -964,7 +972,9 @@ class fragment_matching_found(MSONable):
             reaction["reactant_fragment_count"] = best_matching["reactant_fragment_count"]
             reaction["product_fragment_count"] = best_matching["product_fragment_count"]
             reaction["reactant_fragment_objects"] = best_matching["reactant_fragment_objects"]
+            reaction["reactant_fragment_mappings"] = best_matching["reactant_fragment_mappings"]
             reaction["product_fragment_objects"] = best_matching["product_fragment_objects"]
+            reaction["product_fragment_mappings"] = best_matching["product_fragment_mappings"]
             return True
 
         return False
@@ -1584,6 +1594,7 @@ euvl_phase2_reaction_decision_tree = [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
             (reaction_is_hindered(), Terminal.DISCARD),
+            (hot_atom_preserving_mapping_not_found(), Terminal.DISCARD),
             (
                 reaction_is_covalent_decomposable(),
                 [
