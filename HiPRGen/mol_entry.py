@@ -95,6 +95,14 @@ def find_hot_atom_preserving_fragment_map(fragment_1, fragment_2, mappings):
     return None
 
 
+def build_noH_graph(mol_graph):
+    non_H_indices = []
+    for idx in mol_graph.graph.nodes():
+        if "H" not in mol_graph.graph.nodes()[idx]["specie"]:
+            print(mol_graph.graph.nodes()[idx]["specie"])
+            non_H_indices.append(mol_graph.graph.nodes()[idx]["specie"])
+
+
 class FragmentComplex:
     def __init__(
         self, number_of_fragments, number_of_bonds_broken, bonds_broken, fragment_hashes, fragment_objects=None,
@@ -156,6 +164,8 @@ class MoleculeEntry:
             # self.mol_graph = oxygen_edge_extender(mol_graph)
         else:
             self.mol_graph = mol_graph
+
+        self.noH_graph = build_noH_graph(self.mol_graph)
 
         self.partial_charges_resp = partial_charges_resp
         self.partial_charges_mulliken = partial_charges_mulliken
