@@ -18,13 +18,15 @@ class FragmentObject:
             atom_ids,
             neighborhood_hashes,
             graph,
-            hot_atoms
+            hot_atoms,
+            compressed_graph
     ):
         self.fragment_hash = fragment_hash
         self.atom_ids = atom_ids
         self.neighborhood_hashes = neighborhood_hashes
         self.graph = graph
         self.hot_atoms = hot_atoms
+        self.compressed_graph = compressed_graph
 
 def sym_iterator(n):
     return permutations(range(n), r=n)
@@ -33,7 +35,7 @@ def sym_iterator(n):
 def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
     groups_by_hash = {}
 
-    for left_index in fragment_1.atom_ids:
+    for left_index in fragment_1.compressed_graph.nodes():
 
         neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
         if neighborhood_hash not in groups_by_hash:
@@ -42,7 +44,7 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
         groups_by_hash[neighborhood_hash][0].append(left_index)
 
 
-    for right_index in fragment_2.atom_ids:
+    for right_index in fragment_2.compressed_graph.nodes():
 
         neighborhood_hash = fragment_2.neighborhood_hashes[right_index]
         if neighborhood_hash not in groups_by_hash:
@@ -63,16 +65,29 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
                 mapping[vals[0][i]] = vals[1][j]
 
         isomorphism = True
-        for edge in fragment_1.graph.edges:
+        for edge in fragment_1.compressed_graph.edges:
             u = mapping[edge[0]]
             v = mapping[edge[1]]
-            if not fragment_2.graph.has_edge(u,v):
+            if not fragment_2.compressed_graph.has_edge(u,v):
                 isomorphism = False
                 break
 
 
         if isomorphism:
-            mappings.append(mapping)
+
+            uncompressed_mapping = copy.deepcopy(mapping)
+            for frag1_idx in mapping:
+                frag2_idx=mapping[frag1_idx]
+                for element in fragment_1.compressed_graph.nodes()[frag1_idx]["compressed"]:
+                    for ii, idx in enumerate(fragment_1.compressed_graph.nodes()[frag1_idx]["compressed"][element]):
+                        uncompressed_mapping[idx] = fragment_2.compressed_graph.nodes()[frag2_idx]["compressed"][element][ii]
+
+            for edge in fragment_1.graph.edges:
+                u = uncompressed_mapping[edge[0]]
+                v = uncompressed_mapping[edge[1]]
+                assert fragment_2.graph.has_edge(u,v)
+
+            mappings.append(uncompressed_mapping)
 
             if return_one:
                 return mappings
@@ -95,12 +110,38 @@ def find_hot_atom_preserving_fragment_map(fragment_1, fragment_2, mappings):
     return None
 
 
-def build_noH_graph(mol_graph):
-    non_H_indices = []
-    for idx in mol_graph.graph.nodes():
-        if "H" not in mol_graph.graph.nodes()[idx]["specie"]:
-            print(mol_graph.graph.nodes()[idx]["specie"])
-            non_H_indices.append(mol_graph.graph.nodes()[idx]["specie"])
+def build_compressed_graph(graph, to_compress):
+    # to_compress = ["Br", "Cl", "F", "H"]
+    comp_graph = nx.Graph(copy.deepcopy(graph))
+    indices_to_save = []
+    # print(comp_graph.nodes())
+    # for idx in comp_graph.nodes():
+    #     print(idx, comp_graph.nodes()[idx])
+    for idx in comp_graph.nodes():
+        if comp_graph.nodes()[idx]["specie"] not in to_compress:
+            indices_to_save.append(idx)
+        if "compressed" not in comp_graph.nodes()[idx]:
+            comp_graph.nodes()[idx]["compressed"] = {}
+    for idx in indices_to_save:
+        indices_to_remove = []
+        for n_idx in comp_graph.neighbors(idx):
+            if comp_graph.nodes()[n_idx]["specie"] in to_compress:
+                if comp_graph.nodes()[n_idx]["specie"] not in comp_graph.nodes()[idx]["compressed"]:
+                    comp_graph.nodes()[idx]["compressed"][comp_graph.nodes()[n_idx]["specie"]] = [n_idx]
+                else:
+                    comp_graph.nodes()[idx]["compressed"][comp_graph.nodes()[n_idx]["specie"]].append(n_idx)
+                indices_to_remove.append(n_idx)
+        comp_graph.remove_nodes_from(indices_to_remove)
+        to_append = ""
+        for element in to_compress:
+            if element in comp_graph.nodes()[idx]["compressed"]:
+                to_append += element + str(len(comp_graph.nodes()[idx]["compressed"][element]))
+        comp_graph.nodes()[idx]["specie"] = comp_graph.nodes()[idx]["specie"] + to_append
+    # print(comp_graph.nodes())
+    # for idx in comp_graph.nodes():
+    #     print(idx, comp_graph.nodes()[idx])
+    # print(huh)
+    return comp_graph
 
 
 class FragmentComplex:
@@ -165,8 +206,6 @@ class MoleculeEntry:
         else:
             self.mol_graph = mol_graph
 
-        self.noH_graph = build_noH_graph(self.mol_graph)
-
         self.partial_charges_resp = partial_charges_resp
         self.partial_charges_mulliken = partial_charges_mulliken
         self.partial_charges_nbo = partial_charges_nbo
@@ -174,6 +213,7 @@ class MoleculeEntry:
 
         self.molecule = self.mol_graph.molecule
         self.graph = self.mol_graph.graph.to_undirected()
+
         self.species = [str(s) for s in self.molecule.species]
 
         self.m_inds = [i for i, x in enumerate(self.species) if x in metals]
@@ -186,6 +226,10 @@ class MoleculeEntry:
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
 
+        self.to_compress = ["Br", "Cl", "F", "H"]
+
+        self.compressed_graph = build_compressed_graph(self.covalent_graph, self.to_compress)
+
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
         self.num_atoms = len(self.molecule)
@@ -197,6 +241,12 @@ class MoleculeEntry:
         self.non_metal_atoms = [
             i for i in range(self.num_atoms) if self.species[i] not in metals
         ]
+
+        self.uncompressed_atoms = [
+            i for i in range(self.num_atoms) if self.species[i] not in self.to_compress
+        ]
+
+        assert self.uncompressed_atoms == list(self.compressed_graph.nodes())
 
     @classmethod
     def from_dataset_entry(

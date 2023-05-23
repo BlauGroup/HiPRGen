@@ -1,4 +1,4 @@
-from HiPRGen.mol_entry import MoleculeEntry, FragmentComplex, FragmentObject
+from HiPRGen.mol_entry import MoleculeEntry, FragmentComplex, FragmentObject, build_compressed_graph
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import copy
@@ -140,11 +140,11 @@ class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fr
         fragment_objects = []
         if self.neighborhood_width is not None:
             neighborhood_hashes = {}
-            for i in mol.non_metal_atoms:
+            for i in mol.uncompressed_atoms:
                 hash_list = []
                 for d in range(self.neighborhood_width):
                     neighborhood = nx.generators.ego.ego_graph(
-                        mol.covalent_graph,
+                        mol.compressed_graph,
                         i,
                         d,
                         undirected=True)
@@ -158,16 +158,18 @@ class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fr
                 neighborhood_hashes[i] = hash(tuple(hash_list))
             fragment_object = FragmentObject(
                 mol.covalent_hash,
-                mol.non_metal_atoms,
+                mol.uncompressed_atoms,
                 neighborhood_hashes,
                 mol.covalent_graph,
-                []
+                [],
+                mol.compressed_graph
             )
             fragment_objects.append(fragment_object)
 
         fragment_complex = FragmentComplex(1, 0, [], [mol.covalent_hash], fragment_objects)
 
-        mol.fragment_data.append(fragment_complex)
+        if len(mol.fragment_data) == 0:
+            mol.fragment_data.append(fragment_complex)
 
         return False
 
@@ -223,11 +225,12 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                             subgraph = entry["subgraph"]
                             fragment_hash = entry["fragment_hash"]
                             neighborhood_hashes = {}
-                            for i in c:
+                            compressed_subgraph = build_compressed_graph(subgraph, mol.to_compress)
+                            for i in compressed_subgraph.nodes():
                                 hash_list = []
                                 for d in range(self.neighborhood_width):
                                     neighborhood = nx.generators.ego.ego_graph(
-                                        subgraph,
+                                        compressed_subgraph,
                                         i,
                                         d,
                                         undirected=True)
@@ -244,7 +247,8 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                                 c,
                                 neighborhood_hashes,
                                 subgraph,
-                                [i for i in c if i in edge[0:2]]
+                                [i for i in c if i in edge[0:2]],
+                                compressed_subgraph
                             )
                             fragment_objects.append(fragment_object)
 

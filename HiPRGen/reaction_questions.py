@@ -878,7 +878,10 @@ class fragment_matching_found(MSONable):
                             reactant_hashes[tag] = 1
 
                     reactant_fragment_objects[reactant_index] = fragment_complex.fragment_objects
-                    reactant_fragment_mappings[reactant_index] = fragment_complex.fragment_mappings
+                    # reactant_fragment_mappings[reactant_index] = fragment_complex.fragment_mappings
+                    reactant_fragment_mappings[reactant_index] = {}
+                    for ii, mappings in enumerate(fragment_complex.fragment_mappings):
+                        reactant_fragment_mappings[reactant_index][fragment_complex.fragment_hashes[ii]] = mappings
 
                 product_hashes = dict()
                 product_fragment_objects = dict()
@@ -903,7 +906,9 @@ class fragment_matching_found(MSONable):
                             product_hashes[tag] = 1
 
                     product_fragment_objects[product_index] = fragment_complex.fragment_objects
-                    product_fragment_mappings[product_index] = fragment_complex.fragment_mappings
+                    product_fragment_mappings[product_index] = {}
+                    for ii, mappings in enumerate(fragment_complex.fragment_mappings):
+                        product_fragment_mappings[product_index][fragment_complex.fragment_hashes[ii]] = mappings
 
                 # don't consider fragmentations with both a ring opening and closing
                 if (
@@ -980,8 +985,27 @@ class fragment_matching_found(MSONable):
         return False
 
 
-
 class hot_atom_preserving_mapping_not_found(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "determine atom mapping"
+
+    def __call__(self, reaction, mol_entries, params):
+
+        for ii in range(reaction["number_of_reactants"]):
+            print(mol_entries[reaction["reactants"][ii]])
+
+        for ii in range(reaction["number_of_products"]):
+            print(mol_entries[reaction["products"][ii]])
+
+        print(reaction["reactant_fragment_mappings"])
+        print(reaction["product_fragment_mappings"])
+        print(huh)
+
+
+class old_hot_atom_preserving_mapping_not_found(MSONable):
     def __init__(self):
         pass
 

@@ -193,20 +193,24 @@ def species_filter(
     log_message("mapping fragments")
     fragment_dict = {}
     for mol in mol_entries:
-        print(mol.entry_id)
+        # print(mol.entry_id)
         for fragment_complex in mol.fragment_data:
-            print(" ", fragment_complex.bonds_broken)
+            # print(" bonds broken: ", fragment_complex.bonds_broken)
             for ii, fragment in enumerate(fragment_complex.fragment_objects):
-                print("  ", ii, fragment.atom_ids)
+                # print("  ", ii, fragment.compressed_graph.nodes())
                 assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
                 if fragment.fragment_hash not in fragment_dict:
                     fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
                 all_mappings = find_fragment_atom_mappings(
                     fragment,
                     fragment_dict[fragment.fragment_hash])
-                print("   len(all_mappings)", len(all_mappings))
+                # print("   len(all_mappings): ", len(all_mappings))
+                # print(all_mappings)
                 fragment_complex.fragment_mappings.append([all_mappings])
+        assert len(fragment_complex.fragment_objects) == len(fragment_complex.fragment_mappings)
 
+
+    log_message(str(len(fragment_dict.keys())) + " unique fragments found")
 
 
     log_message("creating molecule entry pickle")
