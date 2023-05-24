@@ -151,7 +151,7 @@ def li_test():
         folder + "/buckets.sqlite",
         default_reaction_decision_tree,
         params,
-        Terminal.DISCARD,
+        default_reaction_decision_tree,
     )
 
     # The dispatcher and worker payloads are passed through the MPI barrier

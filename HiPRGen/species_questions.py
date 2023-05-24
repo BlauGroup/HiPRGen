@@ -555,10 +555,10 @@ li_species_decision_tree = [
     (metal_complex(), Terminal.DISCARD),
     (spin_multiplicity_filter(0.4), Terminal.DISCARD),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
-    (add_single_bond_fragments(neighborhood_width=width), Terminal.KEEP),
-    # (add_unbroken_fragment(), Terminal.KEEP),
-    # (add_single_bond_fragments(), Terminal.KEEP),
+    # (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    # (add_single_bond_fragments(neighborhood_width=width), Terminal.KEEP),
+    (add_unbroken_fragment(), Terminal.KEEP),
+    (add_single_bond_fragments(), Terminal.KEEP),
     # (has_covalent_ring(), [
     #     (covalent_ring_fragments(), Terminal.KEEP),
     #     (species_default_true(), Terminal.KEEP)

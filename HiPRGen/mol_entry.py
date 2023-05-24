@@ -36,63 +36,6 @@ def sym_iterator(n):
 def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
     groups_by_hash = {}
 
-    # print("fragment_1.compressed_graph.nodes()", fragment_1.graph.nodes())
-    # print("fragment_2.compressed_graph.nodes()", fragment_2.graph.nodes())
-
-    # print("fragment_1.fragment_hash",fragment_1.fragment_hash)
-    # print("fragment_2.fragment_hash",fragment_2.fragment_hash)
-
-    # for idx in fragment_1.graph.nodes():
-    #     print(idx, fragment_1.graph.nodes()[idx])
-    # print()
-
-    # # for idx in fragment_1.graph.edges():
-    # #     print(idx, fragment_1.graph.edges()[idx])
-    # print(fragment_1.graph.edges())
-    # print()
-
-    # for idx in fragment_2.graph.nodes():
-    #     print(idx, fragment_2.graph.nodes()[idx])
-    # print()
-
-    # # for idx in fragment_2.graph.edges():
-    # #     print(idx, fragment_2.graph.edges()[idx])
-    # print(fragment_2.graph.edges())
-    # print()
-
-    # for idx in fragment_1.compressed_graph.nodes():
-    #     print(idx, fragment_1.compressed_graph.nodes()[idx])
-    # print()
-
-    # for idx in fragment_2.compressed_graph.nodes():
-    #     print(idx, fragment_2.compressed_graph.nodes()[idx])
-    # print()
-
-    # # new_cg1 = build_compressed_graph(fragment_1.graph)
-    # # new_cg2 = build_compressed_graph(fragment_2.graph)
-
-    # isomorphic = nx.is_isomorphic(
-    #     fragment_1.compressed_graph,
-    #     fragment_2.compressed_graph,
-    #     node_match=iso.categorical_node_match("specie", None),
-    # )
-    # print("isomorphic", isomorphic)
-
-    # new_gh1 = weisfeiler_lehman_graph_hash(
-    #     fragment_1.compressed_graph, node_attr="specie"
-    # )
-
-    # new_gh2 = weisfeiler_lehman_graph_hash(
-    #     fragment_2.compressed_graph, node_attr="specie"
-    # )
-
-    # print("new_gh1",new_gh1)
-    # print("new_gh2",new_gh2)
-    # print()
-
-
-
-
     for left_index in fragment_1.compressed_graph.nodes():
 
         neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
