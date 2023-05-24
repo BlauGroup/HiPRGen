@@ -1,4 +1,4 @@
-from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings
+from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings, build_compressed_graph
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
@@ -198,15 +198,18 @@ def species_filter(
             # print(" bonds broken: ", fragment_complex.bonds_broken)
             for ii, fragment in enumerate(fragment_complex.fragment_objects):
                 # print("  ", ii, fragment.compressed_graph.nodes())
+
+
                 assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
                 if fragment.fragment_hash not in fragment_dict:
                     fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
+                    # print("New fragment!")
                 all_mappings = find_fragment_atom_mappings(
                     fragment,
                     fragment_dict[fragment.fragment_hash])
                 # print("   len(all_mappings): ", len(all_mappings))
                 # print(all_mappings)
-                fragment_complex.fragment_mappings.append([all_mappings])
+                fragment_complex.fragment_mappings.append(all_mappings)
         assert len(fragment_complex.fragment_objects) == len(fragment_complex.fragment_mappings)
 
 

@@ -157,12 +157,12 @@ class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fr
 
                 neighborhood_hashes[i] = hash(tuple(hash_list))
             fragment_object = FragmentObject(
-                mol.covalent_hash,
-                mol.uncompressed_atoms,
-                neighborhood_hashes,
-                mol.covalent_graph,
-                [],
-                mol.compressed_graph
+                fragment_hash=mol.covalent_hash,
+                atom_ids=mol.uncompressed_atoms,
+                neighborhood_hashes=neighborhood_hashes,
+                graph=mol.covalent_graph,
+                hot_atoms=[],
+                compressed_graph=mol.compressed_graph
             )
             fragment_objects.append(fragment_object)
 
@@ -225,7 +225,7 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                             subgraph = entry["subgraph"]
                             fragment_hash = entry["fragment_hash"]
                             neighborhood_hashes = {}
-                            compressed_subgraph = build_compressed_graph(subgraph, mol.to_compress)
+                            compressed_subgraph = build_compressed_graph(subgraph)
                             for i in compressed_subgraph.nodes():
                                 hash_list = []
                                 for d in range(self.neighborhood_width):
@@ -243,12 +243,12 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
                                 neighborhood_hashes[i] = hash(tuple(hash_list))
                             fragment_object = FragmentObject(
-                                fragment_hash,
-                                c,
-                                neighborhood_hashes,
-                                subgraph,
-                                [i for i in c if i in edge[0:2]],
-                                compressed_subgraph
+                                fragment_hash=fragment_hash,
+                                atom_ids=c,
+                                neighborhood_hashes=neighborhood_hashes,
+                                graph=subgraph,
+                                hot_atoms=[i for i in c if i in edge[0:2]],
+                                compressed_graph=compressed_subgraph
                             )
                             fragment_objects.append(fragment_object)
 
@@ -414,6 +414,7 @@ class fix_hydrogen_bonding(MSONable):
                             mol.graph.remove_edge(i, adjacent_atom)
                             if adjacent_atom in mol.covalent_graph:
                                 mol.covalent_graph.remove_edge(i, adjacent_atom)
+        mol.compressed_graph = build_compressed_graph(mol.covalent_graph)
 
         return False
 
@@ -540,6 +541,8 @@ class charge_too_big(MSONable):
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
+width = 6
+
 li_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_correction(li_ec), Terminal.KEEP),
@@ -552,8 +555,10 @@ li_species_decision_tree = [
     (metal_complex(), Terminal.DISCARD),
     (spin_multiplicity_filter(0.4), Terminal.DISCARD),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(), Terminal.KEEP),
+    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    (add_single_bond_fragments(neighborhood_width=width), Terminal.KEEP),
+    # (add_unbroken_fragment(), Terminal.KEEP),
+    # (add_single_bond_fragments(), Terminal.KEEP),
     # (has_covalent_ring(), [
     #     (covalent_ring_fragments(), Terminal.KEEP),
     #     (species_default_true(), Terminal.KEEP)

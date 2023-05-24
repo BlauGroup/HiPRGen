@@ -7,6 +7,7 @@ from pymatgen.analysis.graphs import MoleculeGraph, MolGraphSplitError
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender#, oxygen_edge_extender
 from pymatgen.core.structure import Molecule
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
+import networkx.algorithms.isomorphism as iso
 from HiPRGen.constants import ROOM_TEMP, metals
 from itertools import permutations, product
 
@@ -35,6 +36,63 @@ def sym_iterator(n):
 def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
     groups_by_hash = {}
 
+    # print("fragment_1.compressed_graph.nodes()", fragment_1.graph.nodes())
+    # print("fragment_2.compressed_graph.nodes()", fragment_2.graph.nodes())
+
+    # print("fragment_1.fragment_hash",fragment_1.fragment_hash)
+    # print("fragment_2.fragment_hash",fragment_2.fragment_hash)
+
+    # for idx in fragment_1.graph.nodes():
+    #     print(idx, fragment_1.graph.nodes()[idx])
+    # print()
+
+    # # for idx in fragment_1.graph.edges():
+    # #     print(idx, fragment_1.graph.edges()[idx])
+    # print(fragment_1.graph.edges())
+    # print()
+
+    # for idx in fragment_2.graph.nodes():
+    #     print(idx, fragment_2.graph.nodes()[idx])
+    # print()
+
+    # # for idx in fragment_2.graph.edges():
+    # #     print(idx, fragment_2.graph.edges()[idx])
+    # print(fragment_2.graph.edges())
+    # print()
+
+    # for idx in fragment_1.compressed_graph.nodes():
+    #     print(idx, fragment_1.compressed_graph.nodes()[idx])
+    # print()
+
+    # for idx in fragment_2.compressed_graph.nodes():
+    #     print(idx, fragment_2.compressed_graph.nodes()[idx])
+    # print()
+
+    # # new_cg1 = build_compressed_graph(fragment_1.graph)
+    # # new_cg2 = build_compressed_graph(fragment_2.graph)
+
+    # isomorphic = nx.is_isomorphic(
+    #     fragment_1.compressed_graph,
+    #     fragment_2.compressed_graph,
+    #     node_match=iso.categorical_node_match("specie", None),
+    # )
+    # print("isomorphic", isomorphic)
+
+    # new_gh1 = weisfeiler_lehman_graph_hash(
+    #     fragment_1.compressed_graph, node_attr="specie"
+    # )
+
+    # new_gh2 = weisfeiler_lehman_graph_hash(
+    #     fragment_2.compressed_graph, node_attr="specie"
+    # )
+
+    # print("new_gh1",new_gh1)
+    # print("new_gh2",new_gh2)
+    # print()
+
+
+
+
     for left_index in fragment_1.compressed_graph.nodes():
 
         neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
@@ -51,6 +109,8 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
             groups_by_hash[neighborhood_hash] = ([],[])
 
         groups_by_hash[neighborhood_hash][1].append(right_index)
+
+    # print(groups_by_hash)
 
     groups = list(groups_by_hash.values())
 
@@ -110,13 +170,9 @@ def find_hot_atom_preserving_fragment_map(fragment_1, fragment_2, mappings):
     return None
 
 
-def build_compressed_graph(graph, to_compress):
-    # to_compress = ["Br", "Cl", "F", "H"]
+def build_compressed_graph(graph, to_compress=["Br", "Cl", "F", "H"]):
     comp_graph = nx.Graph(copy.deepcopy(graph))
     indices_to_save = []
-    # print(comp_graph.nodes())
-    # for idx in comp_graph.nodes():
-    #     print(idx, comp_graph.nodes()[idx])
     for idx in comp_graph.nodes():
         if comp_graph.nodes()[idx]["specie"] not in to_compress:
             indices_to_save.append(idx)
@@ -137,11 +193,23 @@ def build_compressed_graph(graph, to_compress):
             if element in comp_graph.nodes()[idx]["compressed"]:
                 to_append += element + str(len(comp_graph.nodes()[idx]["compressed"][element]))
         comp_graph.nodes()[idx]["specie"] = comp_graph.nodes()[idx]["specie"] + to_append
-    # print(comp_graph.nodes())
-    # for idx in comp_graph.nodes():
-    #     print(idx, comp_graph.nodes()[idx])
-    # print(huh)
     return comp_graph
+
+
+def extend_mapping(full_mapping, reactant_index, reactant_fragment_mapping, product_index, product_fragment_mapping):
+    inverted_product_fragment_mapping = {}
+    for product_atom_ind in product_fragment_mapping:
+        master_atom_ind = product_fragment_mapping[product_atom_ind]
+        inverted_product_fragment_mapping[master_atom_ind] = product_atom_ind
+
+    for reactant_atom_ind in reactant_fragment_mapping:
+        master_atom_ind = reactant_fragment_mapping[reactant_atom_ind]
+        product_atom_ind = inverted_product_fragment_mapping[master_atom_ind]
+        full_mapping[(reactant_index, reactant_atom_ind)] = (product_index, product_atom_ind)
+
+    return full_mapping
+
+
 
 
 class FragmentComplex:
@@ -226,9 +294,9 @@ class MoleculeEntry:
         self.covalent_graph = copy.deepcopy(self.graph)
         self.covalent_graph.remove_nodes_from(self.m_inds)
 
-        self.to_compress = ["Br", "Cl", "F", "H"]
+        # self.to_compress = ["Br", "Cl", "F", "H"]
 
-        self.compressed_graph = build_compressed_graph(self.covalent_graph, self.to_compress)
+        self.compressed_graph = build_compressed_graph(self.covalent_graph)#, self.to_compress)
 
         self.formula = self.molecule.composition.alphabetical_formula
         self.charge = self.molecule.charge
@@ -242,11 +310,25 @@ class MoleculeEntry:
             i for i in range(self.num_atoms) if self.species[i] not in metals
         ]
 
-        self.uncompressed_atoms = [
-            i for i in range(self.num_atoms) if self.species[i] not in self.to_compress
-        ]
+        self.uncompressed_atoms = list(self.compressed_graph.nodes())
 
-        assert self.uncompressed_atoms == list(self.compressed_graph.nodes())
+        # if self.entry_id == "libe-120767":
+
+        #     for idx in self.covalent_graph.nodes():
+        #         print(idx, self.covalent_graph.nodes()[idx])
+        #     print()
+
+        #     print(self.covalent_graph.edges())
+
+        #     for idx in self.compressed_graph.nodes():
+        #         print(idx, self.compressed_graph.nodes()[idx])
+        #     print()
+
+        #     new_cg = build_compressed_graph(self.covalent_graph)
+        #     for idx in new_cg.nodes():
+        #         print(idx, new_cg.nodes()[idx])
+        #     print()
+
 
     @classmethod
     def from_dataset_entry(
