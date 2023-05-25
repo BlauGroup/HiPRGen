@@ -1083,35 +1083,11 @@ class mapping_with_reaction_center_not_found(MSONable):
             # once you account for charges, it can be not, e.g. AH- + A -> A- + HA
                 assert reaction["reactant_fragment_count"] == 3
 
-                # print()
-                # print("2X, Y")
-                # print()
-
-                # print("reactants:", reaction["reactants"])
-                # for ii in range(reaction["number_of_reactants"]):
-                #     print(mol_entries[reaction["reactants"][ii]])
-                # print()
-
-                # print("products:", reaction["products"])
-                # for ii in range(reaction["number_of_products"]):
-                #     print(mol_entries[reaction["products"][ii]])
-                # print()
-
-                # print(reaction["reactant_fragment_mappings"])
-                # print(reaction["product_fragment_mappings"])
-                # print()
-                # print("len(reaction['hashes'].keys()):", len(reaction["hashes"].keys()))
-                # print(huh)
-
                 for frag_hash in reaction["hashes"]:
                     if reaction["hashes"][frag_hash] == 2:
                         double_hash = frag_hash
                     elif reaction["hashes"][frag_hash] == 1:
                         single_hash = frag_hash
-
-                # print("single_hash", single_hash)
-                # print("double_hash", double_hash)
-                # print()
 
                 double_hash_on_same_specie = False
                 for ind in range(reaction["number_of_reactants"]):
@@ -1182,8 +1158,6 @@ class mapping_with_reaction_center_not_found(MSONable):
                                         product_index,
                                         reaction["product_fragment_mappings"][product_index][single_hash][0]
                                     )
-                    # print(full_mapping)
-
 
             else:
                 raise RuntimeError("Number of reactants and number of products must both be either 1 or 2! Exiting...")
@@ -1215,23 +1189,6 @@ class mapping_with_reaction_center_not_found(MSONable):
                 assert reaction["number_of_reactants"] + reaction["number_of_products"] == 3
                 assert reaction["reactant_fragment_count"] == 2
 
-                print("Found the crazy case!")
-                print()
-
-                print("reactants:", reaction["reactants"])
-                for ii in range(reaction["number_of_reactants"]):
-                    print(mol_entries[reaction["reactants"][ii]])
-                print()
-
-                print("products:", reaction["products"])
-                for ii in range(reaction["number_of_products"]):
-                    print(mol_entries[reaction["products"][ii]])
-                print()
-
-                print(reaction["reactant_fragment_mappings"])
-                print(reaction["product_fragment_mappings"])
-                print()
-
                 for frag_hash in reaction["hashes"]:
                     if reaction["hashes"][frag_hash] == 2:
                         double_hash = frag_hash
@@ -1242,27 +1199,13 @@ class mapping_with_reaction_center_not_found(MSONable):
                         if len(reaction["reactant_fragment_mappings"][ind][double_hash]) == 2:
                             assert double_hash_on_same_specie == False
                             double_hash_on_same_specie = True
+                for ind in range(reaction["number_of_products"]):
                     if double_hash in reaction["product_fragment_mappings"][ind]:
                         if len(reaction["product_fragment_mappings"][ind][double_hash]) == 2:
                             assert double_hash_on_same_specie == False
                             double_hash_on_same_specie = True
 
                 assert double_hash_on_same_specie
-
-                # for reactant_index in range(reaction["number_of_reactants"]):
-                #     reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
-                #     for product_index in range(reaction["number_of_products"]):
-                #         product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
-                #         overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
-                #         assert len(overlapping_hash_list) == 1
-                #         for overlapping_hash in overlapping_hash_list:
-                #             full_mappping = extend_mapping(
-                #                 full_mapping,
-                #                 reactant_index,
-                #                 reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
-                #                 product_index,
-                #                 reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
-                #             )
 
                 double_ind = 0
                 for reactant_index in range(reaction["number_of_reactants"]):
@@ -1293,7 +1236,6 @@ class mapping_with_reaction_center_not_found(MSONable):
                                 double_ind += 1
                             else:
                                 raise RuntimeError("Mapping should be length 2 on either reactant or product! Exiting...")
-                print(full_mapping)
 
         # Map metals, if present:
         reactant_m_inds = []
