@@ -1232,20 +1232,68 @@ class mapping_with_reaction_center_not_found(MSONable):
                 print(reaction["product_fragment_mappings"])
                 print()
 
+                for frag_hash in reaction["hashes"]:
+                    if reaction["hashes"][frag_hash] == 2:
+                        double_hash = frag_hash
+
+                double_hash_on_same_specie = False
+                for ind in range(reaction["number_of_reactants"]):
+                    if double_hash in reaction["reactant_fragment_mappings"][ind]:
+                        if len(reaction["reactant_fragment_mappings"][ind][double_hash]) == 2:
+                            assert double_hash_on_same_specie == False
+                            double_hash_on_same_specie = True
+                    if double_hash in reaction["product_fragment_mappings"][ind]:
+                        if len(reaction["product_fragment_mappings"][ind][double_hash]) == 2:
+                            assert double_hash_on_same_specie == False
+                            double_hash_on_same_specie = True
+
+                assert double_hash_on_same_specie
+
+                # for reactant_index in range(reaction["number_of_reactants"]):
+                #     reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                #     for product_index in range(reaction["number_of_products"]):
+                #         product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                #         overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                #         assert len(overlapping_hash_list) == 1
+                #         for overlapping_hash in overlapping_hash_list:
+                #             full_mappping = extend_mapping(
+                #                 full_mapping,
+                #                 reactant_index,
+                #                 reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
+                #                 product_index,
+                #                 reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
+                #             )
+
+                double_ind = 0
                 for reactant_index in range(reaction["number_of_reactants"]):
                     reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
                     for product_index in range(reaction["number_of_products"]):
                         product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
                         overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
-                        assert len(overlapping_hash_list) == 1
                         for overlapping_hash in overlapping_hash_list:
-                            full_mappping = extend_mapping(
-                                full_mapping,
-                                reactant_index,
-                                reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
-                                product_index,
-                                reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
-                            )
+                            if len(reactant_frag_hash_set) == 1 and len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 2:
+                                assert overlapping_hash == double_hash
+                                full_mappping = extend_mapping(
+                                    full_mapping,
+                                    reactant_index,
+                                    reaction["reactant_fragment_mappings"][reactant_index][double_hash][double_ind],
+                                    product_index,
+                                    reaction["product_fragment_mappings"][product_index][double_hash][0]
+                                )
+                                double_ind += 1
+                            elif len(product_frag_hash_set) == 1 and len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 2:
+                                assert overlapping_hash == double_hash
+                                full_mappping = extend_mapping(
+                                    full_mapping,
+                                    reactant_index,
+                                    reaction["reactant_fragment_mappings"][reactant_index][double_hash][0],
+                                    product_index,
+                                    reaction["product_fragment_mappings"][product_index][double_hash][double_ind]
+                                )
+                                double_ind += 1
+                            else:
+                                raise RuntimeError("Mapping should be length 2 on either reactant or product! Exiting...")
+                print(full_mapping)
 
         # Map metals, if present:
         reactant_m_inds = []
@@ -1295,20 +1343,20 @@ class mapping_with_reaction_center_not_found(MSONable):
             # print("reaction['reaction_center']:",reaction["reaction_center"])
 
             if reaction["reaction_center"] is None:
-                print("Failed to find reaction center!!")
-                print()
+                # print("Failed to find reaction center!!")
+                # print()
 
-                print("reactants:", reaction["reactants"])
-                for ii in range(reaction["number_of_reactants"]):
-                    print(mol_entries[reaction["reactants"][ii]])
-                print()
+                # print("reactants:", reaction["reactants"])
+                # for ii in range(reaction["number_of_reactants"]):
+                #     print(mol_entries[reaction["reactants"][ii]])
+                # print()
 
-                print("products:", reaction["products"])
-                for ii in range(reaction["number_of_products"]):
-                    print(mol_entries[reaction["products"][ii]])
-                print()
-                print(full_mapping)
-                print()
+                # print("products:", reaction["products"])
+                # for ii in range(reaction["number_of_products"]):
+                #     print(mol_entries[reaction["products"][ii]])
+                # print()
+                # print(full_mapping)
+                # print()
 
 
                 return True
@@ -1780,8 +1828,43 @@ default_reaction_decision_tree = [
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            # (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
+            (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
+
+
+default_logging_decision_tree = [
+    (metal_metal_reaction(), Terminal.DISCARD),
+    # redox branch
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (dG_above_threshold(0.0, "solvation_free_energy", 0.0), Terminal.DISCARD),
+    # (single_reactant_with_ring_break_two(), Terminal.KEEP),
+    # (single_product_with_ring_form_two(), Terminal.KEEP),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (concerted_metal_coordination(), Terminal.DISCARD),
+    (concerted_metal_coordination_one_product(), Terminal.DISCARD),
+    (concerted_metal_coordination_one_reactant(), Terminal.DISCARD),
+    (metal_coordination_passthrough(), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (mapping_with_reaction_center_not_found(), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
     (reaction_default_true(), Terminal.DISCARD),

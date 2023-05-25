@@ -27,6 +27,7 @@ from HiPRGen.species_questions import (
 
 from HiPRGen.reaction_questions import (
     default_reaction_decision_tree,
+    default_logging_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
     euvl_phase1_reaction_logging_tree,
@@ -151,7 +152,7 @@ def li_test():
         folder + "/buckets.sqlite",
         default_reaction_decision_tree,
         params,
-        default_reaction_decision_tree,
+        default_logging_decision_tree,
     )
 
     # The dispatcher and worker payloads are passed through the MPI barrier
