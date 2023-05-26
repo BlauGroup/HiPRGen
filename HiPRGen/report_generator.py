@@ -185,6 +185,7 @@ class ReportGenerator:
         self.f.write("\n\n\n")
 
         if "atom_map" in reaction:
+            self.f.write("atom map:")
             self.emit_atom_map(reaction["atom_map"])
 
     def emit_bond_breakage(self, reaction):
@@ -200,12 +201,4 @@ class ReportGenerator:
 
         self.f.write("\n\n\n")
 
-    # def emit_full_mapping(self, reaction):
-    #     if "full_mapping" in reaction:
-    #         self.f.write("atom map:")
-    #         for reactant_atom in reaction["full_mapping"]:
-    #             product_atom = reaction["full_mapping"][reactant_atom]
-    #             self.emit_verbatim(str(reactant_atom)+":"+str(product_atom))
-
-    #     self.f.write("\n\n\n")
 
