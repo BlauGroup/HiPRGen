@@ -1294,73 +1294,123 @@ class mapping_with_reaction_center_not_found(MSONable):
             # print("reaction['reaction_center']:",reaction["reaction_center"])
 
             if reaction["reaction_center"] is None:
-                print("Failed to find reaction center!!")
-                print()
+                # print("Failed to find reaction center!!")
+                # print()
 
-                print("reactants:", reaction["reactants"])
-                for ii in range(reaction["number_of_reactants"]):
-                    print(mol_entries[reaction["reactants"][ii]])
-                print()
+                # print("reactants:", reaction["reactants"])
+                # for ii in range(reaction["number_of_reactants"]):
+                #     print(mol_entries[reaction["reactants"][ii]])
+                # print()
 
-                print("products:", reaction["products"])
-                for ii in range(reaction["number_of_products"]):
-                    print(mol_entries[reaction["products"][ii]])
+                # print("products:", reaction["products"])
+                # for ii in range(reaction["number_of_products"]):
+                #     print(mol_entries[reaction["products"][ii]])
 
-                print()
-                print(reaction["reactant_fragment_mappings"])
-                print(reaction["product_fragment_mappings"])
+                # print()
+                # print(reaction["reactant_fragment_mappings"])
+                # print(reaction["product_fragment_mappings"])
 
-                print()
-                print(full_mapping)
-                print()
+                # print()
+                # print(full_mapping)
+                # print()
 
                 
-                print(co3_hash)
-                print(reaction["hashes"])
-                print(co3_hash in reaction["hashes"])
+                # print(co3_hash)
+                # print(reaction["hashes"])
+                # print(co3_hash in reaction["hashes"])
+
+                if co3_hash in reaction["hashes"]:
+
+                    reactant_co3_o_inds = set()
+                    for reactant_index in range(reaction["number_of_reactants"]):
+                        if co3_hash in reaction["reactant_fragment_mappings"][reactant_index]:
+                            # print(reactant_index, "co3_hash in reactant_fragment_mappings!")
+                            for atom_index in reaction["reactant_fragment_mappings"][reactant_index][co3_hash][0]:
+                                # print(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index])
+                                # print(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie)
+                                # print(str(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie) == "O")
+                                if str(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie) == "O":
+                                    reactant_co3_o_inds.add((reactant_index, atom_index))
+
+                    product_co3_o_inds = set()
+                    for product_index in range(reaction["number_of_products"]):
+                        if co3_hash in reaction["product_fragment_mappings"][product_index]:
+                            # print(product_index, "co3_hash in product_fragment_mappings!")
+                            for atom_index in reaction["product_fragment_mappings"][product_index][co3_hash][0]:
+                                # print(mol_entries[reaction["products"][product_index]].molecule[atom_index])
+                                # print(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie)
+                                # print(str(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie) == "O")
+                                if str(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie) == "O":
+                                    product_co3_o_inds.add((product_index, atom_index))
+
+                    # print("reactant_co3_o_inds", reactant_co3_o_inds)
+                    # print("product_co3_o_inds", product_co3_o_inds)
 
 
-                reactant_co3_o_inds = set()
-                for reactant_index in range(reaction["number_of_reactants"]):
-                    if co3_hash in reaction["reactant_fragment_mappings"][reactant_index]:
-                        print(reactant_index, "co3_hash in reactant_fragment_mappings!")
-                        for atom_index in reaction["reactant_fragment_mappings"][reactant_index][co3_hash][0]:
-                            print(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index])
-                            print(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie)
-                            print(str(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie) == "O")
-                            if str(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie) == "O":
-                                reactant_co3_o_inds.add((reactant_index, atom_index))
+                    hot_reactant_atoms = set(reaction["reactant_bonds_broken"][0])
+                    hot_product_atoms = set(reaction["product_bonds_broken"][0])
 
-                product_co3_o_inds = set()
-                for product_index in range(reaction["number_of_products"]):
-                    if co3_hash in reaction["product_fragment_mappings"][product_index]:
-                        print(product_index, "co3_hash in product_fragment_mappings!")
-                        for atom_index in reaction["product_fragment_mappings"][product_index][co3_hash][0]:
-                            print(mol_entries[reaction["products"][product_index]].molecule[atom_index])
-                            print(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie)
-                            print(str(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie) == "O")
-                            if str(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie) == "O":
-                                product_co3_o_inds.add((product_index, atom_index))
+                    # print("hot_reactant_atoms", hot_reactant_atoms)
+                    # print("hot_product_atoms", hot_product_atoms)
 
-                print("reactant_co3_o_inds", reactant_co3_o_inds)
-                print("product_co3_o_inds", product_co3_o_inds)
+                    hot_reactant_co3_o_list = list(reactant_co3_o_inds.intersection(hot_reactant_atoms))
+                    hot_product_co3_o_list = list(product_co3_o_inds.intersection(hot_product_atoms))
+
+                    if len(hot_reactant_co3_o_list) == 1 and len(hot_product_co3_o_list) == 1:
+
+                        hot_reactant_co3_o = hot_reactant_co3_o_list[0]
+                        hot_product_co3_o = hot_product_co3_o_list[0]
+
+                        # print("hot_reactant_co3_o",hot_reactant_co3_o)
+                        # print("hot_product_co3_o",hot_product_co3_o)
+
+                        incorrectly_mapped_product_co3_o = reaction["full_mapping"][hot_reactant_co3_o]
+
+                        assert incorrectly_mapped_product_co3_o != hot_product_co3_o
+
+                        swap_executed = False
+                        for key in reaction["full_mapping"]:
+                            if reaction["full_mapping"][key] == hot_product_co3_o:
+                                reaction["full_mapping"][key] = incorrectly_mapped_product_co3_o
+                                reaction["full_mapping"][hot_reactant_co3_o] = hot_product_co3_o
+                                assert swap_executed == False
+                                swap_executed = True
+                                break
+
+                        assert swap_executed
+
+                        reaction["reaction_center"] = (hot_reactant_co3_o, hot_product_co3_o)
+
+                        return False
+                    else:
+                        return True
 
 
-                hot_reactant_atoms = set(reaction["reactant_bonds_broken"][0])
-                hot_product_atoms = set(reaction["product_bonds_broken"][0])
+                    #     print("reactants:", reaction["reactants"])
+                    #     for ii in range(reaction["number_of_reactants"]):
+                    #         print(mol_entries[reaction["reactants"][ii]])
+                    #     print()
 
-                print("hot_reactant_atoms", hot_reactant_atoms)
-                print("hot_product_atoms", hot_product_atoms)
+                    #     print("products:", reaction["products"])
+                    #     for ii in range(reaction["number_of_products"]):
+                    #         print(mol_entries[reaction["products"][ii]])
 
-                hot_reactant_co3_o = list(reactant_co3_o_inds.intersection(hot_reactant_atoms))
-                hot_product_co3_o = list(product_co3_o_inds.intersection(hot_product_atoms))
+                    #     print()
+                    #     print(reaction["reactant_fragment_mappings"])
+                    #     print(reaction["product_fragment_mappings"])
 
-                print("hot_reactant_co3_o",hot_reactant_co3_o)
-                print("hot_product_co3_o",hot_product_co3_o)
+                    #     print()
+                    #     print(full_mapping)
+                    #     print()
 
-                print(huh)
 
-                return True
+                    #     raise RuntimeError("We have a CO3 fragment but it doesn't have the hot atoms?! Exiting...")
+
+                        # print(reaction["full_mapping"])
+
+                else:
+
+                    return True
 
 
             else:
