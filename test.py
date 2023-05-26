@@ -878,11 +878,11 @@ def euvl_phase2_test():
 
 tests = [
     # mg_test,
-    li_test,
+    # li_test,
     # flicho_test,
     # co2_test,
     # euvl_phase1_test,
-    # euvl_phase2_test,
+    euvl_phase2_test,
 ]
 
 for test in tests:

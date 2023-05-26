@@ -1267,7 +1267,7 @@ class mapping_with_reaction_center_not_found(MSONable):
             full_mapping[reactant_m_ind] = product_m_inds[ii]
 
 
-        reaction["full_mapping"] = full_mapping
+        reaction["atom_map"] = full_mapping
 
         if len(reaction["reactant_bonds_broken"]) + len(reaction["product_bonds_broken"]) < 2:
             return False
@@ -1285,11 +1285,11 @@ class mapping_with_reaction_center_not_found(MSONable):
             reaction["reaction_center"] = None
 
             for hot_reactant_atom in hot_reactant_atoms:
-                if reaction["full_mapping"][hot_reactant_atom] in hot_product_atoms:
+                if reaction["atom_map"][hot_reactant_atom] in hot_product_atoms:
                     if reaction["reaction_center"] is not None:
                         raise RuntimeError("Should never find two reaction centers! Exiting...")
                     else:
-                        reaction["reaction_center"] = (hot_reactant_atom, reaction["full_mapping"][hot_reactant_atom])
+                        reaction["reaction_center"] = (hot_reactant_atom, reaction["atom_map"][hot_reactant_atom])
 
             # print("reaction['reaction_center']:",reaction["reaction_center"])
 
@@ -1364,15 +1364,15 @@ class mapping_with_reaction_center_not_found(MSONable):
                         # print("hot_reactant_co3_o",hot_reactant_co3_o)
                         # print("hot_product_co3_o",hot_product_co3_o)
 
-                        incorrectly_mapped_product_co3_o = reaction["full_mapping"][hot_reactant_co3_o]
+                        incorrectly_mapped_product_co3_o = reaction["atom_map"][hot_reactant_co3_o]
 
                         assert incorrectly_mapped_product_co3_o != hot_product_co3_o
 
                         swap_executed = False
-                        for key in reaction["full_mapping"]:
-                            if reaction["full_mapping"][key] == hot_product_co3_o:
-                                reaction["full_mapping"][key] = incorrectly_mapped_product_co3_o
-                                reaction["full_mapping"][hot_reactant_co3_o] = hot_product_co3_o
+                        for key in reaction["atom_map"]:
+                            if reaction["atom_map"][key] == hot_product_co3_o:
+                                reaction["atom_map"][key] = incorrectly_mapped_product_co3_o
+                                reaction["atom_map"][hot_reactant_co3_o] = hot_product_co3_o
                                 assert swap_executed == False
                                 swap_executed = True
                                 break
@@ -1406,7 +1406,7 @@ class mapping_with_reaction_center_not_found(MSONable):
 
                     #     raise RuntimeError("We have a CO3 fragment but it doesn't have the hot atoms?! Exiting...")
 
-                        # print(reaction["full_mapping"])
+                        # print(reaction["atom_map"])
 
                 else:
 

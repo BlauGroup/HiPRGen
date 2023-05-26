@@ -198,12 +198,14 @@ class ReportGenerator:
             for bond in reaction["product_bonds_broken"]:
                 self.emit_verbatim(str(bond))
 
-        # self.f.write("\n\n\n")
-
-    def emit_full_mapping(self, reaction):
-        if "full_mapping" in reaction:
-            self.f.write("atom map:")
-            self.emit_verbatim(str(reaction["full_mapping"]))
-
         self.f.write("\n\n\n")
+
+    # def emit_full_mapping(self, reaction):
+    #     if "full_mapping" in reaction:
+    #         self.f.write("atom map:")
+    #         for reactant_atom in reaction["full_mapping"]:
+    #             product_atom = reaction["full_mapping"][reactant_atom]
+    #             self.emit_verbatim(str(reactant_atom)+":"+str(product_atom))
+
+    #     self.f.write("\n\n\n")
 
