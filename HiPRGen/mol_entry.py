@@ -36,9 +36,22 @@ def sym_iterator(n):
 def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
     groups_by_hash = {}
 
+    hot_f1_neighborhood_hashes = list(fragment_1.hot_atoms.keys())
+    hot_f1_indices = []
+    match_hot_atoms = []
+    hot_f2_indices = []
+    for hot_nbh_hash in hot_f1_neighborhood_hashes:
+        if hot_nbh_hash in fragment_2.hot_atoms:
+            match_hot_atoms.append(hot_nbh_hash)
+            hot_f2_indices.append(fragment_2.hot_atoms[hot_nbh_hash])
+        hot_f1_indices.append(fragment_1.hot_atoms[hot_nbh_hash])
+
+
     for left_index in fragment_1.compressed_graph.nodes():
 
         neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
+        if neighborhood_hash in match_hot_atoms and left_index in hot_f1_indices:
+            neighborhood_hash = neighborhood_hash + "hot"
         if neighborhood_hash not in groups_by_hash:
             groups_by_hash[neighborhood_hash] = ([],[])
 
@@ -48,12 +61,12 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
     for right_index in fragment_2.compressed_graph.nodes():
 
         neighborhood_hash = fragment_2.neighborhood_hashes[right_index]
+        if neighborhood_hash in match_hot_atoms and right_index in hot_f2_indices:
+            neighborhood_hash = neighborhood_hash + "hot"
         if neighborhood_hash not in groups_by_hash:
             groups_by_hash[neighborhood_hash] = ([],[])
 
         groups_by_hash[neighborhood_hash][1].append(right_index)
-
-    # print(groups_by_hash)
 
     groups = list(groups_by_hash.values())
 
@@ -78,6 +91,13 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
 
         if isomorphism:
 
+            for hot_nbh_hash in hot_f1_neighborhood_hashes:
+                if hot_nbh_hash not in match_hot_atoms:
+                    hot_f1_index = fragment_1.hot_atoms[hot_nbh_hash]
+                    new_hot_f2_index = mapping[hot_f1_index]
+                    assert fragment_2.neighborhood_hashes[new_hot_f2_index] == hot_nbh_hash
+                    fragment_2.hot_atoms[hot_nbh_hash] = new_hot_f2_index
+
             uncompressed_mapping = copy.deepcopy(mapping)
             for frag1_idx in mapping:
                 frag2_idx=mapping[frag1_idx]
@@ -95,22 +115,9 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
             if return_one:
                 return mappings
 
+    if len(mappings) == 0:
+        raise RuntimeError("No isomorphic mapping found?!?! Exiting...")
     return mappings
-
-
-def find_hot_atom_preserving_fragment_map(fragment_1, fragment_2, mappings):
-
-    for mapping in mappings:
-        hot_atom_preserving = False
-        for hot_atom in fragment_1.hot_atoms:
-            if mapping[hot_atom] in fragment_2.hot_atoms:
-                hot_atom_preserving = True
-                break
-
-        if hot_atom_preserving:
-            return mapping
-
-    return None
 
 
 def build_compressed_graph(graph, to_compress=["Br", "Cl", "F", "H"]):

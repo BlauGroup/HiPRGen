@@ -155,13 +155,13 @@ class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fr
 
                     hash_list.append(neighborhood_hash)
 
-                neighborhood_hashes[i] = hash(tuple(hash_list))
+                neighborhood_hashes[i] = str(hash(tuple(hash_list)))
             fragment_object = FragmentObject(
                 fragment_hash=mol.covalent_hash,
                 atom_ids=mol.uncompressed_atoms,
                 neighborhood_hashes=neighborhood_hashes,
                 graph=mol.covalent_graph,
-                hot_atoms=[],
+                hot_atoms={},
                 compressed_graph=mol.compressed_graph
             )
             fragment_objects.append(fragment_object)
@@ -241,13 +241,23 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
                                     hash_list.append(neighborhood_hash)
 
-                                neighborhood_hashes[i] = hash(tuple(hash_list))
+                                neighborhood_hashes[i] = str(hash(tuple(hash_list)))
+                            hot_atom_inds = [i for i in c if i in edge[0:2]]
+                            assert len(hot_atom_inds) == 1 or len(hot_atom_inds) == 2
+                            hot_atoms = {}
+                            # We basically ignore the case where we have two hot atoms with
+                            # the same neighborhood hash. These have to be ring openings,
+                            # and not only that, but probably very unlikely ring openings
+                            # involving C-C bond breakages. I'm pretty sure that just taking
+                            # one of the equivalent atoms as "hot" won't cause issues.
+                            for hot_atom_ind in hot_atom_inds:
+                                hot_atoms[neighborhood_hashes[hot_atom_ind]] = hot_atom_ind
                             fragment_object = FragmentObject(
                                 fragment_hash=fragment_hash,
                                 atom_ids=c,
                                 neighborhood_hashes=neighborhood_hashes,
                                 graph=subgraph,
-                                hot_atoms=[i for i in c if i in edge[0:2]],
+                                hot_atoms=hot_atoms,
                                 compressed_graph=compressed_subgraph
                             )
                             fragment_objects.append(fragment_object)

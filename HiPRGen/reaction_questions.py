@@ -1,5 +1,5 @@
 import math
-from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings, sym_iterator, find_hot_atom_preserving_fragment_map, extend_mapping
+from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings, sym_iterator, extend_mapping
 from functools import partial
 import itertools
 import copy
@@ -1274,11 +1274,6 @@ class mapping_with_reaction_center_not_found(MSONable):
 
         elif len(reaction["reactant_bonds_broken"]) == 1 and len(reaction["product_bonds_broken"]) == 1:
 
-
-            # print("reaction['reactant_bonds_broken']:", reaction["reactant_bonds_broken"])
-            # print("reaction['product_bonds_broken']:", reaction["product_bonds_broken"])
-            # print(huh)
-
             hot_reactant_atoms = reaction["reactant_bonds_broken"][0]
             hot_product_atoms = reaction["product_bonds_broken"][0]
 
@@ -1291,230 +1286,13 @@ class mapping_with_reaction_center_not_found(MSONable):
                     else:
                         reaction["reaction_center"] = (hot_reactant_atom, reaction["atom_map"][hot_reactant_atom])
 
-            # print("reaction['reaction_center']:",reaction["reaction_center"])
-
             if reaction["reaction_center"] is None:
-                # print("Failed to find reaction center!!")
-                # print()
-
-                # print("reactants:", reaction["reactants"])
-                # for ii in range(reaction["number_of_reactants"]):
-                #     print(mol_entries[reaction["reactants"][ii]])
-                # print()
-
-                # print("products:", reaction["products"])
-                # for ii in range(reaction["number_of_products"]):
-                #     print(mol_entries[reaction["products"][ii]])
-
-                # print()
-                # print(reaction["reactant_fragment_mappings"])
-                # print(reaction["product_fragment_mappings"])
-
-                # print()
-                # print(full_mapping)
-                # print()
-
-                
-                # print(co3_hash)
-                # print(reaction["hashes"])
-                # print(co3_hash in reaction["hashes"])
-
-                if co3_hash in reaction["hashes"]:
-
-                    reactant_co3_o_inds = set()
-                    for reactant_index in range(reaction["number_of_reactants"]):
-                        if co3_hash in reaction["reactant_fragment_mappings"][reactant_index]:
-                            # print(reactant_index, "co3_hash in reactant_fragment_mappings!")
-                            for atom_index in reaction["reactant_fragment_mappings"][reactant_index][co3_hash][0]:
-                                # print(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index])
-                                # print(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie)
-                                # print(str(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie) == "O")
-                                if str(mol_entries[reaction["reactants"][reactant_index]].molecule[atom_index].specie) == "O":
-                                    reactant_co3_o_inds.add((reactant_index, atom_index))
-
-                    product_co3_o_inds = set()
-                    for product_index in range(reaction["number_of_products"]):
-                        if co3_hash in reaction["product_fragment_mappings"][product_index]:
-                            # print(product_index, "co3_hash in product_fragment_mappings!")
-                            for atom_index in reaction["product_fragment_mappings"][product_index][co3_hash][0]:
-                                # print(mol_entries[reaction["products"][product_index]].molecule[atom_index])
-                                # print(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie)
-                                # print(str(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie) == "O")
-                                if str(mol_entries[reaction["products"][product_index]].molecule[atom_index].specie) == "O":
-                                    product_co3_o_inds.add((product_index, atom_index))
-
-                    # print("reactant_co3_o_inds", reactant_co3_o_inds)
-                    # print("product_co3_o_inds", product_co3_o_inds)
-
-
-                    hot_reactant_atoms = set(reaction["reactant_bonds_broken"][0])
-                    hot_product_atoms = set(reaction["product_bonds_broken"][0])
-
-                    # print("hot_reactant_atoms", hot_reactant_atoms)
-                    # print("hot_product_atoms", hot_product_atoms)
-
-                    hot_reactant_co3_o_list = list(reactant_co3_o_inds.intersection(hot_reactant_atoms))
-                    hot_product_co3_o_list = list(product_co3_o_inds.intersection(hot_product_atoms))
-
-                    if len(hot_reactant_co3_o_list) == 1 and len(hot_product_co3_o_list) == 1:
-
-                        hot_reactant_co3_o = hot_reactant_co3_o_list[0]
-                        hot_product_co3_o = hot_product_co3_o_list[0]
-
-                        # print("hot_reactant_co3_o",hot_reactant_co3_o)
-                        # print("hot_product_co3_o",hot_product_co3_o)
-
-                        incorrectly_mapped_product_co3_o = reaction["atom_map"][hot_reactant_co3_o]
-
-                        assert incorrectly_mapped_product_co3_o != hot_product_co3_o
-
-                        swap_executed = False
-                        for key in reaction["atom_map"]:
-                            if reaction["atom_map"][key] == hot_product_co3_o:
-                                reaction["atom_map"][key] = incorrectly_mapped_product_co3_o
-                                reaction["atom_map"][hot_reactant_co3_o] = hot_product_co3_o
-                                assert swap_executed == False
-                                swap_executed = True
-                                break
-
-                        assert swap_executed
-
-                        reaction["reaction_center"] = (hot_reactant_co3_o, hot_product_co3_o)
-
-                        return False
-                    else:
-                        return True
-
-
-                    #     print("reactants:", reaction["reactants"])
-                    #     for ii in range(reaction["number_of_reactants"]):
-                    #         print(mol_entries[reaction["reactants"][ii]])
-                    #     print()
-
-                    #     print("products:", reaction["products"])
-                    #     for ii in range(reaction["number_of_products"]):
-                    #         print(mol_entries[reaction["products"][ii]])
-
-                    #     print()
-                    #     print(reaction["reactant_fragment_mappings"])
-                    #     print(reaction["product_fragment_mappings"])
-
-                    #     print()
-                    #     print(full_mapping)
-                    #     print()
-
-
-                    #     raise RuntimeError("We have a CO3 fragment but it doesn't have the hot atoms?! Exiting...")
-
-                        # print(reaction["atom_map"])
-
-                else:
-
-                    return True
-
+                return True
 
             else:
                 return False
         else:
             raise RuntimeError("Reaction center not implemented for " + str(len(reaction["reactant_bonds_broken"])) + " reactant bonds broken and " + str(len(reaction["product_bonds_broken"])) + " product bonds broken! Exiting...")
-
-
-
-
-
-
-class old_hot_atom_preserving_mapping_not_found(MSONable):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "determine atom mapping"
-
-    def __call__(self, reaction, mol_entries, params):
-
-        # compute all ways to match up the fragments and store in fragment_mappings
-        fragments_by_hash = {}
-        bond_change = len(reaction["reactant_bonds_broken"]) + len(reaction["product_bonds_broken"])
-        for i in range(reaction["number_of_reactants"]):
-            for fragment in reaction["reactant_fragment_objects"][i]:
-                tag = fragment.fragment_hash
-
-                if tag not in fragments_by_hash:
-                    fragments_by_hash[tag] = ([],[])
-
-                fragments_by_hash[tag][0].append((i,fragment))
-
-        for j in range(reaction["number_of_products"]):
-            for fragment in reaction["product_fragment_objects"][j]:
-                tag = fragment.fragment_hash
-
-                if tag not in fragments_by_hash:
-                    fragments_by_hash[tag] = ([],[])
-
-                fragments_by_hash[tag][1].append((j,fragment))
-
-        fragments = fragments_by_hash.values()
-        product_sym_iterator = itertools.product(*[sym_iterator(len(f[0])) for f in fragments])
-
-        fragment_mappings = []
-        for product_perm in product_sym_iterator:
-            fragment_mapping = []
-            for perm, matching_fragments in zip(product_perm, fragments):
-                for i, j in enumerate(perm):
-                    fragment_mapping.append(
-                        (matching_fragments[0][i],
-                         matching_fragments[1][j])
-                    )
-
-            fragment_mappings.append(fragment_mapping)
-
-        for fragment_mapping in fragment_mappings:
-            # print(fragment_mapping)
-            atom_mapping_parts = []
-
-            # if only 1 bond is changing, we don't need to enforce reaction center
-            if bond_change < 2:
-                hot_found = True
-            else:
-                hot_found = False
-
-
-            for (i, fragment_1), (j,fragment_2) in fragment_mapping:
-
-                if hot_found:
-                    mapping = find_fragment_atom_mappings(
-                        fragment_1,
-                        fragment_2,
-                        return_one=True)[0]
-
-                    atom_mapping_parts.append((i,j,mapping))
-
-                else:
-                    all_mappings = find_fragment_atom_mappings(
-                        fragment_1,
-                        fragment_2)
-
-                    hot_preserving_mapping = find_hot_atom_preserving_fragment_map(
-                        fragment_1,
-                        fragment_2,
-                        all_mappings)
-
-                    if hot_preserving_mapping is not None:
-                        atom_mapping_parts.append((i,j,hot_preserving_mapping))
-                        hot_found = True
-                    else:
-                        atom_mapping_parts.append((i,j,all_mappings[0]))
-
-            if hot_found:
-                combined_map = {}
-                for i, j, mapping in atom_mapping_parts:
-                    for atom_index in mapping.keys():
-                        combined_map[(i,atom_index)] = (j, mapping[atom_index])
-
-                reaction["atom_map"] = combined_map
-                return False
-
-        return True
 
 
 class single_reactant_single_product_not_atom_transfer(MSONable):
