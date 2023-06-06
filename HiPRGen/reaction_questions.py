@@ -943,6 +943,34 @@ class fragment_matching_found(MSONable):
                 ):
                     continue
 
+                elif (
+                    reaction["number_of_reactants"] == 2
+                    and reaction["number_of_products"] == 2
+                    and reactant_fragment_count == 3
+                    and product_fragment_count == 3
+                    and len(list(reactant_hashes.keys())) == 3
+                ):
+                    # if each reactant is isomorphic to one of the products, then the reaction must
+                    # be a fragment transfer of the form AX + A -> A + AX, where charges must differ
+                    # on the left and right species. In some contexts, we will assume this is an
+                    # electron transfer, but in others we will assume its a fragment transfer. In the
+                    # case of a fragment transfer, the three fragments getting matched must include
+                    # two of the same fragment, e.g. A, A, and X. Otherwise, we can have a situation
+                    # where the same bond is broken on e.g. A on both sides of the reaction which is
+                    # unphysical and incorrect.
+                    if set([reactant_0.covalent_hash, reactant_1.covalent_hash]) == set([product_0.covalent_hash, product_1.covalent_hash]):
+                        continue
+                    else: 
+                        # If one reactant is isomorphic to one product, then the reaction is of the form
+                        # A + B -> A + C, where charges must differ on the left and right species else
+                        # the reaction will have been filtered out as covalently decomposable. If the
+                        # reaction truly is not covalently decomposable, then A must be the species to
+                        # include the bond breaking on both sides of the reaction. In other words, A must
+                        # not also be one of the fragments. 
+                        overlap = list(set([reactant_0.covalent_hash, reactant_1.covalent_hash]).intersection(set([product_0.covalent_hash, product_1.covalent_hash])))
+                        if len(overlap) == 1 and overlap[0] in reactant_hashes:
+                            continue
+
                 if reactant_hashes == product_hashes:
                     if hydrogen_hash in reactant_hashes:
                         reaction["reactant_bonds_broken"] = reactant_bonds_broken
@@ -1781,7 +1809,7 @@ euvl_phase1_reaction_decision_tree = [
 ]
 
 
-euvl_phase1_reaction_logging_tree = [
+euvl_phase1_logging_tree = [
     (
         is_redox_reaction(),
         [
@@ -1789,7 +1817,7 @@ euvl_phase1_reaction_logging_tree = [
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
-            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
+            (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),

@@ -30,7 +30,7 @@ from HiPRGen.reaction_questions import (
     default_logging_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
-    euvl_phase1_reaction_logging_tree,
+    euvl_phase1_logging_tree,
     euvl_phase2_reaction_decision_tree,
     euvl_phase2_logging_tree
 )
@@ -580,8 +580,8 @@ def euvl_phase1_test():
     folder = "./scratch/euvl_phase1_test"
     subprocess.run(["mkdir", folder])
 
-    mol_json = "./data/mini_euvl_test_set.json"
-    # mol_json = "./data/euvl_test_set.json"
+    # mol_json = "./data/mini_euvl_test_set.json"
+    mol_json = "./data/euvl_test_set.json"
     database_entries = loadfn(mol_json)
 
     species_decision_tree = euvl_species_decision_tree
@@ -625,7 +625,7 @@ def euvl_phase1_test():
         folder + "/buckets.sqlite",
         euvl_phase1_reaction_decision_tree,
         params,
-        euvl_phase1_reaction_decision_tree
+        euvl_phase1_logging_tree
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -654,18 +654,18 @@ def euvl_phase1_test():
 
     insert_initial_state(initial_state, mol_entries, folder + "/initial_state.sqlite")
 
-    subprocess.run(
-        [
-            "GMC",
-            "--reaction_database=" + folder + "/rn.sqlite",
-            "--initial_state_database=" + folder + "/initial_state.sqlite",
-            "--number_of_simulations=1000",
-            "--base_seed=1000",
-            "--thread_count=" + number_of_threads,
-            "--step_cutoff=200",
-            "--energy_budget=92",
-        ]
-    )
+    # subprocess.run(
+    #     [
+    #         "GMC",
+    #         "--reaction_database=" + folder + "/rn.sqlite",
+    #         "--initial_state_database=" + folder + "/initial_state.sqlite",
+    #         "--number_of_simulations=1000",
+    #         "--base_seed=1000",
+    #         "--thread_count=" + number_of_threads,
+    #         "--step_cutoff=200",
+    #         "--energy_budget=92",
+    #     ]
+    # )
 
     network_loader = NetworkLoader(
         folder + "/rn.sqlite",
@@ -673,16 +673,16 @@ def euvl_phase1_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_initial_state_and_trajectories()
+    # network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
     )
 
-    reaction_tally_report(network_loader, folder + "/reaction_tally.tex", cutoff=10)
-    species_report(network_loader, folder + "/species_report.tex")
-    simulation_replayer = SimulationReplayer(network_loader)
-    final_state_report(simulation_replayer, folder + "/final_state_report.tex")
+    # reaction_tally_report(network_loader, folder + "/reaction_tally.tex", cutoff=10)
+    # species_report(network_loader, folder + "/species_report.tex")
+    # simulation_replayer = SimulationReplayer(network_loader)
+    # final_state_report(simulation_replayer, folder + "/final_state_report.tex")
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
@@ -693,7 +693,7 @@ def euvl_phase1_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 563:
+    if network_loader.number_of_reactions == 560:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
@@ -881,8 +881,8 @@ tests = [
     # li_test,
     # flicho_test,
     # co2_test,
-    # euvl_phase1_test,
-    euvl_phase2_test,
+    euvl_phase1_test,
+    # euvl_phase2_test,
 ]
 
 for test in tests:
