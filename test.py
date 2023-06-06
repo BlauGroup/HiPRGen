@@ -744,7 +744,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         euvl_phase2_reaction_decision_tree,
         params,
-        euvl_phase2_logging_decision_tree,
+        euvl_phase2_reaction_decision_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")

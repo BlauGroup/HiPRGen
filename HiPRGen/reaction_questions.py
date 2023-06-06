@@ -579,18 +579,20 @@ class reaction_is_charge_transfer(MSONable):
                         if reactant.covalent_hash == product.covalent_hash:
                             reactant_fragment_complex = reactant.fragment_data[0]
                             product_fragment_complex = product.fragment_data[0]
-                            assert len(reactant_fragment_complex.fragment_mappings) == 1
-                            assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
-                            assert len(product_fragment_complex.fragment_mappings) == 1
-                            assert len(product_fragment_complex.fragment_mappings[0]) == 1
-                            full_mappping = extend_mapping(
-                                                full_mapping,
-                                                reactant_index,
-                                                reactant_fragment_complex.fragment_mappings[0][0],
-                                                product_index,
-                                                product_fragment_complex.fragment_mappings[0][0]
+                            if reactant_fragment_complex.fragment_mappings != []:
+                                assert len(reactant_fragment_complex.fragment_mappings) == 1
+                                assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+                                assert len(product_fragment_complex.fragment_mappings) == 1
+                                assert len(product_fragment_complex.fragment_mappings[0]) == 1
+                                full_mappping = extend_mapping(
+                                                    full_mapping,
+                                                    reactant_index,
+                                                    reactant_fragment_complex.fragment_mappings[0][0],
+                                                    product_index,
+                                                    product_fragment_complex.fragment_mappings[0][0]
                                             )
-                reaction["atom_map"] = full_mapping
+                if full_mapping != {}:
+                    reaction["atom_map"] = full_mapping
                 reaction["is_redox"] = True
                 return True
             elif len(reactant_total_hashes.intersection(product_total_hashes)) == 1 and reactant_hash_list[0] == reactant_hash_list[1] and product_hash_list[0] == product_hash_list[1]:
@@ -600,18 +602,20 @@ class reaction_is_charge_transfer(MSONable):
                     product = mol_entries[reaction["products"][rctpro_index]]
                     reactant_fragment_complex = reactant.fragment_data[0]
                     product_fragment_complex = product.fragment_data[0]
-                    assert len(reactant_fragment_complex.fragment_mappings) == 1
-                    assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
-                    assert len(product_fragment_complex.fragment_mappings) == 1
-                    assert len(product_fragment_complex.fragment_mappings[0]) == 1
-                    full_mappping = extend_mapping(
-                                        full_mapping,
-                                        rctpro_index,
-                                        reactant_fragment_complex.fragment_mappings[0][0],
-                                        rctpro_index,
-                                        product_fragment_complex.fragment_mappings[0][0]
-                                    )
-                reaction["atom_map"] = full_mapping
+                    if reactant_fragment_complex.fragment_mappings != []:
+                        assert len(reactant_fragment_complex.fragment_mappings) == 1
+                        assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+                        assert len(product_fragment_complex.fragment_mappings) == 1
+                        assert len(product_fragment_complex.fragment_mappings[0]) == 1
+                        full_mappping = extend_mapping(
+                                            full_mapping,
+                                            rctpro_index,
+                                            reactant_fragment_complex.fragment_mappings[0][0],
+                                            rctpro_index,
+                                            product_fragment_complex.fragment_mappings[0][0]
+                                        )
+                if full_mapping != {}:
+                    reaction["atom_map"] = full_mapping
                 reaction["is_redox"] = True
                 return True
             else:
@@ -1981,6 +1985,7 @@ euvl_phase2_logging_decision_tree = [
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
             ),
+            (mapping_with_reaction_center_not_found(), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
