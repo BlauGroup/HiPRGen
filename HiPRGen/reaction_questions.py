@@ -517,6 +517,33 @@ class star_count_diff_above_threshold(MSONable):
             return False
 
 
+class map_redox_reaction(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "map redox reaction"
+
+    def __call__(self, reaction, mol_entries, params):
+        assert reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 1
+        full_mapping = {}
+        reactant_fragment_complex = mol_entries[reaction["reactants"][0]].fragment_data[0]
+        product_fragment_complex = mol_entries[reaction["products"][0]].fragment_data[0]
+        assert len(reactant_fragment_complex.fragment_mappings) == 1
+        assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+        assert len(product_fragment_complex.fragment_mappings) == 1
+        assert len(product_fragment_complex.fragment_mappings[0]) == 1
+        full_mappping = extend_mapping(
+                            full_mapping,
+                            0,
+                            reactant_fragment_complex.fragment_mappings[0][0],
+                            0,
+                            product_fragment_complex.fragment_mappings[0][0]
+                        )
+        reaction["atom_map"] = full_mapping
+        return False
+
+
 class reaction_is_charge_transfer(MSONable):
     def __init__(self):
         pass
@@ -544,12 +571,54 @@ class reaction_is_charge_transfer(MSONable):
                 product_hash_list.append(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) == 2:
+                full_mapping = {}
+                for reactant_index in range(reaction["number_of_reactants"]):
+                    reactant = mol_entries[reaction["reactants"][reactant_index]]
+                    for product_index in range(reaction["number_of_products"]):
+                        product = mol_entries[reaction["products"][product_index]]
+                        if reactant.covalent_hash == product.covalent_hash:
+                            reactant_fragment_complex = reactant.fragment_data[0]
+                            product_fragment_complex = product.fragment_data[0]
+                            assert len(reactant_fragment_complex.fragment_mappings) == 1
+                            assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+                            assert len(product_fragment_complex.fragment_mappings) == 1
+                            assert len(product_fragment_complex.fragment_mappings[0]) == 1
+                            full_mappping = extend_mapping(
+                                                full_mapping,
+                                                reactant_index,
+                                                reactant_fragment_complex.fragment_mappings[0][0],
+                                                product_index,
+                                                product_fragment_complex.fragment_mappings[0][0]
+                                            )
+                reaction["atom_map"] = full_mapping
+                reaction["is_redox"] = True
                 return True
             elif len(reactant_total_hashes.intersection(product_total_hashes)) == 1 and reactant_hash_list[0] == reactant_hash_list[1] and product_hash_list[0] == product_hash_list[1]:
+                full_mapping = {}
+                for rctpro_index in range(reaction["number_of_reactants"]):
+                    reactant = mol_entries[reaction["reactants"][rctpro_index]]
+                    product = mol_entries[reaction["products"][rctpro_index]]
+                    reactant_fragment_complex = reactant.fragment_data[0]
+                    product_fragment_complex = product.fragment_data[0]
+                    assert len(reactant_fragment_complex.fragment_mappings) == 1
+                    assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+                    assert len(product_fragment_complex.fragment_mappings) == 1
+                    assert len(product_fragment_complex.fragment_mappings[0]) == 1
+                    full_mappping = extend_mapping(
+                                        full_mapping,
+                                        rctpro_index,
+                                        reactant_fragment_complex.fragment_mappings[0][0],
+                                        rctpro_index,
+                                        product_fragment_complex.fragment_mappings[0][0]
+                                    )
+                reaction["atom_map"] = full_mapping
+                reaction["is_redox"] = True
                 return True
             else:
+                assert reaction["is_redox"] == False
                 return False
 
+        assert reaction["is_redox"] == False
         return False
 
 
@@ -889,11 +958,8 @@ class fragment_matching_found(MSONable):
                             reactant_hashes[tag] = 1
 
                     reactant_fragment_objects[reactant_index] = fragment_complex.fragment_objects
-                    # reactant_fragment_mappings[reactant_index] = fragment_complex.fragment_mappings
                     reactant_fragment_mappings[reactant_index] = {}
                     for ii, mappings in enumerate(fragment_complex.fragment_mappings):
-                        # print(ii, fragment_complex.fragment_hashes[ii], mappings)
-                        # reactant_fragment_mappings[reactant_index][fragment_complex.fragment_hashes[ii]] = mappings
                         if fragment_complex.fragment_hashes[ii] in reactant_fragment_mappings[reactant_index]:
                             assert len(mappings) == 1
                             reactant_fragment_mappings[reactant_index][fragment_complex.fragment_hashes[ii]].append(mappings[0])
@@ -927,7 +993,6 @@ class fragment_matching_found(MSONable):
                     product_fragment_objects[product_index] = fragment_complex.fragment_objects
                     product_fragment_mappings[product_index] = {}
                     for ii, mappings in enumerate(fragment_complex.fragment_mappings):
-                        # product_fragment_mappings[product_index][fragment_complex.fragment_hashes[ii]] = mappings
                         if fragment_complex.fragment_hashes[ii] in product_fragment_mappings[product_index]:
                             assert len(mappings) == 1
                             product_fragment_mappings[product_index][fragment_complex.fragment_hashes[ii]].append(mappings[0])
@@ -1017,9 +1082,6 @@ class fragment_matching_found(MSONable):
                             connected_components = nx.algorithms.components.connected_components(hot_reactant_graph)
                             for c in connected_components:
                                 subgraph = hot_reactant_graph.subgraph(c)
-                                # if subgraph.number_of_nodes() == 1:
-                                #     for node in subgraph:
-                                #         print(nx.get_node_attributes(hot_reactant_graph, "specie")[node])
                                 if subgraph.number_of_nodes() < min_frag_size:
                                     min_frag_size = subgraph.number_of_nodes()
                                     best_matching = copy.deepcopy(viable_match)
@@ -1668,6 +1730,7 @@ default_reaction_decision_tree = [
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
@@ -1760,6 +1823,7 @@ euvl_phase1_reaction_decision_tree = [
             (too_many_reactants_or_products(), Terminal.DISCARD),
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
             (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
@@ -1816,6 +1880,7 @@ euvl_phase1_logging_tree = [
             (too_many_reactants_or_products(), Terminal.DISCARD),
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
             (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
@@ -1911,7 +1976,8 @@ euvl_phase2_logging_tree = [
                 reaction_is_covalent_decomposable(),
                 [
                     (fragments_are_not_2A_B(), Terminal.DISCARD),
-                    (reaction_default_true(), Terminal.KEEP),
+                    (mapping_with_reaction_center_not_found(), Terminal.KEEP),
+                    (reaction_default_true(), Terminal.DISCARD),
                 ],
             ),
             (reaction_default_true(), Terminal.DISCARD),
