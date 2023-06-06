@@ -586,8 +586,10 @@ mg_species_decision_tree = [
     (mol_not_connected(), Terminal.DISCARD),
     (metal_complex(), Terminal.DISCARD),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(), Terminal.KEEP),
+    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    (add_single_bond_fragments(neighborhood_width=width), Terminal.KEEP),
+    # (add_unbroken_fragment(), Terminal.KEEP),
+    # (add_single_bond_fragments(), Terminal.KEEP),
     (species_default_true(), Terminal.KEEP),
 ]
 

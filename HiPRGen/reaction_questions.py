@@ -1766,6 +1766,7 @@ default_logging_decision_tree = [
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
@@ -1873,7 +1874,7 @@ euvl_phase1_reaction_decision_tree = [
 ]
 
 
-euvl_phase1_logging_tree = [
+euvl_phase1_logging_decision_tree = [
     (
         is_redox_reaction(),
         [
@@ -1958,7 +1959,7 @@ euvl_phase2_reaction_decision_tree = [
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase2_logging_tree = [
+euvl_phase2_logging_decision_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),

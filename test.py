@@ -30,9 +30,9 @@ from HiPRGen.reaction_questions import (
     default_logging_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
-    euvl_phase1_logging_tree,
+    euvl_phase1_logging_decision_tree,
     euvl_phase2_reaction_decision_tree,
-    euvl_phase2_logging_tree
+    euvl_phase2_logging_decision_tree
 )
 
 from HiPRGen.mc_analysis import (
@@ -336,7 +336,7 @@ def mg_test():
         folder + "/buckets.sqlite",
         default_reaction_decision_tree,
         params,
-        Terminal.DISCARD,
+        default_logging_decision_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -415,7 +415,7 @@ def mg_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 788:
+    if network_loader.number_of_reactions == 766:
         print(bcolors.PASS + "mg_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "mg_test: correct number of reactions" + bcolors.ENDC)
@@ -625,7 +625,7 @@ def euvl_phase1_test():
         folder + "/buckets.sqlite",
         euvl_phase1_reaction_decision_tree,
         params,
-        euvl_phase1_logging_tree
+        euvl_phase1_logging_decision_tree
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -744,7 +744,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         euvl_phase2_reaction_decision_tree,
         params,
-        euvl_phase2_reaction_decision_tree,
+        euvl_phase2_logging_decision_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
