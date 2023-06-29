@@ -239,11 +239,14 @@ def species_filter(
     scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
     normalized_graphs = scaler(dgl_molecules)
 
+    print(f"mean: {scaler._mean}")
+    print(f"std: {scaler._std}")
+
     # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
     for key in dgl_molecules_dict.keys():
         temp_index = dgl_molecules_dict[key]
         dgl_molecules_dict[key] = normalized_graphs[temp_index]
-    print(dgl_molecules_dict)
+    #print(dgl_molecules_dict)
 
 
     log_message("creating molecule entry pickle")
@@ -256,7 +259,7 @@ def species_filter(
 
     log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 
-    return mol_entries
+    return mol_entries, dgl_molecules_dict
 
 
 def add_electron_species(
