@@ -261,6 +261,7 @@ class MoleculeEntry:
         ]
 
         self.uncompressed_atoms = list(self.compressed_graph.nodes())
+        self.bonds = {tuple(sorted([i, j])): attr for i, j, attr in self.mol_graph.graph.edges.data()}
 
         # if self.entry_id == "libe-120767":
 

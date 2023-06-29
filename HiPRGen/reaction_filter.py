@@ -1,4 +1,5 @@
 from mpi4py import MPI
+from HiPRGen.rxn_networks_graph import rxn_networks_graph
 from itertools import permutations, product
 from HiPRGen.report_generator import ReportGenerator
 import sqlite3
@@ -104,9 +105,11 @@ def log_message(*args, **kwargs):
 
 def dispatcher(
         mol_entries,
+        dgl_molecules_dict,
         dispatcher_payload
 ):
-
+    print('dgl_molecules_dict')
+    print(dgl_molecules_dict)
     comm = MPI.COMM_WORLD
     work_batch_list = []
     bucket_con = sqlite3.connect(dispatcher_payload.bucket_db_file)
@@ -130,6 +133,15 @@ def dispatcher(
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
     rn_con.commit()
+
+    #### HY
+    ## initialize preprocess data 
+    rxn_networks_g = rxn_networks_graph(
+        mol_entries,
+        dgl_molecules_dict,
+        dispatcher_payload.bondnet_test
+    )
+    ####
 
     log_message("initializing report generator")
 
@@ -224,7 +236,8 @@ def dispatcher(
                  reaction['dG_barrier'],
                  reaction['is_redox']
                  ))
-
+            
+            rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index)
             reaction_index += 1
             if reaction_index % dispatcher_payload.commit_frequency == 0:
                 rn_con.commit()
@@ -249,7 +262,7 @@ def dispatcher(
          reaction_index)
     )
 
-
+    rxn_networks_g.save_data()
     report_generator.finished()
     rn_con.commit()
     bucket_con.close()

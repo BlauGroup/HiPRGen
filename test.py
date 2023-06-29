@@ -876,13 +876,193 @@ def euvl_phase2_test():
     return tests_passed
 
 
+def euvl_bondnet_test():
+
+    phase1_folder = "./euvl_phase1_test"
+    folder = "./scratch/euvl_phase2_test"
+    subprocess.run(["mkdir", folder])
+
+    mol_json = "./data/euvl_test_set.json"
+    database_entries = loadfn(mol_json)
+
+    ## HY
+    bondnet_test_json = "./scratch/euvl_phase2_test/reaction_networks_graphs"
+    subprocess.run(["mkdir", bondnet_test_json])
+    ##
+
+    species_decision_tree = euvl_species_decision_tree
+
+    params = {
+        "temperature": ROOM_TEMP+200.0,
+        "electron_free_energy": 0.0,
+    }
+
+    mol_entries, dgl_molecules_dict = species_filter(
+        database_entries,
+        mol_entries_pickle_location=folder + "/mol_entries.pickle",
+        species_report=folder + "/unfiltered_species_report.tex",
+        species_decision_tree=species_decision_tree,
+        coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
+        species_logging_decision_tree=species_decision_tree,
+        generate_unfiltered_mol_pictures=False,
+    )
+
+    print(len(mol_entries), "initial mol entries")
+
+    bucket(mol_entries, folder + "/buckets.sqlite")
+
+    print(len(mol_entries), "final mol entries")
+
+    dispatcher_payload = DispatcherPayload(
+        folder + "/buckets.sqlite",
+        folder + "/rn.sqlite",
+        folder + "/reaction_report.tex",
+        bondnet_test_json + "/test.json"
+    )
+
+    worker_payload = WorkerPayload(
+        folder + "/buckets.sqlite",
+        euvl_phase2_reaction_decision_tree,
+        params,
+        euvl_phase2_reaction_decision_tree,
+    )
+
+    dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
+    dumpfn(worker_payload, folder + "/worker_payload.json")
+
+    subprocess.run(
+        [
+            "mpirun",
+            "--use-hwthread-cpus",
+            "-n",
+            number_of_threads,
+            "python",
+            "run_network_generation.py",
+            folder + "/mol_entries.pickle",
+            folder + "/dispatcher_payload.json",
+            folder + "/worker_payload.json",
+        ]
+    )
+
+    phase1_network_loader = NetworkLoader(
+        phase1_folder + "/rn.sqlite",
+        phase1_folder + "/mol_entries.pickle",
+        phase1_folder + f"/initial_state.sqlite",
+    )
+    phase1_network_loader.load_initial_state_and_trajectories()
+    phase1_simulation_replayer = SimulationReplayer(phase1_network_loader)
+    phase1_simulation_replayer.compute_trajectory_final_states()
+
+    for seed in range(1000, 2000):
+
+        initial_state = {}
+        for ii, val in enumerate(phase1_simulation_replayer.final_states[seed]):
+            if int(val) > 0:
+                initial_state[ii] = int(val)
+
+        insert_initial_state(
+            initial_state,
+            mol_entries,
+            folder + "/initial_state_" + str(seed) + ".sqlite",
+        )
+
+        subprocess.run(
+            [
+                "GMC",
+                "--reaction_database=" + folder + "/rn.sqlite",
+                "--initial_state_database=" + folder + "/initial_state_" + str(seed) + ".sqlite",
+                "--number_of_simulations=" + number_of_threads,
+                "--base_seed=" + str(1000+(seed-1000)*int(number_of_threads)),
+                "--thread_count=" + number_of_threads,
+                "--step_cutoff=500",
+            ]
+        )
+
+    network_loader = NetworkLoader(
+        folder + "/rn.sqlite",
+    folder + "/mol_entries.pickle",
+    )
+
+    for seed in range(1000, 2000):
+        network_loader.set_initial_state_db(folder + "/initial_state_"+str(seed)+".sqlite")
+        network_loader.load_initial_state_and_trajectories()
+
+    report_generator = ReportGenerator(
+        network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
+    )
+    reaction_tally_report(network_loader, folder + "/reaction_tally.tex", cutoff=10)
+    species_report(network_loader, folder + "/species_report.tex")
+    simulation_replayer = SimulationReplayer(network_loader)
+    final_state_report(simulation_replayer, folder + "/final_state_report.tex")
+
+    sink_report(simulation_replayer, folder + "/sink_report.tex")
+
+    tps_plus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tps.xyz", 1)
+    phs_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/phs.xyz", 0)
+    tba_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tba.xyz", 0)
+    nf_minus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/nf.xyz", -1)
+
+    phase2_important_species = [tps_plus1_id, phs_0_id, tba_0_id, nf_minus1_id]
+
+    colors = list(mcolors.TABLEAU_COLORS.values())
+    phase2_colorstyle_list = []
+    for ii, species in enumerate(phase2_important_species):        
+        phase2_colorstyle_list.append([colors[ii], "solid"])
+
+    ii = 0
+    for mol_id in simulation_replayer.sinks:
+        if mol_id not in phase2_important_species:
+            phase2_important_species.append(mol_id)
+            phase2_colorstyle_list.append([colors[ii%len(colors)], "dashed"])
+            ii += 1
+
+    phase1_important_species = copy.deepcopy(phase2_important_species)
+    phase1_important_species.append(len(mol_entries))
+
+    phase1_colorstyle_list = copy.deepcopy(phase2_colorstyle_list)
+    phase1_colorstyle_list.append(["black", "dotted"])
+
+    phase1_simulation_replayer.time_series_graph(
+        seeds=[i for i in range(1000,2000)],
+        species_of_interest=phase1_important_species,
+        path=os.path.join(folder,"phase1_time_series"),
+        custom_y_max=36,
+        custom_colorstyle_list=phase1_colorstyle_list
+    )
+
+    simulation_replayer.time_series_graph(
+        seeds=[i for i in range(1000,1000+1000*int(number_of_threads))],
+        species_of_interest=phase2_important_species,
+        path=os.path.join(folder,"phase2_time_series"),
+        custom_y_max=36,
+        custom_colorstyle_list=phase2_colorstyle_list
+    )
+
+    tests_passed = True
+    print("Number of species:", network_loader.number_of_species)
+    if network_loader.number_of_species == 103:
+        print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
+    else:
+        print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
+        tests_passed = False
+
+    print("Number of reactions:", network_loader.number_of_reactions)
+    if network_loader.number_of_reactions == 3912:
+        print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
+    else:
+        print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
+        tests_passed = False
+
+    return tests_passed
+
 tests = [
     # mg_test,
     # li_test,
     # flicho_test,
     # co2_test,
     # euvl_phase1_test,
-    euvl_phase2_test,
+    # euvl_phase2_test,
+    euvl_bondnet_test
 ]
 
 for test in tests:
