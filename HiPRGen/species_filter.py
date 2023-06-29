@@ -222,8 +222,9 @@ def species_filter(
     log_message("creating dgl molecule graphs")
     dgl_molecules_dict = {}
     dgl_molecules = []
-    extra_keys = []
+    extra_keys = ["bond_length"]
     for mol in mol_entries:
+        print(f"mol: {mol}")
         molecule_grapher = get_grapher(extra_keys)
         mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id)
         feature = {'charge': mol.charge}
