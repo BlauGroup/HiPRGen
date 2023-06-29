@@ -86,6 +86,7 @@ def log_message(string):
 def species_filter(
     dataset_entries,
     mol_entries_pickle_location,
+    dgl_mol_grphs_pickle_location,
     species_report,
     species_decision_tree,
     coordimer_weight,
@@ -256,6 +257,9 @@ def species_filter(
     # pickles work better in this setting
     with open(mol_entries_pickle_location, "wb") as f:
         pickle.dump(mol_entries, f)
+
+    with open(dgl_mol_grphs_pickle_location, "wb") as f:
+        pickle.dump(dgl_molecules_dict, f)
 
     log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 
