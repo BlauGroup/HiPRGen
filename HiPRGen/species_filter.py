@@ -224,14 +224,20 @@ def species_filter(
     dgl_molecules = []
     extra_keys = []
     for mol in mol_entries:
-        print(f"mol: {mol.mol_graph}")
+        # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(extra_keys)
+
+        # Update with non-
+        print(f"mol_bonds: {mol.bonds}")
         mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id, non_metal_bonds = [])
         feature = {'charge': mol.charge}
         dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
-        print(dgl_molecule_graph)
+        # print(dgl_molecule_graph)
         dgl_molecules.append(dgl_molecule_graph)
         dgl_molecules_dict[mol.entry_id] = dgl_molecule_graph
+
+    # Normalize DGL molecule graphs
+
 
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
