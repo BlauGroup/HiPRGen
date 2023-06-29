@@ -4,7 +4,7 @@ from pathlib import Path
 import copy
 from monty.serialization import dumpfn
 
-class ProcessData:
+class rxn_networks_graph:
     def __init__(
         self,
         mol_entries,
@@ -34,6 +34,8 @@ class ProcessData:
             "num_atoms_total": rxn.num_atoms_total,
         }"""
         self.data['atom_map'][rxn_id] = str(rxn['atom_map'])
+        print("printing dgl_mol_dict")
+        print(self.dgl_mol_dict)
 
 
 
