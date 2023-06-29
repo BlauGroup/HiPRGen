@@ -218,7 +218,7 @@ def species_filter(
 
     log_message(str(len(fragment_dict.keys())) + " unique fragments found")
 
-    # Make DGL Molecule graphs + feature transformation via calling BonDNet functions
+    # Make DGL Molecule graphs via BonDNet functions
     log_message("creating dgl molecule graphs")
     dgl_molecules_dict = {}
     dgl_molecules = []
@@ -226,16 +226,24 @@ def species_filter(
     for mol in mol_entries:
         # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(extra_keys)
-        non_metal_bonds = [tuple(sorted([i, j])) for i, j, _ in mol.covalent_graph.edges.data()]
-        print(f"mol_bonds: {non_metal_bonds}")
+        non_metal_bonds = [ [sorted([i, j])] for i, j, _ in mol.covalent_graph.edges.data()]
+        # print(f"non metal bonds: {non_metal_bonds}")
         mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
         feature = {'charge': mol.charge}
         dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
         # print(dgl_molecule_graph)
         dgl_molecules.append(dgl_molecule_graph)
-        dgl_molecules_dict[mol.entry_id] = dgl_molecule_graph
+        dgl_molecules_dict[mol.entry_id] = mol.ind
 
     # Normalize DGL molecule graphs
+    scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
+    normalized_graphs = scaler(dgl_molecules)
+
+    # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
+    for key in dgl_molecules_dict.keys():
+        temp_index = dgl_molecules_dict[key]
+        dgl_molecules_dict[key] = normalized_graphs[temp_index]
+    print(dgl_molecules_dict)
 
 
     log_message("creating molecule entry pickle")
