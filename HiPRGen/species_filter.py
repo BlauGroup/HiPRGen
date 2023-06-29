@@ -218,6 +218,19 @@ def species_filter(
 
     log_message(str(len(fragment_dict.keys())) + " unique fragments found")
 
+    # Make DGL Molecule graphs + feature transformation via calling BonDNet functions
+    log_message("creating dgl molecule graphs")
+    dgl_molecules_dict = {}
+    dgl_molecules = []
+    extra_keys = []
+    for mol in mol_entries:
+        molecule_grapher = get_grapher(extra_keys)
+        mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id)
+        feature = {'charge': mol.charge}
+        dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
+        print(dgl_molecule_graph)
+        dgl_molecules.append(dgl_molecule_graph)
+        dgl_molecules_dict[mol.entry_id] = dgl_molecule_graph
 
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
