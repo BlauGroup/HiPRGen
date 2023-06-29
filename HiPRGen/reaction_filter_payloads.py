@@ -22,7 +22,7 @@ class DispatcherPayload(MSONable):
         self.report_file = report_file
         self.commit_frequency = commit_frequency
         self.checkpoint_interval = checkpoint_interval
-        self.processed_data = bondnet_test
+        self.bondnet_test = bondnet_test
 
 
 class WorkerPayload(MSONable):
