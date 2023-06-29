@@ -137,11 +137,10 @@ def species_filter(
 
         if run_decision_tree(mol, species_logging_decision_tree):
             # create a set of elements
-            log_message("create a set of elements")
+            # log_message("create a set of elements")
             for element in mol.species:
                 if element not in elements:
                     elements.add(element)
-                    print(elements)
 
             report_generator.emit_verbatim(
                 "\n".join([str(f) for f in decision_pathway])
