@@ -15,6 +15,9 @@ from pymatgen.core.periodic_table import DummySpecies
 from pymatgen.core.sites import Site
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
+from bondnet.model.training_utils import get_grapher
+from bondnet.core.molwrapper import MoleculeWrapper
+from bondnet.data.transformers import HeteroGraphFeatureStandardScaler
 
 """
 Phase 1: species filtering
@@ -121,7 +124,7 @@ def species_filter(
 
     log_message("applying local filters")
     mol_entries_filtered = []
-
+    elements = set()
     # note: it is important here that we are applying the local filters before
     # the non local ones. We remove some molecules which are lower energy
     # than other more realistic lithomers.
@@ -133,6 +136,12 @@ def species_filter(
             mol_entries_filtered.append(mol)
 
         if run_decision_tree(mol, species_logging_decision_tree):
+            # create a set of elements
+            log_message("create a set of elements")
+
+            if mol.species not in elements:
+                elements.add(mol.species)
+                print(elements)
 
             report_generator.emit_verbatim(
                 "\n".join([str(f) for f in decision_pathway])
