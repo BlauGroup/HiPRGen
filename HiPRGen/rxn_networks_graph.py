@@ -36,6 +36,7 @@ class rxn_networks_graph:
 
         # step 1: Transform atom mapping
         atom_map = rxn['atom_map']
+        print(f'atom_map: {atom_map}')
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products']
@@ -68,7 +69,7 @@ class rxn_networks_graph:
                 react_ind, r_atom_i = r_tuple
                 products[prod_ind][p_atom_i] = reactants[react_ind][r_atom_i]
         transformed_atom_map.append(products)
-
+        print(f"products: {products}")
         #print(f"transformed_atom_map: {transformed_atom_map}")
         print(f"reactants: {reactants}")
         # step 2: Get total_bonds
