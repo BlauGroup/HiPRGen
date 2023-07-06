@@ -40,18 +40,24 @@ class rxn_networks_graph:
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products']
 
-        # find the total number of atoms in reactants
+        # find the number of atoms for each reactant
         num_reactant_atoms = []
         for ind in rxn['reactants']:
             mol_reactant = self.mol_entries[ind]
             num_reactant_atoms.append(mol_reactant.num_atoms)
+
+        # check the law of conservation of mass
         num_total_atoms = sum(num_reactant_atoms)
+        num_product_atoms = []
+        for ind in rxn['products']:
+            mol_reactant = self.mol_entries[ind]
+            num_product_atoms.append(mol_reactant.num_atoms)
+        assert num_total_atoms == sum(num_product_atoms)
 
         reactants = [{} for _ in range(num_reactants)]
         for ind, atom_i in atom_map.keys():
-            reactants[ind][atom_i] = atom_i + ind*num_total_atoms
+            reactants[ind][atom_i] = atom_i + ind*num_reactant_atoms[0]
         transformed_atom_map.append(reactants)
-        print(f"reactants: {reactants}")
 
         products = [{} for _ in range(num_products)]
         for r_tuple, p_tuple in atom_map.items():
@@ -64,7 +70,7 @@ class rxn_networks_graph:
         transformed_atom_map.append(products)
 
         print(f"transformed_atom_map: {transformed_atom_map}")
-        self.data['atom_map'] = transformed_atom_map
+        
 
     # def insert_data(self, rxn, rxn_id):
         # should be updated
