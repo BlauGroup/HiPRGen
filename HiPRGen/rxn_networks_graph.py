@@ -72,13 +72,32 @@ class rxn_networks_graph:
         #print(f"transformed_atom_map: {transformed_atom_map}")
         print(f"reactants: {reactants}")
         # step 2: Get total_bonds
-        reactants_total_bonds = []
+        reactants_total_bonds = set()
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                reactants_total_bonds.append([reactants[k][i], reactants[k][j]])
+                reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
+
         print(f"reactants_total_bonds: {reactants_total_bonds}")
+        len_reactants_total_bonds = len(reactants_total_bonds)
+
+        products_total_bonds = set()
+        for k, ind in enumerate(rxn['products']):
+            mol_reactant = self.mol_entries[ind]
+            networkx_graph = mol_reactant.graph
+            for i, j, weight in networkx_graph.edges:
+                products_total_bonds.add((products[k][i], products[k][j]))
+        print(f"products_total_bonds: {products_total_bonds}")
+        bonds_intersection = reactants_total_bonds.intersection(products_total_bonds)
+
+        assert len(bonds_intersection) == len_reactants_total_bonds-1
+        assert len(bonds_intersection) == len(products_total_bonds)-1
+
+        total_bonds = reactants_total_bonds.union(products_total_bonds)
+    
+        print(f"total bonds: {total_bonds}")
+
             
 
 
