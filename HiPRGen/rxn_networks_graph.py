@@ -64,7 +64,7 @@ class rxn_networks_graph:
         assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
 
         # step 2: Get total_bonds which is a union of bonds in reactants and products
-        reactants_total_bonds = set()
+        reactants_total_bonds = []
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
@@ -75,7 +75,7 @@ class rxn_networks_graph:
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
 
-        products_total_bonds = set()
+        products_total_bonds = []
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
