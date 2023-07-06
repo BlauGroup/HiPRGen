@@ -36,27 +36,16 @@ class rxn_networks_graph:
 
         # step 1: Transform atom mapping
         atom_map = rxn['atom_map']
-        print(f'atom_map: {atom_map}')
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products']
 
-        # find the number of atoms for each reactant
-        num_reactant_atoms = []
-        for ind in rxn['reactants']:
-            mol_reactant = self.mol_entries[ind]
-            num_reactant_atoms.append(mol_reactant.num_atoms)
-
-        # check the law of conservation of mass in reaction
-        num_product_atoms = []
-        for ind in rxn['products']:
-            mol_reactant = self.mol_entries[ind]
-            num_product_atoms.append(mol_reactant.num_atoms)
-        
+        # find the number of atoms for reactant 0
+        num_reactant0_atoms = self.mol_entries[rxn['reactants'][0]].num_atoms
 
         reactants = [{} for _ in range(num_reactants)]
         for ind, atom_i in atom_map.keys():
-            reactants[ind][atom_i] = atom_i + ind*num_reactant_atoms[0]
+            reactants[ind][atom_i] = atom_i + ind*num_reactant0_atoms
         transformed_atom_map.append(reactants)
 
         products = [{} for _ in range(num_products)]
@@ -68,12 +57,11 @@ class rxn_networks_graph:
                 react_ind, r_atom_i = r_tuple
                 products[prod_ind][p_atom_i] = reactants[react_ind][r_atom_i]
         transformed_atom_map.append(products)
-        print(f"products: {products}")
-        print(f"reactants: {reactants}")
-        print(f"transformed_atom_map: {transformed_atom_map}")
-        print(f"num_reactant_atoms: {num_reactant_atoms}")
-        print(f"num_product_atoms: {num_product_atoms}")
-        assert sum(num_reactant_atoms) == sum(num_product_atoms)
+        # print(f"products: {products}")
+        # print(f"reactants: {reactants}")
+        # print(f"transformed_atom_map: {transformed_atom_map}")
+        # check the conservation of mass in a reaction
+        assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
 
         # step 2: Get total_bonds
         reactants_total_bonds = []
@@ -95,8 +83,13 @@ class rxn_networks_graph:
                 #products_total_bonds.append((k, i, j))
                 products_total_bonds.append((products[k][i], products[k][j]))
 
-        # not a redox reaction
-        if len(set(reactants_total_bonds)) != len(set(products_total_bonds)):
+        # 
+        if rxn['is_redox']:
+            assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
+        else:
+            print(f"reactants_total_bonds: {reactants_total_bonds}")
+            print(f"products_total_bonds: {products_total_bonds}")
+            print(f'atom_map: {atom_map}')
             print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
             print(f"product bonds broken: {rxn['product_bonds_broken']}")
 
