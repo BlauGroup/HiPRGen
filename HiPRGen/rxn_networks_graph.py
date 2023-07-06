@@ -97,7 +97,7 @@ class rxn_networks_graph:
         reactant_bonds_broken = rxn["reactant_bonds_broken"]
         product_bonds_broken = rxn["product_bonds_broken"]
         print(f"reaction bonds broken: {reactant_bonds_broken}")
-        print(f"reaction bonds broken: {rxn[product_bonds_broken]}")
+        print(f"reaction bonds broken: {product_bonds_broken}")
 
         #bonds_intersection = reactants_total_bonds.intersection(products_total_bonds)
 
