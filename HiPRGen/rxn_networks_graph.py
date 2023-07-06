@@ -24,7 +24,7 @@ class rxn_networks_graph:
 
     def create_rxn_networks_graph(self, rxn, rxn_id):
 
-        # step 1: transfrom reaction data to the following:
+        # Transfrom reaction data to the following:
         """mappings = {
             "bond_map": rxn.bond_mapping,
             "atom_map": rxn.atom_mapping,
@@ -33,10 +33,38 @@ class rxn_networks_graph:
             "num_bonds_total": rxn.num_bonds_total,
             "num_atoms_total": rxn.num_atoms_total,
         }"""
-        self.data['atom_map'][rxn_id] = str(rxn['atom_map'])
-        
 
+        # step 1: Transform atom mapping
+        atom_map = rxn['atom_map']
+        transformed_atom_map = []
+        num_reactants = rxn['number_of_reactants']
+        num_products = rxn['number_of_products']
 
+        # find the total number of atoms in reactants
+        num_reactant_atoms = []
+        for ind in rxn['reactants']:
+            mol_reactant = self.mol_entries[ind]
+            num_reactant_atoms.append(mol_reactant.num_atoms)
+        num_total_atoms = sum(num_reactant_atoms)
+
+        reactants = [{}*num_reactants]
+        for ind, atom_i in atom_map.keys():
+            reactants[ind][atom_i] = atom_i + ind*num_total_atoms
+        transformed_atom_map.append(reactants)
+        print(f"reactants: {reactants}")
+
+        products = [{}*num_products]
+        for r_tuple, p_tuple in atom_map.items():
+            prod_ind, p_atom_i = p_tuple
+            if r_tuple == p_tuple: 
+                products[prod_ind][p_atom_i] = reactants[prod_ind][p_atom_i]
+            else:
+                react_ind, r_atom_i = r_tuple
+                products[prod_ind][p_atom_i] = reactants[react_ind][r_atom_i]
+        transformed_atom_map.append(products)
+
+        print(f"transformed_atom_map: {transformed_atom_map}")
+        self.data['atom_map'] = transformed_atom_map
 
     # def insert_data(self, rxn, rxn_id):
         # should be updated
