@@ -70,6 +70,10 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
                 # reactants_total_bonds.append((k, i, j))
+                print(f"reactants k: {k}")
+                print(f"reactant i: {i}")
+                print(f"reactant j: {j}")
+                print(f"reactants: {reactants}")
                 reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
