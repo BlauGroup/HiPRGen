@@ -78,8 +78,8 @@ class rxn_networks_graph:
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                reactants_total_bonds.append((k, i, j))
-                #reactants_total_bonds.append((reactants[k][i], reactants[k][j]))
+                #reactants_total_bonds.append((k, i, j))
+                reactants_total_bonds.append((reactants[k][i], reactants[k][j]))
 
         print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
@@ -89,9 +89,14 @@ class rxn_networks_graph:
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                products_total_bonds.append((k, i, j))
-                #products_total_bonds.append((products[k][i], products[k][j]))
+                #products_total_bonds.append((k, i, j))
+                products_total_bonds.append((products[k][i], products[k][j]))
         print(f"products_total_bonds: {products_total_bonds}")
+
+        #assert len(products_total_bonds) == len_reactants_total_bonds
+        print(f"reaction bonds broken: {rxn["reactant_bonds_broken"]}")
+        print(f"reaction bonds broken: {rxn["product_bonds_broken"]}")
+
         #bonds_intersection = reactants_total_bonds.intersection(products_total_bonds)
 
         # assert len(bonds_intersection) == len_reactants_total_bonds-1
