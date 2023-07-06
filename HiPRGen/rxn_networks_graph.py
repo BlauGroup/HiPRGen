@@ -36,7 +36,7 @@ class rxn_networks_graph:
 
         # step 1: Transform atom mapping
         atom_map = rxn['atom_map']
-        print(f'atom_map: {atom_map}')
+        #print(f'atom_map: {atom_map}')
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products']
@@ -69,9 +69,9 @@ class rxn_networks_graph:
                 react_ind, r_atom_i = r_tuple
                 products[prod_ind][p_atom_i] = reactants[react_ind][r_atom_i]
         transformed_atom_map.append(products)
-        print(f"products: {products}")
+        #print(f"products: {products}")
         #print(f"transformed_atom_map: {transformed_atom_map}")
-        print(f"reactants: {reactants}")
+        #print(f"reactants: {reactants}")
         # step 2: Get total_bonds
         reactants_total_bonds = []
         for k, ind in enumerate(rxn['reactants']):
@@ -81,7 +81,7 @@ class rxn_networks_graph:
                 #reactants_total_bonds.append((k, i, j))
                 reactants_total_bonds.append((reactants[k][i], reactants[k][j]))
 
-        print(f"reactants_total_bonds: {reactants_total_bonds}")
+        #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
 
         products_total_bonds = []
@@ -91,7 +91,7 @@ class rxn_networks_graph:
             for i, j, weight in networkx_graph.edges:
                 #products_total_bonds.append((k, i, j))
                 products_total_bonds.append((products[k][i], products[k][j]))
-        print(f"products_total_bonds: {products_total_bonds}")
+        #print(f"products_total_bonds: {products_total_bonds}")
 
         #assert len(products_total_bonds) == len_reactants_total_bonds
         # reactant_bonds_broken = rxn["reactant_bonds_broken"]
