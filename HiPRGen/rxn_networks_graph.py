@@ -63,33 +63,35 @@ class rxn_networks_graph:
         # check the conservation of mass in a reaction
         assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
 
-        # step 2: Get total_bonds
-        reactants_total_bonds = []
+        # step 2: Get total_bonds which is a union of bonds in reactants and products
+        reactants_total_bonds = set()
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
                 reactants_total_bonds.append((k, i, j))
-                #reactants_total_bonds.append((reactants[k][i], reactants[k][j]))
+                #reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
 
-        products_total_bonds = []
+        products_total_bonds = set()
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
                 products_total_bonds.append((k, i, j))
-                #products_total_bonds.append((products[k][i], products[k][j]))
-
+                #products_total_bonds.add((products[k][i], products[k][j]))
+        
+        # set_total_bonds = reactants_total_bonds.union(products_total_bonds)
+        # total_bonds = [[i,j] for i, j in set_total_bonds]
         
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
         else:
             print(f"reactants_total_bonds: {reactants_total_bonds}")
             print(f"products_total_bonds: {products_total_bonds}")
-            print(f'transformed_atom_map: {transformed_atom_map}')
+            print(f'atom_map: {atom_map}')
             print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
             print(f"product bonds broken: {rxn['product_bonds_broken']}")
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
