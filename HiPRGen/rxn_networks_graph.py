@@ -119,7 +119,7 @@ class rxn_networks_graph:
             else:
                 for bond_ind, edges in enumerate(networkx_graph.edges):
                     i, j, _ = edges
-                    bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([i,j]))]
+                    bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([reactants[k][i],reactants[k][j]]))]
         bond_mapping.append(bonds_in_reactants)
 
         print(f"bond_mapping: {bond_mapping}")
