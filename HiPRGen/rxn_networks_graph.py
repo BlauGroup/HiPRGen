@@ -76,7 +76,7 @@ class rxn_networks_graph:
         for ind in rxn['reactants']:
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
-            print(f"edges: {networkx_graph.edges.data()}")
+            print(f"edges: {networkx_graph.edges}")
             print(f"networkx_graph: {networkx_graph}")
 
 
