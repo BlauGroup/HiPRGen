@@ -87,6 +87,8 @@ class rxn_networks_graph:
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
+            if len(products) <= k: # list index out of range
+                break
             for i, j, weight in networkx_graph.edges:
                 # products_total_bonds.append((k, i, j))
                 print(f"products k: {k}")
