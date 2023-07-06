@@ -47,13 +47,13 @@ class rxn_networks_graph:
             num_reactant_atoms.append(mol_reactant.num_atoms)
         num_total_atoms = sum(num_reactant_atoms)
 
-        reactants = [{}*num_reactants]
+        reactants = [{} for _ in range(num_reactants)]
         for ind, atom_i in atom_map.keys():
             reactants[ind][atom_i] = atom_i + ind*num_total_atoms
         transformed_atom_map.append(reactants)
         print(f"reactants: {reactants}")
 
-        products = [{}*num_products]
+        products = [{} for _ in range(num_products)]
         for r_tuple, p_tuple in atom_map.items():
             prod_ind, p_atom_i = p_tuple
             if r_tuple == p_tuple: 
