@@ -72,12 +72,14 @@ class rxn_networks_graph:
         #print(f"transformed_atom_map: {transformed_atom_map}")
 
         # step 2: Get total_bonds
-        reactants_total_bonds = set()
+        reactants_total_bonds = []
         for ind in rxn['reactants']:
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
-            print(f"edges: {networkx_graph.edges}")
-            print(f"networkx_graph: {networkx_graph}")
+            for i, j, weight in networkx_graph.edges:
+                reactants_total_bonds.append([reactants[ind][i], reactants[ind][j]])
+        print(f"reactants_total_bonds: {reactants_total_bonds}")
+            
 
 
         # step 3: Get bond_map
