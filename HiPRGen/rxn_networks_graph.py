@@ -64,27 +64,27 @@ class rxn_networks_graph:
         assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
 
         # step 2: Get total_bonds which is a union of bonds in reactants and products
-        reactants_total_bonds = []
+        reactants_total_bonds = set()
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                reactants_total_bonds.append((k, i, j))
-                #reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
+                # reactants_total_bonds.append((k, i, j))
+                reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
 
-        products_total_bonds = []
+        products_total_bonds = set()
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                products_total_bonds.append((k, i, j))
-                #products_total_bonds.add((products[k][i], products[k][j]))
+                # products_total_bonds.append((k, i, j))
+                products_total_bonds.add((products[k][i], products[k][j]))
         
-        # set_total_bonds = reactants_total_bonds.union(products_total_bonds)
-        # total_bonds = [[i,j] for i, j in set_total_bonds]
+        set_total_bonds = reactants_total_bonds.union(products_total_bonds)
+        total_bonds = [[i,j] for i, j in set_total_bonds]
         
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
@@ -95,27 +95,6 @@ class rxn_networks_graph:
             print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
             print(f"product bonds broken: {rxn['product_bonds_broken']}")
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
-
-        #print(f"products_total_bonds: {products_total_bonds}")
-
-        #assert len(products_total_bonds) == len_reactants_total_bonds
-        # reactant_bonds_broken = rxn["reactant_bonds_broken"]
-        # product_bonds_broken = rxn["product_bonds_broken"]
-        # print(f"reaction bonds broken: {reactant_bonds_broken}")
-        # print(f"reaction bonds broken: {product_bonds_broken}")
-
-
-        #bonds_intersection = reactants_total_bonds.intersection(products_total_bonds)
-
-        # assert len(bonds_intersection) == len_reactants_total_bonds-1
-        # assert len(bonds_intersection) == len(products_total_bonds)-1
-
-        #total_bonds = reactants_total_bonds.union(products_total_bonds)
-    
-        # print(f"total bonds: {total_bonds}")
-
-            
-
 
         # step 3: Get bond_map
         
