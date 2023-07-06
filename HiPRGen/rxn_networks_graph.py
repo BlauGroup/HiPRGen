@@ -61,6 +61,7 @@ class rxn_networks_graph:
         # print(f"reactants: {reactants}")
         # print(f"transformed_atom_map: {transformed_atom_map}")
         # check the conservation of mass in a reaction
+        
         assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
 
         # step 2: Get total_bonds which is a union of bonds in reactants and products
@@ -68,13 +69,16 @@ class rxn_networks_graph:
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
-            for i, j, weight in networkx_graph.edges:
-                # reactants_total_bonds.append((k, i, j))
-                print(f"reactants k: {k}")
-                print(f"reactant i: {i}")
-                print(f"reactant j: {j}")
-                print(f"reactants: {reactants}")
-                reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
+            if len(reactants) <= k: # list index out of range
+                break
+            else:
+                for i, j, weight in networkx_graph.edges:
+                    # reactants_total_bonds.append((k, i, j))
+                    print(f"reactants k: {k}")
+                    print(f"reactant i: {i}")
+                    print(f"reactant j: {j}")
+                    print(f"reactants: {reactants}")
+                    reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
