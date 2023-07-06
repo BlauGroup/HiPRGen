@@ -28,10 +28,10 @@ class rxn_networks_graph:
         """mappings = {
             "bond_map": rxn.bond_mapping,
             "atom_map": rxn.atom_mapping,
-            "total_bonds": rxn.total_bonds, 
-            "total_atoms": rxn.total_atoms, 
-            "num_bonds_total": rxn.num_bonds_total,
-            "num_atoms_total": rxn.num_atoms_total,
+            "total_bonds": list of list, 
+            "total_atoms": list of integer, 
+            "num_bonds_total": integer == len(total_bonds),
+            "num_atoms_total": integer == len(total_atoms),
         }"""
 
         # step 1: Transform atom mapping
@@ -69,7 +69,17 @@ class rxn_networks_graph:
                 products[prod_ind][p_atom_i] = reactants[react_ind][r_atom_i]
         transformed_atom_map.append(products)
 
-        print(f"transformed_atom_map: {transformed_atom_map}")
+        #print(f"transformed_atom_map: {transformed_atom_map}")
+
+        # step 2: Get total_bonds
+        reactants_total_bonds = set()
+        for ind in rxn['reactants']:
+            mol_reactant = self.mol_entries[ind]
+            networkx_graph = mol_reactant.graph
+            print(f"networkx_graph: {networkx_graph}")
+
+
+        # step 3: Get bond_map
         
 
     # def insert_data(self, rxn, rxn_id):
