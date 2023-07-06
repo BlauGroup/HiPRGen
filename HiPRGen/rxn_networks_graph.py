@@ -93,7 +93,11 @@ class rxn_networks_graph:
         
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
         total_bonds = [[i,j] for i, j in set_total_bonds]
-        print(f"total_bonds: {total_bonds}")
+        total_bonds_map = {}
+        for ind, bonds in enumerate(total_bonds):
+            i, j = bonds
+            total_bonds_map[(i,j)] = ind
+
         
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
@@ -104,21 +108,20 @@ class rxn_networks_graph:
         #     print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
         #     print(f"product bonds broken: {rxn['product_bonds_broken']}")
             
-        # step 3: Get bond_map
-        # reactants_total_bonds = set()
-        # for k, ind in enumerate(rxn['reactants']):
-        #     mol_reactant = self.mol_entries[ind]
-        #     networkx_graph = mol_reactant.graph
-        #     if len(reactants) <= k: # list index out of range
-        #         break
-        #     else:
-        #         for i, j, weight in networkx_graph.edges:
-        #             # reactants_total_bonds.append((k, i, j))
-        #             # print(f"reactants k: {k}")
-        #             # print(f"reactant i: {i}")
-        #             # print(f"reactant j: {j}")
-        #             # print(f"reactants: {reactants}")
-        #             reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
+        # step 3: Get bond_mapping
+        bond_mapping = []
+        bonds_in_reactants = [{} for _ in range(num_reactants)]
+        for k, ind in enumerate(rxn['reactants']):
+            mol_reactant = self.mol_entries[ind]
+            networkx_graph = mol_reactant.graph
+            if len(reactants) <= k: # list index out of range
+                break
+            else:
+                for bond_ind, i, j, _ in enumerate(networkx_graph.edges):
+                    bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([i,j]))]
+        bond_mapping.append(bonds_in_reactants)
+
+        print(f"bond_mapping: {bond_mapping}")
         
 
     # def insert_data(self, rxn, rxn_id):
