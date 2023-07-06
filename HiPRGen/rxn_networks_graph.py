@@ -89,6 +89,10 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
                 # products_total_bonds.append((k, i, j))
+                print(f"products k: {k}")
+                print(f"products i: {i}")
+                print(f"products j: {j}")
+                print(f"products: {products}")
                 products_total_bonds.add(tuple(sorted([products[k][i], products[k][j]])))
         
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
@@ -122,7 +126,7 @@ class rxn_networks_graph:
                     bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([reactants[k][i],reactants[k][j]]))]
         bond_mapping.append(bonds_in_reactants)
 
-        print(f"bond_mapping: {bond_mapping}")
+        # print(f"bond_mapping: {bond_mapping}")
         
 
     # def insert_data(self, rxn, rxn_id):
