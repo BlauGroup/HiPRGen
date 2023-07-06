@@ -47,12 +47,12 @@ class rxn_networks_graph:
             mol_reactant = self.mol_entries[ind]
             num_reactant_atoms.append(mol_reactant.num_atoms)
 
-        # check the law of conservation of mass
+        # check the law of conservation of mass in reaction
         num_product_atoms = []
         for ind in rxn['products']:
             mol_reactant = self.mol_entries[ind]
             num_product_atoms.append(mol_reactant.num_atoms)
-        assert sum(num_reactant_atoms) == sum(num_product_atoms)
+        
 
         reactants = [{} for _ in range(num_reactants)]
         for ind, atom_i in atom_map.keys():
@@ -68,9 +68,13 @@ class rxn_networks_graph:
                 react_ind, r_atom_i = r_tuple
                 products[prod_ind][p_atom_i] = reactants[react_ind][r_atom_i]
         transformed_atom_map.append(products)
-        #print(f"products: {products}")
-        #print(f"transformed_atom_map: {transformed_atom_map}")
-        #print(f"reactants: {reactants}")
+        print(f"products: {products}")
+        print(f"reactants: {reactants}")
+        print(f"transformed_atom_map: {transformed_atom_map}")
+        print(f"num_reactant_atoms: {num_reactant_atoms}")
+        print(f"num_product_atoms: {num_product_atoms}")
+        assert sum(num_reactant_atoms) == sum(num_product_atoms)
+
         # step 2: Get total_bonds
         reactants_total_bonds = []
         for k, ind in enumerate(rxn['reactants']):
@@ -91,7 +95,7 @@ class rxn_networks_graph:
                 #products_total_bonds.append((k, i, j))
                 products_total_bonds.append((products[k][i], products[k][j]))
 
-        # redox reaction
+        # not a redox reaction
         if len(set(reactants_total_bonds)) != len(set(products_total_bonds)):
             print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
             print(f"product bonds broken: {rxn['product_bonds_broken']}")
