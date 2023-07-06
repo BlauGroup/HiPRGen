@@ -69,8 +69,8 @@ class rxn_networks_graph:
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                #reactants_total_bonds.append((k, i, j))
-                reactants_total_bonds.append((reactants[k][i], reactants[k][j]))
+                reactants_total_bonds.append((k, i, j))
+                #reactants_total_bonds.append((reactants[k][i], reactants[k][j]))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
@@ -80,8 +80,8 @@ class rxn_networks_graph:
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
-                #products_total_bonds.append((k, i, j))
-                products_total_bonds.append((products[k][i], products[k][j]))
+                products_total_bonds.append((k, i, j))
+                #products_total_bonds.append((products[k][i], products[k][j]))
 
         # 
         if rxn['is_redox']:
@@ -89,7 +89,7 @@ class rxn_networks_graph:
         else:
             print(f"reactants_total_bonds: {reactants_total_bonds}")
             print(f"products_total_bonds: {products_total_bonds}")
-            print(f'atom_map: {atom_map}')
+            print(f'transformed_atom_map: {transformed_atom_map}')
             print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
             print(f"product bonds broken: {rxn['product_bonds_broken']}")
 
