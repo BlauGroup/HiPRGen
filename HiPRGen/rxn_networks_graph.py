@@ -117,7 +117,8 @@ class rxn_networks_graph:
             if len(reactants) <= k: # list index out of range
                 break
             else:
-                for bond_ind, i, j, _ in enumerate(networkx_graph.edges):
+                for bond_ind, edges in enumerate(networkx_graph.edges):
+                    i, j, _ = edges
                     bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([i,j]))]
         bond_mapping.append(bonds_in_reactants)
 
