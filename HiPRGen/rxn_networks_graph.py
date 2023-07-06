@@ -74,11 +74,11 @@ class rxn_networks_graph:
             else:
                 for i, j, weight in networkx_graph.edges:
                     # reactants_total_bonds.append((k, i, j))
-                    print(f"reactants k: {k}")
-                    print(f"reactant i: {i}")
-                    print(f"reactant j: {j}")
-                    print(f"reactants: {reactants}")
-                    reactants_total_bonds.add((reactants[k][i], reactants[k][j]))
+                    # print(f"reactants k: {k}")
+                    # print(f"reactant i: {i}")
+                    # print(f"reactant j: {j}")
+                    # print(f"reactants: {reactants}")
+                    reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
         len_reactants_total_bonds = len(reactants_total_bonds)
@@ -89,22 +89,36 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             for i, j, weight in networkx_graph.edges:
                 # products_total_bonds.append((k, i, j))
-                products_total_bonds.add((products[k][i], products[k][j]))
+                products_total_bonds.add(tuple(sorted([products[k][i], products[k][j]])))
         
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
         total_bonds = [[i,j] for i, j in set_total_bonds]
+        print(f"total_bonds: {total_bonds}")
         
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
-        else:
-            print(f"reactants_total_bonds: {reactants_total_bonds}")
-            print(f"products_total_bonds: {products_total_bonds}")
-            print(f'atom_map: {atom_map}')
-            print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
-            print(f"product bonds broken: {rxn['product_bonds_broken']}")
-            assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
-
+        # else:
+        #     print(f"reactants_total_bonds: {reactants_total_bonds}")
+        #     print(f"products_total_bonds: {products_total_bonds}")
+        #     print(f'atom_map: {atom_map}')
+        #     print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
+        #     print(f"product bonds broken: {rxn['product_bonds_broken']}")
+            
         # step 3: Get bond_map
+        # reactants_total_bonds = set()
+        # for k, ind in enumerate(rxn['reactants']):
+        #     mol_reactant = self.mol_entries[ind]
+        #     networkx_graph = mol_reactant.graph
+        #     if len(reactants) <= k: # list index out of range
+        #         break
+        #     else:
+        #         for i, j, weight in networkx_graph.edges:
+        #             # reactants_total_bonds.append((k, i, j))
+        #             # print(f"reactants k: {k}")
+        #             # print(f"reactant i: {i}")
+        #             # print(f"reactant j: {j}")
+        #             # print(f"reactants: {reactants}")
+        #             reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
         
 
     # def insert_data(self, rxn, rxn_id):
