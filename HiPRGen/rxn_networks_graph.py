@@ -83,7 +83,7 @@ class rxn_networks_graph:
                 products_total_bonds.append((k, i, j))
                 #products_total_bonds.append((products[k][i], products[k][j]))
 
-        # 
+        
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
         else:
@@ -92,6 +92,7 @@ class rxn_networks_graph:
             print(f'transformed_atom_map: {transformed_atom_map}')
             print(f"reactant bonds broken: {rxn['reactant_bonds_broken']}")
             print(f"product bonds broken: {rxn['product_bonds_broken']}")
+            assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
 
         #print(f"products_total_bonds: {products_total_bonds}")
 
