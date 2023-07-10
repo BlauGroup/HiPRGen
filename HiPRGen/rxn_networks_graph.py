@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import copy
+from collections import defaultdict
 from monty.serialization import dumpfn
 from bondnet.data.utils import create_rxn_graph
 
@@ -35,12 +36,15 @@ class rxn_networks_graph:
             "num_atoms_total": integer == len(total_atoms),
         }"""
 
-        # step 1: Transform atom mapping
+        
         atom_map = rxn['atom_map']
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products']
+        reactants_entry_ids = [self.mol_entries[ind].entry_id for ind in rxn['reactants']]
+        products_entry_ids = [self.mol_entries[ind].entry_id for ind in rxn['products']]
 
+        # step 1: Transform atom mapping
         # find the number of atoms for reactant 0
         num_reactant0_atoms = self.mol_entries[rxn['reactants'][0]].num_atoms
 
@@ -61,8 +65,8 @@ class rxn_networks_graph:
         # print(f"products: {products}")
         # print(f"reactants: {reactants}")
         # print(f"transformed_atom_map: {transformed_atom_map}")
-        # check the conservation of mass in a reaction
-        
+
+        # check the conservation of mass in a reaction 
         assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
         num_tot_atoms = sum([len(i) for i in reactants])
         total_atoms = [i for i in range(num_tot_atoms)]
@@ -85,7 +89,6 @@ class rxn_networks_graph:
                     reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
-        len_reactants_total_bonds = len(reactants_total_bonds)
 
         products_total_bonds = set()
         for k, ind in enumerate(rxn['products']):
@@ -150,12 +153,33 @@ class rxn_networks_graph:
         print(f"mapping: {mappings}")
         
         # step 5: Create a reaction graphs and features
-        print('dgl mol dict')
-        print(self.dgl_mol_dict)
+        reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]
+        products_dgl_graphs = [self.dgl_mol_dict[entry_i] for entry_i in products_entry_ids]
 
+        # create has_bonds
+        # "has_bonds" is required input to create a reaction graph from BonDNet
+        # it's a dictionary e.g) {'reactants': [True, True], 'products': [True]}
+        has_bonds = defaultdict(list)
+        for _ in range(len(reactants)):
+            has_bonds['reactants'].append(True)
+        for _ in range(len(products)):
+            has_bonds['products'].append(True)
+
+
+        rxn_graph, features = create_rxn_graph(
+                                                reactants = reactants_dgl_graphs,
+                                                products = products_dgl_graphs,
+                                                mappings = mappings,
+                                                has_bonds = has_bonds,
+                                                device = None
+                                            )
+
+        print(f"rxn_graph: {rxn_graph}")
 
         # step 6: Update reaction features to the reaction graph
-
+        for nt, ft in features.items():
+            rxn_graph.nodes[nt].data.update({'ft': ft})
+        print(f"rxn_graph: {rxn_graph}")
 
 
 
