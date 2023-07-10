@@ -172,6 +172,7 @@ class rxn_networks_graph:
             has_bonds['products'].append(True)
 
         print(f"has_bonds: {has_bonds}")
+        print(f"mappings: {mappings}")
         rxn_graph, features = create_rxn_graph(
                                                 reactants = reactants_dgl_graphs,
                                                 products = products_dgl_graphs,
@@ -184,7 +185,7 @@ class rxn_networks_graph:
                                             )
 
         print(f"rxn_graph: {rxn_graph}")
-        print(f"features: {features}")
+        # print(f"features: {features}")
 
 
 
