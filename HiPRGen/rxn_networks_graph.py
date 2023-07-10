@@ -150,11 +150,11 @@ class rxn_networks_graph:
         mappings['num_bonds_total'] = len(total_bonds_map)
         mappings['num_atoms_total'] = len(total_atoms)
 
-        print(f"mapping: {mappings}")
+        #print(f"mapping: {mappings}")
         
         # step 5: Create a reaction graphs and features
         reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]
-        print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
+        #print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
         products_dgl_graphs = [self.dgl_mol_dict[entry_i] for entry_i in products_entry_ids]
 
         # create has_bonds
@@ -178,13 +178,13 @@ class rxn_networks_graph:
                                                 reverse=False,
                                             )
 
-        print(f"rxn_graph: {rxn_graph}")
-        print(f"features: {features}")
+        print(f"before rxn_graph: {rxn_graph}")
+        # print(f"features: {features}")
 
         # step 6: Update reaction features to the reaction graph
-        # for nt, ft in features.items():
-        #     rxn_graph.nodes[nt].data.update({'ft': ft})
-        # print(f"rxn_graph: {rxn_graph}")
+        for nt, ft in features.items():
+            rxn_graph.nodes[nt].data.update({'ft': ft})
+        print(f"after rxn_graph: {rxn_graph}")
 
 
 
