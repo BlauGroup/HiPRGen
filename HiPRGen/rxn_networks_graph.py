@@ -150,7 +150,9 @@ class rxn_networks_graph:
         mappings['num_bonds_total'] = len(total_bonds_map)
         mappings['num_atoms_total'] = len(total_atoms)
 
-        print(f"mapping: {mappings}")
+        #print(f"mapping: {mappings}")
+        print(f"atom_map: {atom_map}")
+        print(f"reactants: {reactants}")
         print(f"products: {products}")
         # step 5: Create a reaction graphs and features
         reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]
