@@ -40,9 +40,7 @@ class rxn_networks_graph:
         atom_map = rxn['atom_map']
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
-        print(f'the number of reactants: {num_reactants}')
-        num_products = rxn['number_of_products']
-        print(f'number of products: {num_products}')
+        num_products = rxn['number_of_products'] 
         reactants_entry_ids = []
         products_entry_ids = []
 
@@ -70,6 +68,8 @@ class rxn_networks_graph:
 
         # check the conservation of mass in a reaction 
         assert sum([len(i) for i in reactants]) == sum([len(i) for i in products])
+        assert num_reactants == len(reactants)
+        assert num_products == len(products)
         num_tot_atoms = sum([len(i) for i in reactants])
         total_atoms = [i for i in range(num_tot_atoms)]
         
@@ -137,9 +137,8 @@ class rxn_networks_graph:
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
-            if len(reactants) <= k: # list index out of range
-                break
-            
+            if len(products) <= k: # list index out of range
+                break 
             for bond_ind, edges in enumerate(networkx_graph.edges):
                 i, j, _ = edges
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
