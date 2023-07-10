@@ -171,7 +171,10 @@ class rxn_networks_graph:
                                                 products = products_dgl_graphs,
                                                 mappings = mappings,
                                                 has_bonds = has_bonds,
-                                                device = None
+                                                device = None,
+                                                ntypes=("global", "atom", "bond"),
+                                                ft_name="ft",
+                                                reverse=False,
                                             )
 
         print(f"rxn_graph: {rxn_graph}")
