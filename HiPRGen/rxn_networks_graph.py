@@ -125,10 +125,10 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             if len(reactants) <= k: # list index out of range
                 break
-            else:
-                for bond_ind, edges in enumerate(networkx_graph.edges):
-                    i, j, _ = edges
-                    bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([reactants[k][i],reactants[k][j]]))]
+            
+            for bond_ind, edges in enumerate(networkx_graph.edges):
+                i, j, _ = edges
+                bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([reactants[k][i],reactants[k][j]]))]
         bond_mapping.append(bonds_in_reactants)
 
         bonds_in_products = [{} for _ in range(num_products)]
@@ -137,10 +137,10 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             if len(reactants) <= k: # list index out of range
                 break
-            else:
-                for bond_ind, edges in enumerate(networkx_graph.edges):
-                    i, j, _ = edges
-                    bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
+            
+            for bond_ind, edges in enumerate(networkx_graph.edges):
+                i, j, _ = edges
+                bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
 
         # step 4: get mapping
@@ -171,7 +171,7 @@ class rxn_networks_graph:
         for _ in range(len(products)):
             has_bonds['products'].append(True)
 
-
+        print(f"has_bonds: {has_bonds}")
         rxn_graph, features = create_rxn_graph(
                                                 reactants = reactants_dgl_graphs,
                                                 products = products_dgl_graphs,
@@ -184,7 +184,7 @@ class rxn_networks_graph:
                                             )
 
         print(f"rxn_graph: {rxn_graph}")
-        # print(f"features: {features}")
+        print(f"features: {features}")
 
 
 
