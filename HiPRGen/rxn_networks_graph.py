@@ -174,7 +174,7 @@ class rxn_networks_graph:
                                                 has_bonds = has_bonds,
                                                 device = None,
                                                 ntypes=("global", "atom", "bond"),
-                                                ft_name="ft",
+                                                ft_name="feat",
                                                 reverse=False,
                                             )
 
