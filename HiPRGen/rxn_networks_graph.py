@@ -175,11 +175,12 @@ class rxn_networks_graph:
                                             )
 
         print(f"rxn_graph: {rxn_graph}")
+        print(f"features: {features}")
 
         # step 6: Update reaction features to the reaction graph
-        for nt, ft in features.items():
-            rxn_graph.nodes[nt].data.update({'ft': ft})
-        print(f"rxn_graph: {rxn_graph}")
+        # for nt, ft in features.items():
+        #     rxn_graph.nodes[nt].data.update({'ft': ft})
+        # print(f"rxn_graph: {rxn_graph}")
 
 
 
