@@ -41,8 +41,8 @@ class rxn_networks_graph:
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products']
-        reactants_entry_ids = [self.mol_entries[ind].entry_id for ind in rxn['reactants']]
-        products_entry_ids = [self.mol_entries[ind].entry_id for ind in rxn['products']]
+        reactants_entry_ids = []
+        products_entry_ids = []
 
         # step 1: Transform atom mapping
         # find the number of atoms for reactant 0
@@ -79,14 +79,15 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             if len(reactants) <= k: # list index out of range
                 break
-            else:
-                for i, j, weight in networkx_graph.edges:
-                    # reactants_total_bonds.append((k, i, j))
-                    # print(f"reactants k: {k}")
-                    # print(f"reactant i: {i}")
-                    # print(f"reactant j: {j}")
-                    # print(f"reactants: {reactants}")
-                    reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
+            reactants_entry_ids.append(self.mol_entries[ind].entry_id)
+            for i, j, weight in networkx_graph.edges:
+                # reactants_total_bonds.append((k, i, j))
+                # print(f"reactants k: {k}")
+                # print(f"reactant i: {i}")
+                # print(f"reactant j: {j}")
+                # print(f"reactants: {reactants}")
+                reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
+            
 
         #print(f"reactants_total_bonds: {reactants_total_bonds}")
 
@@ -96,6 +97,7 @@ class rxn_networks_graph:
             networkx_graph = mol_reactant.graph
             if len(products) <= k: # list index out of range
                 break
+            products_entry_ids.append(self.mol_entries[ind].entry_id)
             for i, j, weight in networkx_graph.edges:
                 # products_total_bonds.append((k, i, j))
                 # print(f"products k: {k}")
