@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import copy
 from monty.serialization import dumpfn
+from bondnet.data.utils import create_rxn_graph
 
 class rxn_networks_graph:
     def __init__(
@@ -138,24 +139,24 @@ class rxn_networks_graph:
         bond_mapping.append(bonds_in_products)
 
         # step 4: get mapping
-        """mappings = {
-            "bond_map": rxn.bond_mapping,
-            "atom_map": rxn.atom_mapping,
-            "total_bonds": list of list, 
-            "total_atoms": list of integer, 
-            "num_bonds_total": integer == len(total_bonds),
-            "num_atoms_total": integer == len(total_atoms),
-        }"""
-
         mappings = {}
         mappings['bond_map'] = bond_mapping
         mappings['atom_map'] = transformed_atom_map
-        mappings['total_bonds'] = total_bonds_map
+        mappings['total_bonds'] = total_bonds
         mappings['total_atoms'] = total_atoms
-        print(f"total_numb_atoms: {num_tot_atoms}")
         mappings['num_bonds_total'] = len(total_bonds_map)
         mappings['num_atoms_total'] = len(total_atoms)
+
         print(f"mapping: {mappings}")
+        
+        # step 5: Create a reaction graphs and features
+        print('dgl mol dict')
+        print(self.dgl_mol_dict)
+
+
+        # step 6: Update reaction features to the reaction graph
+
+
 
 
 
