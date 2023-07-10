@@ -40,7 +40,9 @@ class rxn_networks_graph:
         atom_map = rxn['atom_map']
         transformed_atom_map = []
         num_reactants = rxn['number_of_reactants']
+        print(f'the number of reactants: {num_reactants}')
         num_products = rxn['number_of_products']
+        print(f'number of products: {num_products}')
         reactants_entry_ids = []
         products_entry_ids = []
 
