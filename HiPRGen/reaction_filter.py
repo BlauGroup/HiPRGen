@@ -236,7 +236,9 @@ def dispatcher(
                  reaction['dG_barrier'],
                  reaction['is_redox']
                  ))
-            
+            log_message("........... printing ...........")
+            print(f"product bonds broken: {reaction['product_bonds_broken']}")
+            print(f"reactant bonds broken: {reaction['reactant_bonds_broken']}")
             rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index)
             reaction_index += 1
             if reaction_index % dispatcher_payload.commit_frequency == 0:
