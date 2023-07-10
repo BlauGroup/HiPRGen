@@ -154,8 +154,9 @@ class rxn_networks_graph:
         
         # step 5: Create a reaction graphs and features
         reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]
-        #print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
+        print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
         products_dgl_graphs = [self.dgl_mol_dict[entry_i] for entry_i in products_entry_ids]
+        print(f"products_dgl_graphs: {products_dgl_graphs}")
 
         # create has_bonds
         # "has_bonds" is required input to create a reaction graph from BonDNet
@@ -178,13 +179,9 @@ class rxn_networks_graph:
                                                 reverse=False,
                                             )
 
-        print(f"before rxn_graph: {rxn_graph}")
+        print(f"rxn_graph: {rxn_graph}")
         # print(f"features: {features}")
 
-        # step 6: Update reaction features to the reaction graph
-        for nt, ft in features.items():
-            rxn_graph.nodes[nt].data.update({'ft': ft})
-        print(f"after rxn_graph: {rxn_graph}")
 
 
 
