@@ -154,6 +154,7 @@ class rxn_networks_graph:
         
         # step 5: Create a reaction graphs and features
         reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]
+        print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
         products_dgl_graphs = [self.dgl_mol_dict[entry_i] for entry_i in products_entry_ids]
 
         # create has_bonds
