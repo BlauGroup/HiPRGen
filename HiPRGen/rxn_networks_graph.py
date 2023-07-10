@@ -150,8 +150,8 @@ class rxn_networks_graph:
         print(f"mapping: {mappings}")
         
         # step 5: Create a reaction graphs and features
-        # print('dgl mol dict')
-        # print(self.dgl_mol_dict)
+        print('dgl mol dict')
+        print(self.dgl_mol_dict)
 
 
         # step 6: Update reaction features to the reaction graph

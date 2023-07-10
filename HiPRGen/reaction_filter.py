@@ -108,8 +108,7 @@ def dispatcher(
         dgl_molecules_dict,
         dispatcher_payload
 ):
-    print('dgl_molecules_dict')
-    print(dgl_molecules_dict)
+
     comm = MPI.COMM_WORLD
     work_batch_list = []
     bucket_con = sqlite3.connect(dispatcher_payload.bucket_db_file)
