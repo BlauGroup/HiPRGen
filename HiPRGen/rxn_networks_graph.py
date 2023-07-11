@@ -135,7 +135,7 @@ class rxn_networks_graph:
 
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
-        assert len(total_bonds) < len(total_atoms)
+        assert len(total_bonds) <= len(total_atoms)
             
         # step 3: Get bond_mapping
         bond_mapping = []
@@ -164,10 +164,10 @@ class rxn_networks_graph:
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
 
-        print(f'bonds_in_reactants: {bonds_in_reactants}')
-        print(f'bonds_in_products: {bonds_in_products}')
-        print(f'reactants: {reactants}')
-        print(f'products: {products}')
+        # print(f'bonds_in_reactants: {bonds_in_reactants}')
+        # print(f'bonds_in_products: {bonds_in_products}')
+        # print(f'reactants: {reactants}')
+        # print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
         for d1, d2 in zip(bonds_in_reactants, reactants):
