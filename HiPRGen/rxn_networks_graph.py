@@ -23,8 +23,15 @@ class rxn_networks_graph:
 
     def create_rxn_networks_graph(self, rxn, rxn_id):
 
-        # Transfrom reaction data to the following:
-        """mappings = {
+        """
+        To create a reaction graph (or a reaction networks graph) using a function from BonDNet,
+        we need to specify four inputs:
+        - reactants: a list of dgl graphs of reactants,
+        - products: a list of dgl graphs of products,
+        - mappings: detailed explanation in the below,
+        - has_bonds: a dictionary with a form of {'reactants': [True, True], 'products': [True]} as an example of two reactants and one product.
+        
+        mappings = {
             "bond_map": a list of lists, 
                         e.g.) For a reaction that has two reactants and two products, it has [[{}, {}], [{}, {}]] format.
                         The first inner list includes dictionaries of bond map for reactants.
@@ -42,18 +49,19 @@ class rxn_networks_graph:
             "total_atoms": list of integer, 
             "num_bonds_total": integer == len(total_bonds),
             "num_atoms_total": integer == len(total_atoms),
-        }"""
+            }
+
+        The goal of this function is to create a reaction graph with a reaction filtered from HiPRGen. Specifically, reaction_filter.py
+        """
 
         
         atom_map = rxn['atom_map']
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products'] 
         transformed_atom_map = []
-        
-        products_entry_ids = []
 
         # step 1: Transform atom mapping
-        # find the number of atoms for reactant 0
+        # find the number of atoms for reactant_0
         num_reactant0_atoms = self.mol_entries[rxn['reactants'][0]].num_atoms
 
         reactants = [{} for _ in range(num_reactants)]
@@ -79,13 +87,23 @@ class rxn_networks_graph:
         assert num_reactants == len(reactants)
         assert num_products == len(products)
 
-        # Get "total_atoms"
+        # Find "total_atoms" in mapping
         num_tot_atoms = sum([len(i) for i in reactants])
         total_atoms = [i for i in range(num_tot_atoms)]
         
 
-        # step 2: Get total_bonds which is a union of bonds in reactants and products
+        # step 2: Get total_bonds which are a union of bonds in reactants and products
         def find_total_bonds(rxn, species, reactants, products):
+            """ Goal: find total bonds in reactants or products and fetch entry_ids of reactants or products 
+                Inputs:
+                - rxn: a reaction from reaction_filter.py from HiPRGen
+                - species: (str) 'reactants' or 'products'
+                - reactants: a list of dictionaries of transformed atom map for reactants
+                - products: a list of dictionaries of transformed atom map for products
+                Outputs:
+                - species_entry_ids: a list of mol.entry_ids of reactants or products
+                - species_total_bonds:  a set of tuples. Each tuple represents a bond between two atoms noted with global indexes
+            """
             species_entry_ids = []
             species_total_bonds = set()
             if species == 'reactants':
@@ -105,39 +123,19 @@ class rxn_networks_graph:
         
         reactants_total_bonds, reactants_entry_ids = find_total_bonds(rxn, 'reactants', reactants, products)
         products_total_bonds, products_entry_ids = find_total_bonds(rxn, 'products', reactants, products)
-
-        # reactants_total_bonds = set()
-        # for k, ind in enumerate(rxn['reactants']):
-        #     mol_reactant = self.mol_entries[ind]
-        #     networkx_graph = mol_reactant.graph
-        #     # This is needed because there is a case where num_reactants != len(rxn['reactants'])
-        #     if len(reactants) <= k: 
-        #         break
-        #     reactants_entry_ids.append(self.mol_entries[ind].entry_id)
-        #     for i, j, weight in networkx_graph.edges:
-        #         reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
-            
-
-        # products_total_bonds = set()
-        # for k, ind in enumerate(rxn['products']):
-        #     mol_reactant = self.mol_entries[ind]
-        #     networkx_graph = mol_reactant.graph
-        #     if len(products) <= k: # list index out of range
-        #         break
-        #     products_entry_ids.append(self.mol_entries[ind].entry_id)
-        #     for i, j, weight in networkx_graph.edges:
-        #         products_total_bonds.add(tuple(sorted([products[k][i], products[k][j]])))
         
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
         total_bonds = [[i,j] for i, j in set_total_bonds]
+
+        # the following codes is used for creating bond_map
         total_bonds_map = {}
         for ind, bonds in enumerate(total_bonds):
             i, j = bonds
             total_bonds_map[(i,j)] = ind
 
-        
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
+        assert len(total_bonds) < len(total_atoms)
             
         # step 3: Get bond_mapping
         bond_mapping = []
@@ -145,7 +143,8 @@ class rxn_networks_graph:
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
-            if len(reactants) <= k: # list index out of range
+            # This is needed because there is a case where num_reactants != len(rxn['reactants']) or num_products != len(rxn['products'])
+            if len(reactants) <= k: 
                 break
             
             for bond_ind, edges in enumerate(networkx_graph.edges):
@@ -157,12 +156,20 @@ class rxn_networks_graph:
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
             networkx_graph = mol_reactant.graph
-            if len(products) <= k: # list index out of range
+            # This is needed because there is a case where num_reactants != len(rxn['reactants']) or num_products != len(rxn['products'])
+            if len(products) <= k: 
                 break 
             for bond_ind, edges in enumerate(networkx_graph.edges):
                 i, j, _ = edges
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
+
+        assert len(bonds_in_reactants) == len(reactants)
+        assert len(bonds_in_products) == len(products)
+        for d1, d2 in zip(bonds_in_reactants, reactants):
+            assert len(d1) < len(d2)
+        for d1, d2 in zip(bonds_in_products, products):
+            assert len(d1) < len(d2)
 
         # step 4: get mapping
         mappings = {}
@@ -177,15 +184,14 @@ class rxn_networks_graph:
         # print(f"atom_map: {atom_map}")
         # print(f"reactants: {reactants}")
         # print(f"products: {products}")
-        # step 5: Create a reaction graphs and features
-        reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]
-        # print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
+
+        # grab dgl graphs of reactants or products
+        reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]       
         products_dgl_graphs = [self.dgl_mol_dict[entry_i] for entry_i in products_entry_ids]
+        # print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
         # print(f"products_dgl_graphs: {products_dgl_graphs}")
 
         # create has_bonds
-        # "has_bonds" is required input to create a reaction graph from BonDNet
-        # it's a dictionary e.g) {'reactants': [True, True], 'products': [True]}
         has_bonds = defaultdict(list)
         for _ in range(len(reactants)):
             has_bonds['reactants'].append(True)
@@ -194,6 +200,8 @@ class rxn_networks_graph:
 
         # print(f"has_bonds: {has_bonds}")
         # print(f"mappings: {mappings}")
+
+        # step 5: Create a reaction graphs and features
         rxn_graph, features = create_rxn_graph(
                                                 reactants = reactants_dgl_graphs,
                                                 products = products_dgl_graphs,
