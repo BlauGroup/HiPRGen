@@ -164,6 +164,8 @@ class rxn_networks_graph:
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
 
+        print(f'bonds_in_reactants: {bonds_in_reactants}')
+        print(f'bonds_in_products: {bonds_in_products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
         for d1, d2 in zip(bonds_in_reactants, reactants):
