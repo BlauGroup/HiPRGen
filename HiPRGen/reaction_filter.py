@@ -14,6 +14,7 @@ from HiPRGen.reaction_filter_payloads import (
 from HiPRGen.reaction_questions import (
     run_decision_tree
 )
+from bondnet.data.lmdb_dataset import LmdbDataset, CRNs2lmdb
 
 """
 Phases 3 & 4 run in parallel using MPI

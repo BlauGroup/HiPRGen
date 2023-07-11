@@ -6,6 +6,7 @@ import copy
 from collections import defaultdict
 from monty.serialization import dumpfn
 from bondnet.data.utils import create_rxn_graph
+from bondnet.data.lmdb_dataset import LmdbDataset, CRNs2lmdb
 
 class rxn_networks_graph:
     def __init__(

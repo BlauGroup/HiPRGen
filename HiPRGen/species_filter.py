@@ -227,6 +227,8 @@ def species_filter(
     for mol in mol_entries:
         # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(extra_keys)
+        
+
         non_metal_bonds = [ tuple(sorted([i, j])) for i, j, _ in mol.covalent_graph.edges.data()]
         # print(f"non metal bonds: {non_metal_bonds}")
         mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
@@ -242,6 +244,8 @@ def species_filter(
 
     print(f"mean: {scaler._mean}")
     print(f"std: {scaler._std}")
+    print(f'grapher.feature_name: {molecule_grapher.feature_name}')
+    print(f'grapher.feature_size: {molecule_grapher.feature_size}')
 
     # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
     for key in dgl_molecules_dict.keys():
