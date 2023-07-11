@@ -1,3 +1,4 @@
+import torch
 import json
 import os
 from pathlib import Path
@@ -17,12 +18,8 @@ class rxn_networks_graph:
         self.dgl_mol_dict = dgl_molecules_dict
         self.report_file_path = report_file_path
         
-        self.keys = ['atom_map', 'bond_map', 'total_bonds', 'total_atoms', 'num_bonds_total', 'num_atoms_total']
-        
         # initialize JSON data
         self.data = {}
-        for k in self.keys:
-            self.data[k] = {}
 
     def create_rxn_networks_graph(self, rxn, rxn_id):
 
@@ -83,15 +80,8 @@ class rxn_networks_graph:
                 break
             reactants_entry_ids.append(self.mol_entries[ind].entry_id)
             for i, j, weight in networkx_graph.edges:
-                # reactants_total_bonds.append((k, i, j))
-                # print(f"reactants k: {k}")
-                # print(f"reactant i: {i}")
-                # print(f"reactant j: {j}")
-                # print(f"reactants: {reactants}")
                 reactants_total_bonds.add(tuple(sorted([reactants[k][i], reactants[k][j]])))
             
-
-        #print(f"reactants_total_bonds: {reactants_total_bonds}")
 
         products_total_bonds = set()
         for k, ind in enumerate(rxn['products']):
@@ -101,11 +91,6 @@ class rxn_networks_graph:
                 break
             products_entry_ids.append(self.mol_entries[ind].entry_id)
             for i, j, weight in networkx_graph.edges:
-                # products_total_bonds.append((k, i, j))
-                # print(f"products k: {k}")
-                # print(f"products i: {i}")
-                # print(f"products j: {j}")
-                # print(f"products: {products}")
                 products_total_bonds.add(tuple(sorted([products[k][i], products[k][j]])))
         
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
@@ -188,38 +173,13 @@ class rxn_networks_graph:
         print(f"rxn_graph: {rxn_graph}")
         # print(f"features: {features}")
 
+        # step 5: update reaction features to the reaction graph
+        for nt, ft in features.items():
+            rxn_graph.nodes[nt].data.update({'ft': features})
 
+        self.data[rxn_id]['rxn_graph'] = rxn_graph
+        self.data[rxn_id]['value'] = torch.tensor([rxn['dG']])
 
-
-
-        # print(f"bond_mapping: {bond_mapping}")
-        
-
-    # def insert_data(self, rxn, rxn_id):
-        # should be updated
-        # assume only one reactant for now 
-        # mol_reactant = self.mol_entries[rxn["reactants"][0]] # MolecularEntry object
-        # mol_product = self.mol_entries[rxn["products"][0]]
-        # print(mol_reactant.entry_id)
-        # graph_hash = mol_reactant.entry_id.split('-')[0]
-        # self.data['_id'][rxn_id] = graph_hash
-        # self.data['builder_meta'][rxn_id] = None
-        # self.data['charge'][rxn_id] = mol_reactant.charge
-        # self.data['spin_multiplicity'][rxn_id] = mol_reactant.spin_multiplicity
-        # self.data['natoms'][rxn_id] = mol_reactant.num_atoms
-        # self.data['elements'][rxn_id] = list(set(mol_reactant.species))
-        # self.data['nelements'][rxn_id] = len(self.data['elements'][rxn_id])
-        # self.data['nelectrons'][rxn_id] = mol_reactant.molecule.nelectrons
-        # self.data['composition'][rxn_id] = mol_reactant.molecule.composition.as_dict()
-        # self.data['composition_reduced'][rxn_id] = mol_reactant.molecule.composition.to_reduced_dict
-        # self.data['formula_alphabetical'][rxn_id] = mol_reactant.formula
-        # self.data['formula_pretty'][rxn_id] = mol_reactant.molecule.composition.to_pretty_string()
-        # self.data['formula_anonymous'][rxn_id] = mol_reactant.molecule.composition.anonymized_formula
-        # self.data['chemsys'][rxn_id] = mol_reactant.molecule.composition.chemical_system
-        # self.data['symmetry'][rxn_id] = None
-        # self.data['reactant_structure'][rxn_id] = mol_reactant.molecule.as_dict()
-        # self.data['reactant_molecule_graph'][rxn_id] = mol_reactant.mol_graph
-    
 
     def save_data(self):
         #self.f.write(json.dumps(self.data))
