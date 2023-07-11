@@ -175,7 +175,7 @@ class rxn_networks_graph:
 
         # step 5: update reaction features to the reaction graph
         for nt, ft in features.items():
-            rxn_graph.nodes[nt].data.update({'ft': features})
+            rxn_graph.nodes[nt].data.update({'ft': ft})
 
         self.data[rxn_id]['rxn_graph'] = rxn_graph
         self.data[rxn_id]['value'] = torch.tensor([rxn['dG']])
