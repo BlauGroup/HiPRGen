@@ -51,7 +51,7 @@ class rxn_networks_graph:
             "num_atoms_total": integer == len(total_atoms),
             }
 
-        The goal of this function is to create a reaction graph with a reaction filtered from HiPRGen. Specifically, reaction_filter.py
+        The goal of this function is to create a reaction graph with a reaction filtered from HiPRGen, specifically, reaction_filter.py
         """
 
         
@@ -60,15 +60,18 @@ class rxn_networks_graph:
         num_products = rxn['number_of_products'] 
         transformed_atom_map = []
 
-        # step 1: Transform atom mapping
+        # step 1: Transform atom map to "atom_map" format in mappings
+
         # find the number of atoms for reactant_0
         num_reactant0_atoms = self.mol_entries[rxn['reactants'][0]].num_atoms
 
+        # transform atom map for reactants
         reactants = [{} for _ in range(num_reactants)]
         for ind, atom_i in atom_map.keys():
             reactants[ind][atom_i] = atom_i + ind*num_reactant0_atoms
         transformed_atom_map.append(reactants)
 
+        # transform atom map for products
         products = [{} for _ in range(num_products)]
         for r_tuple, p_tuple in atom_map.items():
             prod_ind, p_atom_i = p_tuple
@@ -93,6 +96,8 @@ class rxn_networks_graph:
         
 
         # step 2: Get total_bonds which are a union of bonds in reactants and products
+
+        # define a function to find total bonds in reactants or products
         def find_total_bonds(rxn, species, reactants, products):
             """ Goal: find total bonds in reactants or products and fetch entry_ids of reactants or products 
                 Inputs:
@@ -124,10 +129,13 @@ class rxn_networks_graph:
         reactants_total_bonds, reactants_entry_ids = find_total_bonds(rxn, 'reactants', reactants, products)
         products_total_bonds, products_entry_ids = find_total_bonds(rxn, 'products', reactants, products)
         
+        # find an union of bonds of reactants and products
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
+
+        # convert to the correct format in "total_bonds" in mappings
         total_bonds = [[i,j] for i, j in set_total_bonds]
 
-        # the following codes is used for creating bond_map
+        # a dictionary, total_bonds_map, is used for creating bond_map for reactants and products in step 3
         total_bonds_map = {}
         for ind, bonds in enumerate(total_bonds):
             i, j = bonds
@@ -135,13 +143,16 @@ class rxn_networks_graph:
 
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
-        print(f'total_bonds: {total_bonds}')
-        print(f'atom_map: {atom_map}')
-        print(f'transformed_atom_map: {transformed_atom_map}')
+        
+        # print(f'total_bonds: {total_bonds}')
+        # print(f'atom_map: {atom_map}')
+        # print(f'transformed_atom_map: {transformed_atom_map}')
         
             
         # step 3: Get bond_mapping
         bond_mapping = []
+
+        # bond mapping for reactants
         bonds_in_reactants = [{} for _ in range(num_reactants)]
         for k, ind in enumerate(rxn['reactants']):
             mol_reactant = self.mol_entries[ind]
@@ -155,6 +166,7 @@ class rxn_networks_graph:
                 bonds_in_reactants[k][bond_ind] = total_bonds_map[tuple(sorted([reactants[k][i],reactants[k][j]]))]
         bond_mapping.append(bonds_in_reactants)
 
+        # bond mapping for products
         bonds_in_products = [{} for _ in range(num_products)]
         for k, ind in enumerate(rxn['products']):
             mol_reactant = self.mol_entries[ind]
@@ -195,7 +207,7 @@ class rxn_networks_graph:
         # print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
         # print(f"products_dgl_graphs: {products_dgl_graphs}")
 
-        # create has_bonds
+        # create has_bonds in mappings
         has_bonds = defaultdict(list)
         for _ in range(len(reactants)):
             has_bonds['reactants'].append(True)
@@ -224,12 +236,13 @@ class rxn_networks_graph:
         for nt, ft in features.items():
             rxn_graph.nodes[nt].data.update({'ft': ft})
 
+        # step 6: save a reaction graph and dG
         self.data[rxn_id] = {}
         self.data[rxn_id]['rxn_graph'] = str(rxn_graph)
         self.data[rxn_id]['value'] = str(torch.tensor([rxn['dG']]))
 
         
 
-    def save_data(self):
-        #self.f.write(json.dumps(self.data))
+    def write_data(self):
+        # write a json file
         dumpfn(self.data, self.report_file_path)
