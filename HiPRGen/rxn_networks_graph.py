@@ -166,6 +166,8 @@ class rxn_networks_graph:
 
         print(f'bonds_in_reactants: {bonds_in_reactants}')
         print(f'bonds_in_products: {bonds_in_products}')
+        print(f'reactans: {reactants}')
+        print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
         for d1, d2 in zip(bonds_in_reactants, reactants):
