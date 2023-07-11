@@ -135,6 +135,9 @@ class rxn_networks_graph:
 
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
+        print(f'total_bonds: {total_bonds}')
+        print(f'atom_map: {atom_map}')
+        print(f'transformed_atom_map: {transformed_atom_map}')
         assert len(total_bonds) <= len(total_atoms)
             
         # step 3: Get bond_mapping
