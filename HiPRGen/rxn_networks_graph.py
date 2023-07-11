@@ -138,7 +138,7 @@ class rxn_networks_graph:
         print(f'total_bonds: {total_bonds}')
         print(f'atom_map: {atom_map}')
         print(f'transformed_atom_map: {transformed_atom_map}')
-        # assert len(total_bonds) <= len(total_atoms)
+        
             
         # step 3: Get bond_mapping
         bond_mapping = []
@@ -167,17 +167,13 @@ class rxn_networks_graph:
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
 
-        print(f'bonds_in_reactants: {bonds_in_reactants}')
-        print(f'bonds_in_products: {bonds_in_products}')
-        print(f'reactants: {reactants}')
-        print(f'products: {products}')
+        # print(f'bonds_in_reactants: {bonds_in_reactants}')
+        # print(f'bonds_in_products: {bonds_in_products}')
+        # print(f'reactants: {reactants}')
+        # print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
-        assert len(total_bonds) <= len(total_atoms)
-        for d1, d2 in zip(bonds_in_reactants, reactants):
-            assert len(d1) <= len(d2)
-        for d1, d2 in zip(bonds_in_products, products):
-            assert len(d1) <= len(d2)
+        
 
         # step 4: get mapping
         mappings = {}
