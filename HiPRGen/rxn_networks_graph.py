@@ -177,6 +177,7 @@ class rxn_networks_graph:
         for nt, ft in features.items():
             rxn_graph.nodes[nt].data.update({'ft': ft})
 
+        self.data[rxn_id] = {}
         self.data[rxn_id]['rxn_graph'] = rxn_graph
         self.data[rxn_id]['value'] = torch.tensor([rxn['dG']])
 
