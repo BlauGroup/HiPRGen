@@ -16,10 +16,12 @@ class rxn_networks_graph:
         self,
         mol_entries,
         dgl_molecules_dict,
+        mol_wrapper_dict,
         report_file_path
     ):
         self.mol_entries = mol_entries
         self.dgl_mol_dict = dgl_molecules_dict
+        self.mol_wrapper_dict = mol_wrapper_dict
         self.report_file_path = report_file_path
         
         # initialize data

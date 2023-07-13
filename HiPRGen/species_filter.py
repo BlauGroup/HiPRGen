@@ -239,7 +239,7 @@ def species_filter(
         # print(dgl_molecule_graph)
         dgl_molecules.append(dgl_molecule_graph)
         dgl_molecules_dict[mol.entry_id] = mol.ind
-        mol_wrapper_dict[mol.ind] = mol_wrapper
+        mol_wrapper_dict[mol.entry_id] = mol_wrapper
 
     # Normalize DGL molecule graphs
     scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
@@ -247,8 +247,7 @@ def species_filter(
 
     # print(f"mean: {scaler._mean}")
     # print(f"std: {scaler._std}")
-    print(f'grapher.feature_name: {mol_wrapper.feature_name}')
-    print(f'grapher.feature_size: {mol_wrapper.feature_size}')
+    
 
     # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
     for key in dgl_molecules_dict.keys():

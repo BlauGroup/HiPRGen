@@ -141,6 +141,7 @@ def dispatcher(
     rxn_networks_g = rxn_networks_graph(
         mol_entries,
         dgl_molecules_dict,
+        mol_wrapper_dict,
         dispatcher_payload.bondnet_test
     )
     ####
