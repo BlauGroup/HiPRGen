@@ -255,6 +255,8 @@ class rxn_networks_graph:
         self.data[rxn_id] = {} # {'id': {}}
         self.data[rxn_id]['rxn_graph'] = str(rxn_graph)
         self.data[rxn_id]['value'] = str(torch.tensor([rxn['dG']]))
+        print('grab mol wrapper')
+        print([self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids])
         # self.data_extra_properties 
 
         # get_mean_std_feature_size_feature_name()
