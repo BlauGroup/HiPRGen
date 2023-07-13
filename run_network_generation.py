@@ -20,6 +20,7 @@ mol_entries_pickle_file = sys.argv[1]
 dispatcher_payload_json = sys.argv[2]
 worker_payload_json = sys.argv[3]
 dgl_molecules_dict_pickle_file = sys.argv[4]
+mol_wrapper_dict_pickle_file = sys.argv[5]
 
 with open(mol_entries_pickle_file, 'rb') as f:
     mol_entries = pickle.load(f)
@@ -27,10 +28,14 @@ with open(mol_entries_pickle_file, 'rb') as f:
 with open(dgl_molecules_dict_pickle_file, 'rb') as f:
     dgl_molecules_dict_pickle_file = pickle.load(f)
 
+with open(mol_wrapper_dict_pickle_file, 'rb') as f:
+    mol_wrapper_dict_pickle_file = pickle.load(f)
+
 if rank == DISPATCHER_RANK:
     dispatcher_payload = loadfn(dispatcher_payload_json)
     dispatcher(mol_entries,
                dgl_molecules_dict_pickle_file,
+               mol_wrapper_dict_pickle_file,
                dispatcher_payload
                )
 

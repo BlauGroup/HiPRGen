@@ -897,10 +897,11 @@ def euvl_bondnet_test():
         "electron_free_energy": 0.0,
     }
 
-    mol_entries, dgl_molecules_dict = species_filter(
+    mol_entries, dgl_molecules_dict  = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         dgl_mol_grphs_pickle_location = folder + "/dgl_mol_graphs.pickle",
+        mol_wrapper_pickle_location= folder + "/mol_wrapper.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
@@ -942,7 +943,8 @@ def euvl_bondnet_test():
             folder + "/mol_entries.pickle",
             folder + "/dispatcher_payload.json",
             folder + "/worker_payload.json",
-            folder + "/dgl_mol_graphs.pickle"
+            folder + "/dgl_mol_graphs.pickle",
+            folder + "/mol_wrapper.pickle"
         ]
     )
 

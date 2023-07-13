@@ -6,7 +6,10 @@ import copy
 from collections import defaultdict
 from monty.serialization import dumpfn
 from bondnet.data.utils import create_rxn_graph
-from bondnet.data.lmdb_dataset import LmdbDataset, CRNs2lmdb
+from lmdb_dataset import LmdbDataset, CRNs2lmdb
+import lmdb
+import tqdm
+import pickle
 
 class rxn_networks_graph:
     def __init__(
@@ -19,8 +22,17 @@ class rxn_networks_graph:
         self.dgl_mol_dict = dgl_molecules_dict
         self.report_file_path = report_file_path
         
-        # initialize JSON data
-        self.data = {}
+        # initialize data
+        self.data = {} 
+        # self.CRNs2lmdb = CRNs2lmdb(dtype = "float32",
+        #         feature_size = {'atom': 0, 'bond': 0, 'global': 0},
+        #         feature_name = {'atom': ['total degree', 'is in ring', 'total H', 'chemical symbol', 'ring size'], 
+        #                         'bond': ['metal bond', 'ring inclusion', 'ring size', 'bond_length'], 
+        #                         'global': ['num atoms', 'num bonds', 'molecule weight', 'charge one hot']},
+        #         mean = 0,
+        #         std = 0,
+        #         lmdb_dir = '/'.join(self.report_file_path.split[:-1]),
+        #         lmdb_name = self.report_file_path.split('/')[0])
 
     def create_rxn_networks_graph(self, rxn, rxn_id):
 
@@ -238,12 +250,62 @@ class rxn_networks_graph:
             rxn_graph.nodes[nt].data.update({'ft': ft})
 
         # step 6: save a reaction graph and dG
-        self.data[rxn_id] = {}
+        self.data[rxn_id] = {} # {'id': {}}
         self.data[rxn_id]['rxn_graph'] = str(rxn_graph)
         self.data[rxn_id]['value'] = str(torch.tensor([rxn['dG']]))
+        # self.data_extra_properties 
+
+        # get_mean_std_feature_size_feature_name()
 
         
 
-    def write_data(self):
+        # To do: update mean and std
+
+        # To do: feat_name feat_size should be updated
+
+        
+
+    def write_data(self): 
         # write a json file
-        dumpfn(self.data, self.report_file_path)
+        dumpfn(self.data, self.report_file_path) # replace dumfn function to write lmdb
+    
+
+    # def write_lmdb_data(self, mean, std, feature_size, feature_name):
+    #     current_length = lmdb.length
+    #     meta_keys = {
+    #             "dtype" : dtype,
+    #             "feature_size":CRNsDb.feature_size,
+    #             "feature_name":CRNsDb.feature_name
+    #             }
+        
+    #     db = lmdb.open(
+    #     self.report_file_path,
+    #     map_size=1099511627776 * 2,
+    #     subdir=False,
+    #     meminit=False,
+    #     map_async=True,
+    #     )
+        
+    #     #write indexed samples
+    #     idx = current_length + 1
+    #     for rxn_ind, d in self.data.items():
+    #         txn=db.begin(write=True)
+    #         txn.put(
+    #             f"{idx}".encode("ascii"),
+    #             pickle.dumps(d, protocol=-1),
+    #         )
+    #         idx += 1
+    #         txn.commit()
+
+    #     #update length  current_length + 100
+    #     txn=db.begin(write=True)
+    #     txn.put("length".encode("ascii"), pickle.dumps(len(self.data), protocol=-1))
+    #     txn.commit()
+
+    #     #update other global properties. mean, std, dtype, feature_size, feature_name
+    #     for key, value in meta_keys.items():
+    #         txn=db.begin(write=True)
+    #         txn.put(key.encode("ascii"), pickle.dumps(value, protocol=-1))
+    #         txn.commit()
+    #     db.sync()
+    #     db.close()

@@ -18,6 +18,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from bondnet.model.training_utils import get_grapher
 from bondnet.core.molwrapper import MoleculeWrapper
 from bondnet.data.transformers import HeteroGraphFeatureStandardScaler
+from lmdb_dataset import LmdbDataset, CRNs2lmdb
 
 """
 Phase 1: species filtering
@@ -87,6 +88,7 @@ def species_filter(
     dataset_entries,
     mol_entries_pickle_location,
     dgl_mol_grphs_pickle_location,
+    mol_wrapper_pickle_location,
     species_report,
     species_decision_tree,
     coordimer_weight,
@@ -224,10 +226,10 @@ def species_filter(
     dgl_molecules_dict = {}
     dgl_molecules = []
     extra_keys = []
+    mol_wrapper_dict= {}
     for mol in mol_entries:
         # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(extra_keys)
-        
 
         non_metal_bonds = [ tuple(sorted([i, j])) for i, j, _ in mol.covalent_graph.edges.data()]
         # print(f"non metal bonds: {non_metal_bonds}")
@@ -237,15 +239,16 @@ def species_filter(
         # print(dgl_molecule_graph)
         dgl_molecules.append(dgl_molecule_graph)
         dgl_molecules_dict[mol.entry_id] = mol.ind
+        mol_wrapper_dict[mol.ind] = mol_wrapper
 
     # Normalize DGL molecule graphs
     scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
     normalized_graphs = scaler(dgl_molecules)
 
-    print(f"mean: {scaler._mean}")
-    print(f"std: {scaler._std}")
-    print(f'grapher.feature_name: {molecule_grapher.feature_name}')
-    print(f'grapher.feature_size: {molecule_grapher.feature_size}')
+    # print(f"mean: {scaler._mean}")
+    # print(f"std: {scaler._std}")
+    print(f'grapher.feature_name: {mol_wrapper.feature_name}')
+    print(f'grapher.feature_size: {mol_wrapper.feature_size}')
 
     # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
     for key in dgl_molecules_dict.keys():
@@ -264,6 +267,9 @@ def species_filter(
 
     with open(dgl_mol_grphs_pickle_location, "wb") as f:
         pickle.dump(dgl_molecules_dict, f)
+    
+    with open(mol_wrapper_pickle_location, "wb") as f:
+        pickle.dump(mol_wrapper_dict, f)
 
     log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 
