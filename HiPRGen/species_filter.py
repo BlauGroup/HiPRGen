@@ -18,7 +18,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from bondnet.model.training_utils import get_grapher
 from bondnet.core.molwrapper import MoleculeWrapper
 from bondnet.data.transformers import HeteroGraphFeatureStandardScaler
-from lmdb_dataset import LmdbDataset, CRNs2lmdb
+
 
 """
 Phase 1: species filtering

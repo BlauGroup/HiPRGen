@@ -6,7 +6,7 @@ import copy
 from collections import defaultdict
 from monty.serialization import dumpfn
 from bondnet.data.utils import create_rxn_graph
-from lmdb_dataset import LmdbDataset, CRNs2lmdb
+from HiPRGen.lmdb_dataset import LmdbDataset, CRNs2lmdb
 import lmdb
 import tqdm
 import pickle

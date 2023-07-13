@@ -14,7 +14,7 @@ from HiPRGen.reaction_filter_payloads import (
 from HiPRGen.reaction_questions import (
     run_decision_tree
 )
-from bondnet.data.lmdb_dataset import LmdbDataset, CRNs2lmdb
+
 
 """
 Phases 3 & 4 run in parallel using MPI
@@ -107,6 +107,7 @@ def log_message(*args, **kwargs):
 def dispatcher(
         mol_entries,
         dgl_molecules_dict,
+        mol_wrapper_dict,
         dispatcher_payload
 ):
 
