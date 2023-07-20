@@ -7,6 +7,7 @@ from collections import defaultdict
 from monty.serialization import dumpfn
 from bondnet.data.utils import create_rxn_graph
 from HiPRGen.lmdb_dataset import LmdbDataset, CRNs2lmdb
+from bondnet.data.featurizer import AtomFeaturizerGraphGeneral, GlobalFeaturizerGraph, BondAsNodeGraphFeaturizerGeneral
 import lmdb
 import tqdm
 import pickle
@@ -255,8 +256,8 @@ class rxn_networks_graph:
         self.data[rxn_id] = {} # {'id': {}}
         self.data[rxn_id]['rxn_graph'] = str(rxn_graph)
         self.data[rxn_id]['value'] = str(torch.tensor([rxn['dG']]))
-        print('grab mol wrapper')
-        print([self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids])
+        # print('grab mol wrapper')
+        # print([self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids])
         # self.data_extra_properties 
 
         # get_mean_std_feature_size_feature_name()
@@ -266,6 +267,9 @@ class rxn_networks_graph:
         # To do: update mean and std
 
         # To do: feat_name feat_size should be updated
+        # Get the largest 
+        
+
 
         
 
