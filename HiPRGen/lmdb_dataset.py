@@ -169,7 +169,6 @@ def CRNs2lmdb( dtype,
 
     db_paths = os.path.join(lmdb_dir, "_tmp_data.%04d.lmdb")
     
-    
     meta_keys = {
                 "dtype" : dtype,
                 "feature_size": feature_size,
@@ -280,3 +279,50 @@ def merge_lmdbs(db_paths, out_path, output_file):
         
     env_out.sync()
     env_out.close()
+
+
+
+def write_to_lmdb(new_samples, current_length, lmdb_update, db_path):
+        
+    # #pid is idx of workers.
+    # db_path, samples, pid, meta_keys = mp_args
+    db = lmdb.open(
+        db_path,
+        map_size=1099511627776 * 2,
+        subdir=False,
+        meminit=False,
+        map_async=True,
+    )
+
+    pbar = tqdm(
+        total=len(new_samples),
+        desc=f"Adding new samples into LMDBs",
+    )
+    
+    #write indexed samples
+    idx = current_length + 1
+    for sample in new_samples:
+        txn=db.begin(write=True)
+        txn.put(
+            f"{idx}".encode("ascii"),
+            pickle.dumps(sample, protocol=-1),
+        )
+        idx += 1
+        pbar.update(1)
+        txn.commit()
+    
+    #write properties
+    total_length = current_length + len(new_samples)
+
+    txn=db.begin(write=True)
+    txn.put("length".encode("ascii"), pickle.dumps(len(total_length), protocol=-1))
+    txn.commit()
+    
+    #write mean, std, feature_size, feature_name. dtype etc.
+    for key, value in lmdb_update.items():
+        txn=db.begin(write=True)
+        txn.put(key.encode("ascii"), pickle.dumps(value, protocol=-1))
+        txn.commit()
+    
+    db.sync()
+    db.close()

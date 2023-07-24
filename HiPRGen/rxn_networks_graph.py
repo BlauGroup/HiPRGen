@@ -1,5 +1,5 @@
 import torch
-import json
+import math
 import os
 from pathlib import Path
 import copy
@@ -11,6 +11,7 @@ from bondnet.data.featurizer import AtomFeaturizerGraphGeneral, GlobalFeaturizer
 import lmdb
 import tqdm
 import pickle
+from lmdb_dataset import write_to_lmdb
 
 class rxn_networks_graph:
     def __init__(
@@ -254,66 +255,70 @@ class rxn_networks_graph:
 
         # step 6: save a reaction graph and dG
         self.data[rxn_id] = {} # {'id': {}}
-        self.data[rxn_id]['rxn_graph'] = str(rxn_graph)
-        self.data[rxn_id]['value'] = str(torch.tensor([rxn['dG']]))
-        # print('grab mol wrapper')
-        # print([self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids])
-        # self.data_extra_properties 
-
-        # get_mean_std_feature_size_feature_name()
-
+        self.data[rxn_id]['rxn_graph'] = rxn_graph
+        self.data[rxn_id]['value'] = rxn['dG']  #torch.tensor([rxn['dG']])
         
 
-        # To do: update mean and std
+        #### Write LMDB ####
+        #1 load lmdb
+        lmdb_path = "training.lmdb"
+        current_lmdb = LmdbDataset({"src": lmdb_path})
 
-        # To do: feat_name feat_size should be updated
-        # Get the largest 
+        #2 define a dict used to update lmdb. can be initialized by zero
+        lmdb_update = {
+        "mean" : current_lmdb.mean,
+        "std":   current_lmdb.std,
+        "feature_size": current_lmdb.feature_size,
+        "feature_name": current_lmdb.feature_name,
+        "dtype": current_lmdb.dtype
+        }
+
+        #3 update mean, std, feature_size, feature_name, dtype to dict_update
+        lmdb_update["dtype"] = "float32"
+        #3.1 update mean
+        prev_mean = lmdb_update["mean"]
+        n = current_lmdb.get("length") + 1
+        current_y = rxn['dG']
+        updated_mean = (current_y + (n-1)*prev_mean)/n
+        lmdb_update["mean"] = updated_mean
+
+        #3.2 update std
+        prev_variance = (lmdb_update["std"])**2
+        updated_variance = (n-1)/(n)*prev_variance + (n-1)/n*(prev_mean-updated_mean)**2 + (current_y - updated_mean)**2/n
+        lmdb_update["std"] = math.sqrt(updated_variance)
+
+        #3.3 update feature_size and feature_name
         
+        all_mol_wrappers = [self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids].extend([self.mol_wrapper_dict[entry_i] for entry_i in products_entry_ids])
 
+        for mol_wrapper in all_mol_wrappers:
+            atom_featurizer = AtomFeaturizerGraphGeneral()
+            bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
+            global_featurizer = GlobalFeaturizerGraph()
+            atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
+            bond_temp = bond_featurizer(mol_wrapper)
+            global_temp = global_featurizer(mol_wrapper)
+            if atom_temp._feature_size > lmdb_update["feature_size"]['atom']:
+                lmdb_update['feature_size']['atom'] = atom_temp._feature_size
+                lmdb_update['feature_name']['atom'] = atom_temp._feature_name
+
+            if bond_temp._feature_size > lmdb_update["feature_size"]['bond']:
+                lmdb_update['feature_size']['bond'] = bond_temp._feature_size
+                lmdb_update['feature_name']['bond'] = bond_temp._feature_name
+
+            if global_temp._feature_size > lmdb_update["feature_size"]['global']:
+                lmdb_update['feature_size']['global'] = global_temp._feature_size
+                lmdb_update['feature_name']['global'] = global_temp._feature_name
+
+        
+        #4 write new entries and new lmdb_update
+        current_length = current_lmdb.get("length")
+        #self.data is new samples, current_length is number of smaples before adding new samples
+        #lmdb_update is global features to be updated, lmdb_path is training data to be updated
+        write_to_lmdb(self.data, current_length, lmdb_update, lmdb_path)
 
         
 
     def write_data(self): 
         # write a json file
-        dumpfn(self.data, self.report_file_path) # replace dumfn function to write lmdb
-    
-
-    # def write_lmdb_data(self, mean, std, feature_size, feature_name):
-    #     current_length = lmdb.length
-    #     meta_keys = {
-    #             "dtype" : dtype,
-    #             "feature_size":CRNsDb.feature_size,
-    #             "feature_name":CRNsDb.feature_name
-    #             }
-        
-    #     db = lmdb.open(
-    #     self.report_file_path,
-    #     map_size=1099511627776 * 2,
-    #     subdir=False,
-    #     meminit=False,
-    #     map_async=True,
-    #     )
-        
-    #     #write indexed samples
-    #     idx = current_length + 1
-    #     for rxn_ind, d in self.data.items():
-    #         txn=db.begin(write=True)
-    #         txn.put(
-    #             f"{idx}".encode("ascii"),
-    #             pickle.dumps(d, protocol=-1),
-    #         )
-    #         idx += 1
-    #         txn.commit()
-
-    #     #update length  current_length + 100
-    #     txn=db.begin(write=True)
-    #     txn.put("length".encode("ascii"), pickle.dumps(len(self.data), protocol=-1))
-    #     txn.commit()
-
-    #     #update other global properties. mean, std, dtype, feature_size, feature_name
-    #     for key, value in meta_keys.items():
-    #         txn=db.begin(write=True)
-    #         txn.put(key.encode("ascii"), pickle.dumps(value, protocol=-1))
-    #         txn.commit()
-    #     db.sync()
-    #     db.close()
+        dumpfn(self.data, self.report_file_path)
