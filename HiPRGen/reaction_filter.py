@@ -265,7 +265,7 @@ def dispatcher(
          reaction_index)
     )
 
-    rxn_networks_g.write_data()
+    
     report_generator.finished()
     rn_con.commit()
     bucket_con.close()
