@@ -289,7 +289,7 @@ class rxn_networks_graph:
         # lmdb_update["dtype"] = "float32"
         #3.1 update mean
         prev_mean = lmdb_update["mean"]
-        n = current_lmdb.env.begin().get("length") + 1
+        n = current_lmdb.begin().get("length") + 1
         current_y = rxn['dG']
         updated_mean = (current_y + (n-1)*prev_mean)/n
         lmdb_update["mean"] = updated_mean
@@ -324,7 +324,7 @@ class rxn_networks_graph:
 
         
         #4 write new entries and new lmdb_update
-        current_length = current_lmdb.env.begin().get("length")
+        current_length = current_lmdb.begin().get("length")
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
         write_to_lmdb(self.data, current_length, lmdb_update, lmdb_path)
