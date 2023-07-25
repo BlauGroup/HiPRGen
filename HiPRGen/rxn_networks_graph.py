@@ -266,7 +266,7 @@ class rxn_networks_graph:
             "feature_name": current_lmdb.feature_name,
             "dtype": "float32"
             }
-            current_length = current_lmdb.get("length")
+            current_length = current_lmdb.num_samples
         else:
             current_lmdb = lmdb.open(
                                     lmdb_path,
