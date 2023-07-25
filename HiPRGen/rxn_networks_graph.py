@@ -303,8 +303,9 @@ class rxn_networks_graph:
         lmdb_update["std"] = math.sqrt(updated_variance)
 
         #3.3 update feature_size and feature_name
-        
-        all_mol_wrappers = [self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids].extend([self.mol_wrapper_dict[entry_i] for entry_i in products_entry_ids])
+        all_mol_wrappers = [self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids]
+        products_mol_wrapper = [self.mol_wrapper_dict[entry_i] for entry_i in products_entry_ids]
+        all_mol_wrappers.extend(products_mol_wrapper)
         print(f"all_mol_wrappers: {all_mol_wrappers}")
         for mol_wrapper in all_mol_wrappers:
             atom_featurizer = AtomFeaturizerGraphGeneral()
