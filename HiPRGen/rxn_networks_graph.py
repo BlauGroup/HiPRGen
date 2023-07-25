@@ -311,23 +311,22 @@ class rxn_networks_graph:
             atom_featurizer = AtomFeaturizerGraphGeneral()
             bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
             global_featurizer = GlobalFeaturizerGraph()
-            atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
-            bond_temp = bond_featurizer(mol_wrapper)
-            global_temp = global_featurizer(mol_wrapper)
-            print(f"atom_temp: {atom_temp}")
-            print(f"bond_temp: {bond_temp}")
-            print(f"global_temp: {global_temp}")
-            if atom_temp._feature_size > lmdb_update["feature_size"]['atom']:
-                lmdb_update['feature_size']['atom'] = atom_temp._feature_size
-                lmdb_update['feature_name']['atom'] = atom_temp._feature_name
+            atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
+            bond_featurizer(mol_wrapper)
+            global_featurizer(mol_wrapper)
+            print(f"atom_featurizer: {atom_featurizer}")
 
-            if bond_temp._feature_size > lmdb_update["feature_size"]['bond']:
-                lmdb_update['feature_size']['bond'] = bond_temp._feature_size
-                lmdb_update['feature_name']['bond'] = bond_temp._feature_name
+            if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
+                lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
+                lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
 
-            if global_temp._feature_size > lmdb_update["feature_size"]['global']:
-                lmdb_update['feature_size']['global'] = global_temp._feature_size
-                lmdb_update['feature_name']['global'] = global_temp._feature_name
+            if bond_featurizer._feature_size > lmdb_update["feature_size"]['bond']:
+                lmdb_update['feature_size']['bond'] = bond_featurizer._feature_size
+                lmdb_update['feature_name']['bond'] = bond_featurizer._feature_name
+
+            if global_featurizer._feature_size > lmdb_update["feature_size"]['global']:
+                lmdb_update['feature_size']['global'] = global_featurizer._feature_size
+                lmdb_update['feature_name']['global'] = global_featurizer._feature_name
 
         
         #4 write new entries and new lmdb_update
