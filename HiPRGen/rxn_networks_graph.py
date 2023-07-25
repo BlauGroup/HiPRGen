@@ -28,15 +28,7 @@ class rxn_networks_graph:
         
         # initialize data
         self.data = {} 
-        # self.CRNs2lmdb = CRNs2lmdb(dtype = "float32",
-        #         feature_size = {'atom': 0, 'bond': 0, 'global': 0},
-        #         feature_name = {'atom': ['total degree', 'is in ring', 'total H', 'chemical symbol', 'ring size'], 
-        #                         'bond': ['metal bond', 'ring inclusion', 'ring size', 'bond_length'], 
-        #                         'global': ['num atoms', 'num bonds', 'molecule weight', 'charge one hot']},
-        #         mean = 0,
-        #         std = 0,
-        #         lmdb_dir = '/'.join(self.report_file_path.split[:-1]),
-        #         lmdb_name = self.report_file_path.split('/')[0])
+        
 
     def create_rxn_networks_graph(self, rxn, rxn_id):
 
@@ -267,6 +259,13 @@ class rxn_networks_graph:
         if lmdb_file.is_file():
             # file exists
             current_lmdb = LmdbDataset({'src': lmdb_path})
+            lmdb_update = {
+            "mean" : current_lmdb.mean,
+            "std":   current_lmdb.std,
+            "feature_size": current_lmdb.feature_size,
+            "feature_name": current_lmdb.feature_name,
+            "dtype": "float32"
+            }
         else:
             current_lmdb = lmdb.open(
                                     lmdb_path,
@@ -276,7 +275,7 @@ class rxn_networks_graph:
                                     map_async=True,
             
                                     )
-            #2 define a dict used to update lmdb. can be initialized by zero
+            #2 initialize dict
             lmdb_update = {
             "mean" : 0,
             "std":   0,
