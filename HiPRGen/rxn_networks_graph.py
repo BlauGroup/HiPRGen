@@ -262,11 +262,11 @@ class rxn_networks_graph:
         #### Write LMDB ####
         #1 load lmdb
         
-
-        lmdb_path = Path("training.lmdb")
-        if lmdb_path.is_file():
+        lmdb_path = "training.lmdb"
+        lmdb_file = Path(lmdb_path)
+        if lmdb_file.is_file():
             # file exists
-            current_lmdb = LmdbDataset()
+            current_lmdb = LmdbDataset({'src': lmdb_path})
         else:
             current_lmdb = lmdb.open(
                                     lmdb_path,
