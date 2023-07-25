@@ -261,9 +261,20 @@ class rxn_networks_graph:
 
         #### Write LMDB ####
         #1 load lmdb
-        lmdb_dir = '/'.join(self.report_file_path.split[:-1])
-        lmdb_path = lmdb_dir +  "/training.lmdb"
-        current_lmdb = LmdbDataset({"src": lmdb_path})
+        
+
+        lmdb_path = Path("training.lmdb")
+        if lmdb_path.is_file():
+            # file exists
+            current_lmdb = LmdbDataset()
+        else:
+            current_lmdb = lmdb.open(
+                                    lmdb_path,
+                                    map_size=1099511627776 * 2,
+                                    subdir=False,
+                                    meminit=False,
+                                    map_async=True,
+                                    )
 
         #2 define a dict used to update lmdb. can be initialized by zero
         if current_lmdb.get("length") < 1:
