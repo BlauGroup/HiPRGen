@@ -306,7 +306,7 @@ class rxn_networks_graph:
         all_mol_wrappers = [self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids]
         products_mol_wrapper = [self.mol_wrapper_dict[entry_i] for entry_i in products_entry_ids]
         all_mol_wrappers.extend(products_mol_wrapper)
-        print(f"all_mol_wrappers: {all_mol_wrappers}")
+        
         for mol_wrapper in all_mol_wrappers:
             atom_featurizer = AtomFeaturizerGraphGeneral()
             bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
@@ -314,6 +314,9 @@ class rxn_networks_graph:
             atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
             bond_temp = bond_featurizer(mol_wrapper)
             global_temp = global_featurizer(mol_wrapper)
+            print(f"atom_temp: {atom_temp}")
+            print(f"bond_temp: {bond_temp}")
+            print(f"global_temp: {global_temp}")
             if atom_temp._feature_size > lmdb_update["feature_size"]['atom']:
                 lmdb_update['feature_size']['atom'] = atom_temp._feature_size
                 lmdb_update['feature_name']['atom'] = atom_temp._feature_name
