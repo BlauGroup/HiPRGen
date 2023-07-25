@@ -11,7 +11,7 @@ from bondnet.data.featurizer import AtomFeaturizerGraphGeneral, GlobalFeaturizer
 import lmdb
 import tqdm
 import pickle
-from lmdb_dataset import write_to_lmdb
+from HiPRGen.lmdb_dataset import write_to_lmdb
 
 class rxn_networks_graph:
     def __init__(
@@ -261,20 +261,21 @@ class rxn_networks_graph:
 
         #### Write LMDB ####
         #1 load lmdb
-        lmdb_path = "training.lmdb"
+        lmdb_path = self.report_file_path + "/training.lmdb"
         current_lmdb = LmdbDataset({"src": lmdb_path})
 
         #2 define a dict used to update lmdb. can be initialized by zero
-        lmdb_update = {
-        "mean" : current_lmdb.mean,
-        "std":   current_lmdb.std,
-        "feature_size": current_lmdb.feature_size,
-        "feature_name": current_lmdb.feature_name,
-        "dtype": current_lmdb.dtype
-        }
+        if current_lmdb.get("length") < 1:
+            lmdb_update = {
+            "mean" : 0,
+            "std":   0,
+            "feature_size": {'atom': 0, 'bond': 0, 'global': 0},
+            "feature_name": {'atom': [], 'bond': [], 'global': []},
+            "dtype": "float32"
+            }
 
         #3 update mean, std, feature_size, feature_name, dtype to dict_update
-        lmdb_update["dtype"] = "float32"
+        # lmdb_update["dtype"] = "float32"
         #3.1 update mean
         prev_mean = lmdb_update["mean"]
         n = current_lmdb.get("length") + 1
