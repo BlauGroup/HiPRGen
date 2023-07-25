@@ -301,6 +301,7 @@ def write_to_lmdb(new_samples, current_length, lmdb_update, db_path):
     
     #write indexed samples
     idx = current_length + 1
+    print(f"new samples: {new_samples}")
     for sample in new_samples:
         txn=db.begin(write=True)
         txn.put(
@@ -312,10 +313,11 @@ def write_to_lmdb(new_samples, current_length, lmdb_update, db_path):
         txn.commit()
     
     #write properties
+    
     total_length = current_length + len(new_samples)
 
     txn=db.begin(write=True)
-    txn.put("length".encode("ascii"), pickle.dumps(len(total_length), protocol=-1))
+    txn.put("length".encode("ascii"), pickle.dumps(total_length, protocol=-1))
     txn.commit()
     
     #write mean, std, feature_size, feature_name. dtype etc.
