@@ -266,6 +266,7 @@ class rxn_networks_graph:
             "feature_name": current_lmdb.feature_name,
             "dtype": "float32"
             }
+            current_length = current_lmdb.get("length")
         else:
             current_lmdb = lmdb.open(
                                     lmdb_path,
@@ -283,14 +284,15 @@ class rxn_networks_graph:
             "feature_name": {'atom': [], 'bond': [], 'global': []},
             "dtype": "float32"
             }
+            current_length = 0
 
      
         #3 update mean, std, feature_size, feature_name, dtype to dict_update
         # lmdb_update["dtype"] = "float32"
         #3.1 update mean
         prev_mean = lmdb_update["mean"]
-        print(current_lmdb.begin().get("length".encode("ascii")))
-        n = current_lmdb.begin().get("length".encode("ascii")) + 1
+        print(f"current_length: {current_length}")
+        n = current_length + 1
         current_y = rxn['dG']
         updated_mean = (current_y + (n-1)*prev_mean)/n
         lmdb_update["mean"] = updated_mean
