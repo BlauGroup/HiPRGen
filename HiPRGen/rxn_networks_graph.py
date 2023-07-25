@@ -305,7 +305,7 @@ class rxn_networks_graph:
         #3.3 update feature_size and feature_name
         
         all_mol_wrappers = [self.mol_wrapper_dict[entry_i] for entry_i in reactants_entry_ids].extend([self.mol_wrapper_dict[entry_i] for entry_i in products_entry_ids])
-
+        print(f"all_mol_wrappers: {all_mol_wrappers}")
         for mol_wrapper in all_mol_wrappers:
             atom_featurizer = AtomFeaturizerGraphGeneral()
             bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
