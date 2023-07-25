@@ -291,7 +291,7 @@ class rxn_networks_graph:
         # lmdb_update["dtype"] = "float32"
         #3.1 update mean
         prev_mean = lmdb_update["mean"]
-        print(f"current_length: {current_length}")
+        #print(f"current_length: {current_length}")
         n = current_length + 1
         current_y = rxn['dG']
         updated_mean = (current_y + (n-1)*prev_mean)/n
