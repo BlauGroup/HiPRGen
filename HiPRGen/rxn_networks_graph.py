@@ -274,10 +274,9 @@ class rxn_networks_graph:
                                     subdir=False,
                                     meminit=False,
                                     map_async=True,
+            
                                     )
-
-        #2 define a dict used to update lmdb. can be initialized by zero
-        if current_lmdb.get("length") < 1:
+            #2 define a dict used to update lmdb. can be initialized by zero
             lmdb_update = {
             "mean" : 0,
             "std":   0,
@@ -286,6 +285,7 @@ class rxn_networks_graph:
             "dtype": "float32"
             }
 
+     
         #3 update mean, std, feature_size, feature_name, dtype to dict_update
         # lmdb_update["dtype"] = "float32"
         #3.1 update mean
