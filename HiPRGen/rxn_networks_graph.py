@@ -314,7 +314,7 @@ class rxn_networks_graph:
             atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
             bond_featurizer(mol_wrapper)
             global_featurizer(mol_wrapper)
-            print(f"atom_featurizer: {atom_featurizer}")
+            # print(f"atom_featurizer: {atom_featurizer}")
 
             if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
                 lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
