@@ -261,7 +261,7 @@ class rxn_networks_graph:
 
         #### Write LMDB ####
         #1 load lmdb
-        lmdb_path = self.report_file_path + "/training.lmdb"
+        lmdb_path = "training.lmdb"
         current_lmdb = LmdbDataset({"src": lmdb_path})
 
         #2 define a dict used to update lmdb. can be initialized by zero
