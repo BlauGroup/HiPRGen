@@ -249,6 +249,9 @@ class rxn_networks_graph:
         self.data[rxn_id] = {} # {'id': {}}
         self.data[rxn_id]['rxn_graph'] = rxn_graph
         self.data[rxn_id]['value'] = rxn['dG']  #torch.tensor([rxn['dG']])
+        self.data[rxn_id]['reaction_features'] = {'global': torch.tensor([]),
+                                                  'atom': torch.tensor([]),
+                                                'bond': torch.tensor([]) }
         
 
         #### Write LMDB ####
@@ -311,10 +314,12 @@ class rxn_networks_graph:
             atom_featurizer = AtomFeaturizerGraphGeneral()
             bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
             global_featurizer = GlobalFeaturizerGraph()
-            atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
-            bond_featurizer(mol_wrapper)
-            global_featurizer(mol_wrapper)
-            # print(f"atom_featurizer: {atom_featurizer}")
+            atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
+            bond_temp = bond_featurizer(mol_wrapper)
+            global_temp = global_featurizer(mol_wrapper)
+            self.data[rxn_id]['reaction_features']['atom'] = atom_temp
+            self.data[rxn_id]['reaction_features']['bond'] = bond_temp
+            self.data[rxn_id]['reaction_features']['global'] = global_temp
 
             if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
                 lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size

@@ -300,7 +300,7 @@ def write_to_lmdb(new_samples, current_length, lmdb_update, db_path):
     )
     
     #write indexed samples
-    idx = current_length + 1
+    idx = current_length
     for sample in new_samples:
         txn=db.begin(write=True)
         txn.put(
