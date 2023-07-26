@@ -257,7 +257,7 @@ class rxn_networks_graph:
         #### Write LMDB ####
         #1 load lmdb
         
-        lmdb_path = "training.lmdb"
+        lmdb_path = "training_trial2.lmdb"
         lmdb_file = Path(lmdb_path)
         if lmdb_file.is_file():
             # file exists
@@ -317,9 +317,9 @@ class rxn_networks_graph:
             atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
             bond_temp = bond_featurizer(mol_wrapper)
             global_temp = global_featurizer(mol_wrapper)
-            self.data[rxn_id]['reaction_features']['atom'] = atom_temp
-            self.data[rxn_id]['reaction_features']['bond'] = bond_temp
-            self.data[rxn_id]['reaction_features']['global'] = global_temp
+            self.data[rxn_id]['reaction_features']['atom'] = atom_temp[0]
+            self.data[rxn_id]['reaction_features']['bond'] = bond_temp[0]
+            self.data[rxn_id]['reaction_features']['global'] = global_temp[0]
 
             if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
                 lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
@@ -339,7 +339,7 @@ class rxn_networks_graph:
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
         print(f"data: {self.data[rxn_id]}")
-        write_to_lmdb([self.data[rxn_id]], current_length, lmdb_update, lmdb_path)
+        write_to_lmdb([(self.data[rxn_id]['rxn_graph']), self.data[rxn_id]['reaction_features'], {'value': rxn['dG']}], current_length, lmdb_update, lmdb_path)
 
         
 
