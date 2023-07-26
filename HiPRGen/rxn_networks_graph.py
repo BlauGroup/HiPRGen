@@ -338,8 +338,10 @@ class rxn_networks_graph:
         #current_length = current_lmdb.begin().get("length".encode("ascii"))
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
-        print(f"data: {self.data[rxn_id]}")
-        write_to_lmdb([(self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], {'value': rxn['dG']})], current_length, lmdb_update, lmdb_path)
+        
+        data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], {'value': rxn['dG']})
+        print(f"data: {data}")
+        write_to_lmdb([data], current_length, lmdb_update, lmdb_path)
 
         
 
