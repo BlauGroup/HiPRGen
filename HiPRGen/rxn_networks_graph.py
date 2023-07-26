@@ -339,7 +339,7 @@ class rxn_networks_graph:
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
         
-        data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], {'value': rxn['dG']})
+        data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], {'value': torch.tensor([rxn['dG']])})
         print(f"data: {data}")
         write_to_lmdb([data], current_length, lmdb_update, lmdb_path)
 
