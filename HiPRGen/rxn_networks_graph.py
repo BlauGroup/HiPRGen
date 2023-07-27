@@ -310,15 +310,53 @@ class rxn_networks_graph:
         # If feature size of current reaction is larger, then update it
         if atom_feature_size > lmdb_update["feature_size"]['atom']:
             lmdb_update['feature_size']['atom'] = atom_feature_size
-            #lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
+
+        #     # get species
+        #     allowed_ring_size = [3, 4, 5, 6, 7]
+        #     self._feature_name = (
+        #     ["total degree", "is in ring", "total H"]
+        #     + self.selected_keys
+        #     + ["chemical symbol"] * len(species)
+        #     + ["ring size"] * len(allowed_ring_size)
+        # )
+        #     self.mol_entries[rxn['reactants'][0]]
+        #     lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
 
         if bond_feature_size > lmdb_update["feature_size"]['bond']:
             lmdb_update['feature_size']['bond'] = bond_feature_size
-            #lmdb_update['feature_name']['bond'] = bond_featurizer._feature_name
+            # lmdb_update['feature_name']['bond'] = bond_featurizer._feature_name
 
         if global_feature_size > lmdb_update["feature_size"]['global']:
             lmdb_update['feature_size']['global'] = global_feature_size
-            #lmdb_update['feature_name']['global'] = global_featurizer._feature_name
+            # lmdb_update['feature_name']['global'] = global_featurizer._feature_name
+
+        
+        
+        # for mol_wrapper in all_mol_wrappers:
+        #     atom_featurizer = AtomFeaturizerGraphGeneral()
+        #     bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
+        #     global_featurizer = GlobalFeaturizerGraph()
+        #     atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
+        #     bond_temp = bond_featurizer(mol_wrapper)
+        #     global_temp = global_featurizer(mol_wrapper)
+
+        #     # save reaction features
+        #     self.data[rxn_id]['reaction_features']['atom'] = atom_temp[0]['feat']
+        #     self.data[rxn_id]['reaction_features']['bond'] = bond_temp[0]['feat']
+        #     self.data[rxn_id]['reaction_features']['global'] = global_temp[0]['feat']
+
+        #     # If feature size of current reaction is larger, then update it
+        #     if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
+        #         lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
+        #         lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
+
+        #     if bond_featurizer._feature_size > lmdb_update["feature_size"]['bond']:
+        #         lmdb_update['feature_size']['bond'] = bond_featurizer._feature_size
+        #         lmdb_update['feature_name']['bond'] = bond_featurizer._feature_name
+
+        #     if global_featurizer._feature_size > lmdb_update["feature_size"]['global']:
+        #         lmdb_update['feature_size']['global'] = global_featurizer._feature_size
+        #         lmdb_update['feature_name']['global'] = global_featurizer._feature_name
 
         
         #4 write new entries and new lmdb_update
