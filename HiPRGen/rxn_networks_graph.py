@@ -257,7 +257,7 @@ class rxn_networks_graph:
         #### Write LMDB ####
         #1 load lmdb
         
-        lmdb_path = "training_trial2.lmdb"
+        lmdb_path = "training_trial3.lmdb"
         lmdb_file = Path(lmdb_path)
         if lmdb_file.is_file():
             # file exists
