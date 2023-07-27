@@ -290,8 +290,7 @@ class rxn_networks_graph:
             current_length = 0
 
      
-        #3 update mean, std, feature_size, feature_name, dtype to dict_update
-        # lmdb_update["dtype"] = "float32"
+        #3 update mean, std, feature_size, feature_name to dict_update
         #3.1 update mean
         prev_mean = lmdb_update["mean"]
         #print(f"current_length: {current_length}")
@@ -317,10 +316,13 @@ class rxn_networks_graph:
             atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
             bond_temp = bond_featurizer(mol_wrapper)
             global_temp = global_featurizer(mol_wrapper)
+
+            # save reaction features
             self.data[rxn_id]['reaction_features']['atom'] = atom_temp[0]['feat']
             self.data[rxn_id]['reaction_features']['bond'] = bond_temp[0]['feat']
             self.data[rxn_id]['reaction_features']['global'] = global_temp[0]['feat']
 
+            # If feature size of current reaction is larger, then update it
             if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
                 lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
                 lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
@@ -335,7 +337,6 @@ class rxn_networks_graph:
 
         
         #4 write new entries and new lmdb_update
-        #current_length = current_lmdb.begin().get("length".encode("ascii"))
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
         labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': None, 'id': rxn_id, "reaction_types": None}

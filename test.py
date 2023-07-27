@@ -4,6 +4,7 @@ import subprocess
 import sqlite3
 import pickle
 import copy
+import time
 
 import matplotlib.colors as mcolors
 from HiPRGen.network_loader import NetworkLoader
@@ -878,6 +879,7 @@ def euvl_phase2_test():
 
 def euvl_bondnet_test():
 
+    start_time = time.time()
     phase1_folder = "./euvl_phase1_test"
     folder = "./scratch/euvl_phase2_test"
     subprocess.run(["mkdir", folder])
@@ -950,6 +952,8 @@ def euvl_bondnet_test():
 
 
     tests_passed = True
+    execution_time = time.time() - start_time
+    print(f"Time taken: {execution_time}")
     # Check the length
     # print("Number of species:", network_loader.number_of_species)
     # if network_loader.number_of_species == 103:
