@@ -946,7 +946,7 @@ def euvl_bondnet_test():
             folder + "/dispatcher_payload.json",
             folder + "/worker_payload.json",
             folder + "/dgl_mol_graphs.pickle",
-            folder + "/mol_wrapper.pickle"
+            folder + "/grapher_features.pickle"
         ]
     )
 
