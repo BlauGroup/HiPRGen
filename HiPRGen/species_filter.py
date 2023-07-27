@@ -236,8 +236,8 @@ def species_filter(
         mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
         feature = {'charge': mol.charge}
         dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
-        print(dgl_molecule_graph.atom_featurizer['_feature_name'])
-        print(dgl_molecule_graph.atom_featurizer['_feature_size'])
+        print(molecule_grapher.atom_featurizer['_feature_name'])
+        print(molecule_grapher.atom_featurizer['_feature_size'])
         dgl_molecules.append(dgl_molecule_graph)
         dgl_molecules_dict[mol.entry_id] = mol.ind
         mol_wrapper_dict[mol.entry_id] = mol_wrapper
