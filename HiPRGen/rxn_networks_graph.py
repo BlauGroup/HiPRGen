@@ -317,9 +317,9 @@ class rxn_networks_graph:
             atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
             bond_temp = bond_featurizer(mol_wrapper)
             global_temp = global_featurizer(mol_wrapper)
-            self.data[rxn_id]['reaction_features']['atom'] = atom_temp[0]
-            self.data[rxn_id]['reaction_features']['bond'] = bond_temp[0]
-            self.data[rxn_id]['reaction_features']['global'] = global_temp[0]
+            self.data[rxn_id]['reaction_features']['atom'] = atom_temp[0]['feat']
+            self.data[rxn_id]['reaction_features']['bond'] = bond_temp[0]['feat']
+            self.data[rxn_id]['reaction_features']['global'] = global_temp[0]['feat']
 
             if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
                 lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
