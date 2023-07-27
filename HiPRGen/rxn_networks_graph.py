@@ -238,8 +238,8 @@ class rxn_networks_graph:
                                                 reverse=False,
                                             )
 
-        #print(f"rxn_graph: {rxn_graph}")
-        # print(f"features: {features}")
+        print(f"rxn_graph: {rxn_graph}")
+        print(f"features: {features}")
 
         # step 5: update reaction features to the reaction graph
         for nt, ft in features.items():
