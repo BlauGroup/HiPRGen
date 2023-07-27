@@ -903,7 +903,7 @@ def euvl_bondnet_test():
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         dgl_mol_grphs_pickle_location = folder + "/dgl_mol_graphs.pickle",
-        mol_wrapper_pickle_location= folder + "/mol_wrapper.pickle",
+        grapher_features_pickle_location= folder + "/grapher_features.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),

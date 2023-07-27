@@ -88,7 +88,7 @@ def species_filter(
     dataset_entries,
     mol_entries_pickle_location,
     dgl_mol_grphs_pickle_location,
-    mol_wrapper_pickle_location,
+    grapher_features_pickle_location,
     species_report,
     species_decision_tree,
     coordimer_weight,
@@ -226,7 +226,7 @@ def species_filter(
     dgl_molecules_dict = {}
     dgl_molecules = []
     extra_keys = []
-    mol_wrapper_dict= {}
+    
     for mol in mol_entries:
         # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(extra_keys)
@@ -236,11 +236,10 @@ def species_filter(
         mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
         feature = {'charge': mol.charge}
         dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
-        print(f"grapher feature name: {molecule_grapher.feature_name}")
-        print(f"grapher feature size: {molecule_grapher.feature_size}")
         dgl_molecules.append(dgl_molecule_graph)
         dgl_molecules_dict[mol.entry_id] = mol.ind
-        mol_wrapper_dict[mol.entry_id] = mol_wrapper
+    grapher_features= {'feature_size':molecule_grapher.feature_size, 'feature_name': molecule_grapher.feature_name}
+    #mol_wrapper_dict[mol.entry_id] = mol_wrapper
 
     # Normalize DGL molecule graphs
     scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
@@ -268,8 +267,8 @@ def species_filter(
     with open(dgl_mol_grphs_pickle_location, "wb") as f:
         pickle.dump(dgl_molecules_dict, f)
     
-    with open(mol_wrapper_pickle_location, "wb") as f:
-        pickle.dump(mol_wrapper_dict, f)
+    with open(grapher_features_pickle_location, "wb") as f:
+        pickle.dump(grapher_features, f)
 
     log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 

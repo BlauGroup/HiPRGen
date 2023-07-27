@@ -18,12 +18,12 @@ class rxn_networks_graph:
         self,
         mol_entries,
         dgl_molecules_dict,
-        mol_wrapper_dict,
+        grapher_features,
         report_file_path
     ):
         self.mol_entries = mol_entries
         self.dgl_mol_dict = dgl_molecules_dict
-        self.mol_wrapper_dict = mol_wrapper_dict
+        self.grapher_features = grapher_features
         self.report_file_path = report_file_path
         
         # initialize data
@@ -263,8 +263,8 @@ class rxn_networks_graph:
             lmdb_update = {
             "mean" : current_lmdb.mean,
             "std":   current_lmdb.std,
-            "feature_size": current_lmdb.feature_size,
-            "feature_name": current_lmdb.feature_name,
+            "feature_size": self.grapher_features['feature_size'],
+            "feature_name": self.grapher_features['feature_name'],
             "dtype": "float32"
             }
             current_length = current_lmdb.num_samples
@@ -281,8 +281,8 @@ class rxn_networks_graph:
             lmdb_update = {
             "mean" : 0,
             "std":   0,
-            "feature_size": {'atom': 0, 'bond': 0, 'global': 0},
-            "feature_name": {'atom': [], 'bond': [], 'global': []},
+            "feature_size": self.grapher_features['feature_size'],
+            "feature_name": self.grapher_features['feature_name'],
             "dtype": "float32"
             }
             current_length = 0
@@ -303,34 +303,11 @@ class rxn_networks_graph:
         lmdb_update["std"] = math.sqrt(updated_variance)
 
         #3.3 update feature_size and feature_name
-        atom_feature_size = len(features['atom'][0])
-        bond_feature_size = len(features['bond'][0])
-        global_feature_size = len(features['global'][0])
+        # atom_feature_size = len(features['atom'][0])
+        # bond_feature_size = len(features['bond'][0])
+        # global_feature_size = len(features['global'][0])
 
-        # If feature size of current reaction is larger, then update it
-        if atom_feature_size > lmdb_update["feature_size"]['atom']:
-            lmdb_update['feature_size']['atom'] = atom_feature_size
-
-        #     # get species
-        #     allowed_ring_size = [3, 4, 5, 6, 7]
-        #     self._feature_name = (
-        #     ["total degree", "is in ring", "total H"]
-        #     + self.selected_keys
-        #     + ["chemical symbol"] * len(species)
-        #     + ["ring size"] * len(allowed_ring_size)
-        # )
-        #     self.mol_entries[rxn['reactants'][0]]
-        #     lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
-
-        if bond_feature_size > lmdb_update["feature_size"]['bond']:
-            lmdb_update['feature_size']['bond'] = bond_feature_size
-            # lmdb_update['feature_name']['bond'] = bond_featurizer._feature_name
-
-        if global_feature_size > lmdb_update["feature_size"]['global']:
-            lmdb_update['feature_size']['global'] = global_feature_size
-            # lmdb_update['feature_name']['global'] = global_featurizer._feature_name
-
-        
+       
         
         # for mol_wrapper in all_mol_wrappers:
         #     atom_featurizer = AtomFeaturizerGraphGeneral()
@@ -362,7 +339,8 @@ class rxn_networks_graph:
         #4 write new entries and new lmdb_update
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
-        
+        print(f"data: {data}")
+        print(f"lmdb_update: {lmdb_update}")
         labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': torch.tensor([0]), 'id': [str(rxn_id)], "reaction_type": ['']}
         data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], labels)
         write_to_lmdb([data], current_length, lmdb_update, lmdb_path)

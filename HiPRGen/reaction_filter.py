@@ -107,7 +107,7 @@ def log_message(*args, **kwargs):
 def dispatcher(
         mol_entries,
         dgl_molecules_dict,
-        mol_wrapper_dict,
+        grapher_features,
         dispatcher_payload
 ):
 
@@ -141,7 +141,7 @@ def dispatcher(
     rxn_networks_g = rxn_networks_graph(
         mol_entries,
         dgl_molecules_dict,
-        mol_wrapper_dict,
+        grapher_features,
         dispatcher_payload.bondnet_test
     )
     ####
