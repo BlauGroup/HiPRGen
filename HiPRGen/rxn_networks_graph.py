@@ -257,7 +257,7 @@ class rxn_networks_graph:
         #### Write LMDB ####
         #1 load lmdb
         
-        lmdb_path = "training_trial3.lmdb"
+        lmdb_path = "training_trial4.lmdb"
         lmdb_file = Path(lmdb_path)
         if lmdb_file.is_file():
             # file exists
@@ -338,9 +338,8 @@ class rxn_networks_graph:
         #current_length = current_lmdb.begin().get("length".encode("ascii"))
         #self.data is new samples, current_length is number of smaples before adding new samples
         #lmdb_update is global features to be updated, lmdb_path is training data to be updated
-        
-        data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], {'value': torch.tensor([rxn['dG']])})
-        print(f"data: {data}")
+        labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': None, 'id': rxn_id, "reaction_types": None}
+        data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], labels)
         write_to_lmdb([data], current_length, lmdb_update, lmdb_path)
 
         
