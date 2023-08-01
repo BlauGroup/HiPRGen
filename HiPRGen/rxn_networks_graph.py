@@ -258,6 +258,8 @@ class rxn_networks_graph:
 
         # step 5: update reaction features to the reaction graph
         for nt, ft in features.items():
+            print(f"nt: {nt}")
+            print(f"ft: {ft}")
             rxn_graph.nodes[nt].data.update({'ft': ft})
 
         # step 6: save a reaction graph and dG
