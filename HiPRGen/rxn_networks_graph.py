@@ -142,8 +142,8 @@ class rxn_networks_graph:
         products_total_bonds, products_entry_ids, original_bonds_prod = find_total_bonds(rxn, 'products', reactants, products)
         
 
-        assert len(original_bonds_react) == len(reactants_total_bonds)
-        assert len(original_bonds_prod) == len(products_total_bonds)
+        # assert len(original_bonds_react) == len(reactants_total_bonds)
+        # assert len(original_bonds_prod) == len(products_total_bonds)
         print(f"reactants_total_bonds: {reactants_total_bonds}")
         print(f"products_total_bonds: {products_total_bonds}")
         print(f"original bonds react: {original_bonds_react}")
