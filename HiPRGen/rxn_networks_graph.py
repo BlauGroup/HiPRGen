@@ -127,13 +127,15 @@ class rxn_networks_graph:
             for k, ind in enumerate(rxn[species]):
                 mol_reactant = self.mol_entries[ind]
                 networkx_graph = mol_reactant.graph
+                original_tmp = []
                 # This is needed because there is a case where num_reactants != len(rxn['reactants']) or num_products != len(rxn['products'])
                 if len(temp_species) <= k: 
                     break
                 species_entry_ids.append(self.mol_entries[ind].entry_id)
                 for i, j, weight in networkx_graph.edges:
-                    original_bonds.append(sorted([i, j]))
+                    original_tmp.append(sorted([i, j]))
                     species_total_bonds.add(tuple(sorted([temp_species[k][i], temp_species[k][j]])))
+                original_bonds.append(original_tmp)
             return species_total_bonds, species_entry_ids, original_bonds
         
         reactants_total_bonds, reactants_entry_ids, original_bonds_react = find_total_bonds(rxn, 'reactants', reactants, products)
@@ -143,6 +145,7 @@ class rxn_networks_graph:
         print(f"products_total_bonds: {products_total_bonds}")
         print(f"original bonds react: {original_bonds_react}")
         print(f"original bonds prod: {original_bonds_prod}")
+        print(f"transformed atom map: {transformed_atom_map}")
         # find an union of bonds of reactants and products
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
         print(f"set_total_bonds: {set_total_bonds}")
