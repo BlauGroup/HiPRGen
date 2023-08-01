@@ -218,7 +218,8 @@ class rxn_networks_graph:
         mappings['total_atoms'] = total_atoms
         mappings['num_bonds_total'] = len(total_bonds_map)
         mappings['num_atoms_total'] = len(total_atoms)
-        print(f"mappings: {mappings}")
+        if not rxn['is_redox']:
+            print(f"mappings: {mappings}")
         #print(f"mapping: {mappings}")
         # print(f"atom_map: {atom_map}")
         # print(f"reactants: {reactants}")
