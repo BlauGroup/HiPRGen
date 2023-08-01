@@ -52,7 +52,7 @@ class rxn_networks_graph:
                         The second inner list includes dictionaries of atom map for products.
                         A key of the dictionary represetns a local atom index and the corresponding value represents 
                         a global atom index.
-            "total_bonds": list of lists whose length is 2. It's an union of bonds in reactants and products
+            "total_bonds": list of lists. It's an union of bonds in reactants and products
                         e.g.) [[0,1], [0,2], [0,3], [0, 4]]
             "total_atoms": list of integer, 
             "num_bonds_total": integer == len(total_bonds),
@@ -142,8 +142,6 @@ class rxn_networks_graph:
         products_total_bonds, products_entry_ids, original_bonds_prod = find_total_bonds(rxn, 'products', reactants, products)
         
 
-        # assert len(original_bonds_react) == len(reactants_total_bonds)
-        # assert len(original_bonds_prod) == len(products_total_bonds)
         print(f"reactants_total_bonds: {reactants_total_bonds}")
         print(f"products_total_bonds: {products_total_bonds}")
         print(f"original bonds react: {original_bonds_react}")
@@ -200,12 +198,16 @@ class rxn_networks_graph:
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
 
-        print(f'bonds_in_reactants: {bonds_in_reactants}')
-        print(f'bonds_in_products: {bonds_in_products}')
+        # print(f'bonds_in_reactants: {bonds_in_reactants}')
+        # print(f'bonds_in_products: {bonds_in_products}')
         # print(f'reactants: {reactants}')
         # print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
+        for i in range(original_bonds_react):
+            assert len(bonds_in_reactants[i]) == len(original_bonds_react[i])
+        for i in range(original_bonds_prod):
+            assert len(bonds_in_products[i]) == len(original_bonds_prod[i])
         
 
         # step 4: get mapping
@@ -216,7 +218,7 @@ class rxn_networks_graph:
         mappings['total_atoms'] = total_atoms
         mappings['num_bonds_total'] = len(total_bonds_map)
         mappings['num_atoms_total'] = len(total_atoms)
-
+        print(f"mappings: {mappings}")
         #print(f"mapping: {mappings}")
         # print(f"atom_map: {atom_map}")
         # print(f"reactants: {reactants}")
