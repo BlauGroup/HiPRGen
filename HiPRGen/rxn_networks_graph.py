@@ -127,20 +127,22 @@ class rxn_networks_graph:
             for k, ind in enumerate(rxn[species]):
                 mol_reactant = self.mol_entries[ind]
                 networkx_graph = mol_reactant.graph
-                original_tmp = []
                 # This is needed because there is a case where num_reactants != len(rxn['reactants']) or num_products != len(rxn['products'])
                 if len(temp_species) <= k: 
                     break
                 species_entry_ids.append(self.mol_entries[ind].entry_id)
                 for i, j, weight in networkx_graph.edges:
-                    original_tmp.append(sorted([i, j]))
+                    original_bonds.append(sorted([i, j]))
                     species_total_bonds.add(tuple(sorted([temp_species[k][i], temp_species[k][j]])))
-                original_bonds.append(original_tmp)
+
             return species_total_bonds, species_entry_ids, original_bonds
         
         reactants_total_bonds, reactants_entry_ids, original_bonds_react = find_total_bonds(rxn, 'reactants', reactants, products)
         products_total_bonds, products_entry_ids, original_bonds_prod = find_total_bonds(rxn, 'products', reactants, products)
         
+
+        assert len(original_bonds_react) == len(reactants_total_bonds)
+        assert len(original_bonds_prod) == len(products_total_bonds)
         print(f"reactants_total_bonds: {reactants_total_bonds}")
         print(f"products_total_bonds: {products_total_bonds}")
         print(f"original bonds react: {original_bonds_react}")
@@ -197,8 +199,8 @@ class rxn_networks_graph:
                 bonds_in_products[k][bond_ind] = total_bonds_map[tuple(sorted([products[k][i],products[k][j]]))]
         bond_mapping.append(bonds_in_products)
 
-        # print(f'bonds_in_reactants: {bonds_in_reactants}')
-        # print(f'bonds_in_products: {bonds_in_products}')
+        print(f'bonds_in_reactants: {bonds_in_reactants}')
+        print(f'bonds_in_products: {bonds_in_products}')
         # print(f'reactants: {reactants}')
         # print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
