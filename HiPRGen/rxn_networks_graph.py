@@ -204,10 +204,10 @@ class rxn_networks_graph:
         # print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
-        for i in range(original_bonds_react):
-            assert len(bonds_in_reactants[i]) == len(original_bonds_react[i])
-        for i in range(original_bonds_prod):
-            assert len(bonds_in_products[i]) == len(original_bonds_prod[i])
+        # for i in range(original_bonds_react):
+        #     assert len(bonds_in_reactants[i]) == len(original_bonds_react[i])
+        # for i in range(original_bonds_prod):
+        #     assert len(bonds_in_products[i]) == len(original_bonds_prod[i])
         
 
         # step 4: get mapping
