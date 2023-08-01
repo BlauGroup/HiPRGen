@@ -6,8 +6,7 @@ import copy
 from collections import defaultdict
 from monty.serialization import dumpfn
 from bondnet.data.utils import create_rxn_graph
-from HiPRGen.lmdb_dataset import LmdbDataset, CRNs2lmdb
-from bondnet.data.featurizer import AtomFeaturizerGraphGeneral, GlobalFeaturizerGraph, BondAsNodeGraphFeaturizerGeneral
+from HiPRGen.lmdb_dataset import LmdbDataset
 import lmdb
 import tqdm
 import pickle
@@ -239,7 +238,7 @@ class rxn_networks_graph:
                                             )
 
         # print(f"rxn_graph: {rxn_graph}")
-        # print(f"features: {features}")
+        print(f"features: {features}")
 
         # step 5: update reaction features to the reaction graph
         for nt, ft in features.items():
@@ -302,44 +301,6 @@ class rxn_networks_graph:
         updated_variance = (n-1)/(n)*prev_variance + (n-1)/n*(prev_mean-updated_mean)**2 + (current_y - updated_mean)**2/n
         lmdb_update["std"] = math.sqrt(updated_variance)
 
-        #3.3 update feature_size and feature_name
-        # atom_feature_size = len(features['atom'][0])
-        # bond_feature_size = len(features['bond'][0])
-        # global_feature_size = len(features['global'][0])
-
-       
-        
-        # for mol_wrapper in all_mol_wrappers:
-        #     atom_featurizer = AtomFeaturizerGraphGeneral()
-        #     bond_featurizer = BondAsNodeGraphFeaturizerGeneral()
-        #     global_featurizer = GlobalFeaturizerGraph()
-        #     atom_temp = atom_featurizer(mol_wrapper, dataset_species = mol_wrapper.species)
-        #     bond_temp = bond_featurizer(mol_wrapper)
-        #     global_temp = global_featurizer(mol_wrapper)
-
-        #     # save reaction features
-        #     self.data[rxn_id]['reaction_features']['atom'] = atom_temp[0]['feat']
-        #     self.data[rxn_id]['reaction_features']['bond'] = bond_temp[0]['feat']
-        #     self.data[rxn_id]['reaction_features']['global'] = global_temp[0]['feat']
-
-        #     # If feature size of current reaction is larger, then update it
-        #     if atom_featurizer._feature_size > lmdb_update["feature_size"]['atom']:
-        #         lmdb_update['feature_size']['atom'] = atom_featurizer._feature_size
-        #         lmdb_update['feature_name']['atom'] = atom_featurizer._feature_name
-
-        #     if bond_featurizer._feature_size > lmdb_update["feature_size"]['bond']:
-        #         lmdb_update['feature_size']['bond'] = bond_featurizer._feature_size
-        #         lmdb_update['feature_name']['bond'] = bond_featurizer._feature_name
-
-        #     if global_featurizer._feature_size > lmdb_update["feature_size"]['global']:
-        #         lmdb_update['feature_size']['global'] = global_featurizer._feature_size
-        #         lmdb_update['feature_name']['global'] = global_featurizer._feature_name
-
-        
-        #4 write new entries and new lmdb_update
-        #self.data is new samples, current_length is number of smaples before adding new samples
-        #lmdb_update is global features to be updated, lmdb_path is training data to be updated
-        
         
         labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': torch.tensor([0]), 'id': [str(rxn_id)], "reaction_type": ['']}
         data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], labels)
