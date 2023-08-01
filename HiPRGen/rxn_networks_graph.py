@@ -137,8 +137,11 @@ class rxn_networks_graph:
         reactants_total_bonds, reactants_entry_ids = find_total_bonds(rxn, 'reactants', reactants, products)
         products_total_bonds, products_entry_ids = find_total_bonds(rxn, 'products', reactants, products)
         
+        print(f"reactants_total_bonds: {reactants_total_bonds}")
+        print(f"products_total_bonds: {products_total_bonds}")
         # find an union of bonds of reactants and products
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
+        print(f"set_total_bonds: {set_total_bonds}")
 
         # convert to the correct format in "total_bonds" in mappings
         total_bonds = [[i,j] for i, j in set_total_bonds]
