@@ -119,6 +119,7 @@ class rxn_networks_graph:
             """
             species_entry_ids = []
             species_total_bonds = set()
+            original_bonds = []
             if species == 'reactants':
                 temp_species = reactants
             else:
@@ -131,14 +132,17 @@ class rxn_networks_graph:
                     break
                 species_entry_ids.append(self.mol_entries[ind].entry_id)
                 for i, j, weight in networkx_graph.edges:
+                    original_bonds.append(sorted([i, j]))
                     species_total_bonds.add(tuple(sorted([temp_species[k][i], temp_species[k][j]])))
-            return species_total_bonds, species_entry_ids
+            return species_total_bonds, species_entry_ids, original_bonds
         
-        reactants_total_bonds, reactants_entry_ids = find_total_bonds(rxn, 'reactants', reactants, products)
-        products_total_bonds, products_entry_ids = find_total_bonds(rxn, 'products', reactants, products)
+        reactants_total_bonds, reactants_entry_ids, original_bonds_react = find_total_bonds(rxn, 'reactants', reactants, products)
+        products_total_bonds, products_entry_ids, original_bonds_prod = find_total_bonds(rxn, 'products', reactants, products)
         
         print(f"reactants_total_bonds: {reactants_total_bonds}")
         print(f"products_total_bonds: {products_total_bonds}")
+        print(f"original bonds react: {original_bonds_react}")
+        print(f"original bonds prod: {original_bonds_prod}")
         # find an union of bonds of reactants and products
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
         print(f"set_total_bonds: {set_total_bonds}")
