@@ -119,7 +119,7 @@ class rxn_networks_graph:
             """
             species_entry_ids = []
             species_total_bonds = set()
-            original_bonds = []
+            
             if species == 'reactants':
                 temp_species = reactants
             else:
@@ -127,30 +127,23 @@ class rxn_networks_graph:
             for k, ind in enumerate(rxn[species]):
                 mol_reactant = self.mol_entries[ind]
                 networkx_graph = mol_reactant.graph
-                original_bonds_tmp = []
+           
                 # This is needed because there is a case where num_reactants != len(rxn['reactants']) or num_products != len(rxn['products'])
                 if len(temp_species) <= k: 
                     break
                 species_entry_ids.append(self.mol_entries[ind].entry_id)
                 for i, j, weight in networkx_graph.edges:
-                    original_bonds_tmp.append(sorted([i, j]))
+                   
                     species_total_bonds.add(tuple(sorted([temp_species[k][i], temp_species[k][j]])))
-                original_bonds.append(original_bonds_tmp)
-            return species_total_bonds, species_entry_ids, original_bonds
         
-        reactants_total_bonds, reactants_entry_ids, original_bonds_react = find_total_bonds(rxn, 'reactants', reactants, products)
-        products_total_bonds, products_entry_ids, original_bonds_prod = find_total_bonds(rxn, 'products', reactants, products)
+            return species_total_bonds, species_entry_ids
         
+        reactants_total_bonds, reactants_entry_ids = find_total_bonds(rxn, 'reactants', reactants, products)
+        products_total_bonds, products_entry_ids = find_total_bonds(rxn, 'products', reactants, products)
 
-        print(f"reactants_total_bonds: {reactants_total_bonds}")
-        print(f"products_total_bonds: {products_total_bonds}")
-        print(f"original bonds react: {original_bonds_react}")
-        print(f"original bonds prod: {original_bonds_prod}")
-        print(f"transformed atom map: {transformed_atom_map}")
         # find an union of bonds of reactants and products
         set_total_bonds = reactants_total_bonds.union(products_total_bonds)
         
-
         # convert to the correct format in "total_bonds" in mappings
         total_bonds = [[i,j] for i, j in set_total_bonds]
 
@@ -159,13 +152,11 @@ class rxn_networks_graph:
         for ind, bonds in enumerate(total_bonds):
             i, j = bonds
             total_bonds_map[(i,j)] = ind
-        print(f"total_bonds_map: {total_bonds_map}")
+
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
         
-        # print(f'total_bonds: {total_bonds}')
-        # print(f'atom_map: {atom_map}')
-        # print(f'transformed_atom_map: {transformed_atom_map}')
+
         
             
         # step 3: Get bond_mapping
@@ -204,10 +195,7 @@ class rxn_networks_graph:
         # print(f'products: {products}')
         assert len(bonds_in_reactants) == len(reactants)
         assert len(bonds_in_products) == len(products)
-        # for i in range(original_bonds_react):
-        #     assert len(bonds_in_reactants[i]) == len(original_bonds_react[i])
-        # for i in range(original_bonds_prod):
-        #     assert len(bonds_in_products[i]) == len(original_bonds_prod[i])
+
         
 
         # step 4: get mapping
@@ -218,8 +206,8 @@ class rxn_networks_graph:
         mappings['total_atoms'] = total_atoms
         mappings['num_bonds_total'] = len(total_bonds_map)
         mappings['num_atoms_total'] = len(total_atoms)
-        if not rxn['is_redox']:
-            print(f"mappings: {mappings}")
+        # if rxn['is_redox']:
+        #     print(f"mappings: {mappings}")
         #print(f"mapping: {mappings}")
         # print(f"atom_map: {atom_map}")
         # print(f"reactants: {reactants}")
@@ -254,12 +242,14 @@ class rxn_networks_graph:
                                             )
 
         # print(f"rxn_graph: {rxn_graph}")
-        print(f"features: {features}")
+        if rxn['is_redox']:
+            print(f"mappings: {mappings}")
+            print(f"features: {features}")
 
         # step 5: update reaction features to the reaction graph
         for nt, ft in features.items():
-            print(f"nt: {nt}")
-            print(f"ft: {ft}")
+            # print(f"nt: {nt}")
+            # print(f"ft: {ft}")
             rxn_graph.nodes[nt].data.update({'ft': ft})
 
         # step 6: save a reaction graph and dG
@@ -322,8 +312,8 @@ class rxn_networks_graph:
         
         labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': torch.tensor([0]), 'id': [str(rxn_id)], "reaction_type": ['']}
         data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], labels)
-        print(f"data: {data}")
-        print(f"lmdb_update: {lmdb_update}")
+        # print(f"data: {data}")
+        # print(f"lmdb_update: {lmdb_update}")
         write_to_lmdb([data], current_length, lmdb_update, lmdb_path)
 
         
