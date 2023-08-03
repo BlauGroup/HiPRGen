@@ -239,7 +239,7 @@ def species_filter(
         dgl_molecules.append(dgl_molecule_graph)
         for nt in ["global", "atom", "bond"]:
             print(f"nt: {nt}")
-            fts = [p.nodes[nt].data["ft"] for p in dgl_molecule_graph]
+            fts = dgl_molecule_graph.nodes[nt].data["ft"]
             print(f"features: {fts}")
         dgl_molecules_dict[mol.entry_id] = mol.ind
     grapher_features= {'feature_size':molecule_grapher.feature_size, 'feature_name': molecule_grapher.feature_name}
