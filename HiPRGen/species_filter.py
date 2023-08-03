@@ -231,12 +231,16 @@ def species_filter(
         # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(extra_keys)
 
-        non_metal_bonds = [ tuple(sorted([i, j])) for i, j, _ in mol.covalent_graph.edges.data()]
+        non_metal_bonds = [ (i, j) for i, j, _ in mol.covalent_graph.edges.data()]
         # print(f"non metal bonds: {non_metal_bonds}")
-        mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = mol.energy, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
+        mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = None, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
         feature = {'charge': mol.charge}
         dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
         dgl_molecules.append(dgl_molecule_graph)
+        for nt in ["global", "atom", "bond"]:
+            print(f"nt: {nt}")
+            fts = [p.nodes[nt].data["ft"] for p in dgl_molecule_graph]
+            print(f"features: {fts}")
         dgl_molecules_dict[mol.entry_id] = mol.ind
     grapher_features= {'feature_size':molecule_grapher.feature_size, 'feature_name': molecule_grapher.feature_name}
     #mol_wrapper_dict[mol.entry_id] = mol_wrapper
