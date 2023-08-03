@@ -245,6 +245,8 @@ class rxn_networks_graph:
         if rxn['is_redox']:
             print(f"mappings: {mappings}")
             print(f"features: {features}")
+            print(f"transformed_atom_map: {transformed_atom_map}")
+            print(f"atom_map: {atom_map}")
 
         # step 5: update reaction features to the reaction graph
         for nt, ft in features.items():
