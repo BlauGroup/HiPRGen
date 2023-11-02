@@ -228,7 +228,7 @@ def add_electron_species(
     mol_entries, mol_entries_pickle_location, electron_free_energy
 ):
     e_site = Site(
-        DummySpecies("E", oxidation_state=None, properties=None), [0.0, 0.0, 0.0]
+        DummySpecies("E", oxidation_state=None), [0.0, 0.0, 0.0]
     )
     e_mol = Molecule.from_sites([e_site])
     e_mol.set_charge_and_spin(-1, 2)
