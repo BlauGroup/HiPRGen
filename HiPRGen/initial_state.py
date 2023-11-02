@@ -65,6 +65,22 @@ create_factors_table = """
     );
 """
 
+create_interrupt_state_table = """
+    CREATE TABLE interrupt_state (
+            seed                   INTEGER NOT NULL,
+            species_id             INTEGER NOT NULL,
+            count                  INTEGER NOT NULL
+    );
+"""
+
+create_interrupt_cutoff_table = """
+    CREATE TABLE interrupt_cutoff (
+            seed                   INTEGER NOT NULL,
+            step                   INTEGER NOT NULL,
+            time                   INTEGER NOT NULL
+    );
+"""
+
 
 def insert_initial_state(
         initial_state,
@@ -83,6 +99,8 @@ def insert_initial_state(
     rn_cur.execute(create_initial_state_table)
     rn_cur.execute(create_trajectories_table)
     rn_cur.execute(create_factors_table)
+    rn_cur.execute(create_interrupt_state_table)
+    rn_cur.execute(create_interrupt_cutoff_table)
     rn_con.commit()
 
     rn_cur.execute(
