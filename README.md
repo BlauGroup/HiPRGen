@@ -51,7 +51,8 @@ module load openmpi/4.0.1-gcc
 pip3 install --user mpi4py
 conda create -n HiPRGen_RNMC python=3.8
 conda activate HiPRGen_RNMC
-conda install -c conda-forge openbabel pygraphviz pymatgen pycairo
+conda install -c conda-forge openbabel pygraphviz pycairo
+pip install pymatgen==2023.3.10
 
 git clone https://github.com/BlauGroup/RNMC.git
 cd RNMC
