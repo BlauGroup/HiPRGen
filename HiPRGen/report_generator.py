@@ -138,6 +138,10 @@ class ReportGenerator:
                 self.emit_molecule(species_id)
                 self.emit_newline()
 
+    def emit_atom_map(self, atom_map):
+        for key in atom_map:
+            self.emit_verbatim(str(key) + ": " + str(atom_map[key]))
+
     def emit_reaction(self, reaction, label=None):
         reactants_filtered = [i for i in reaction["reactants"] if i != -1]
 
@@ -180,6 +184,10 @@ class ReportGenerator:
         self.f.write("$$")
         self.f.write("\n\n\n")
 
+        if "atom_map" in reaction:
+            self.f.write("atom map:")
+            self.emit_atom_map(reaction["atom_map"])
+
     def emit_bond_breakage(self, reaction):
         if "reactant_bonds_broken" in reaction:
             self.f.write("reactant bonds broken:")
@@ -192,3 +200,5 @@ class ReportGenerator:
                 self.emit_verbatim(str(bond))
 
         self.f.write("\n\n\n")
+
+

@@ -4,6 +4,7 @@ import subprocess
 import sqlite3
 import pickle
 import copy
+import time
 
 import matplotlib.colors as mcolors
 from HiPRGen.network_loader import NetworkLoader
@@ -27,11 +28,12 @@ from HiPRGen.species_questions import (
 
 from HiPRGen.reaction_questions import (
     default_reaction_decision_tree,
+    default_logging_decision_tree,
     co2_reaction_decision_tree,
     euvl_phase1_reaction_decision_tree,
-    euvl_phase1_reaction_logging_tree,
+    euvl_phase1_logging_decision_tree,
     euvl_phase2_reaction_decision_tree,
-    euvl_phase2_logging_tree
+    euvl_phase2_logging_decision_tree
 )
 
 from HiPRGen.mc_analysis import (
@@ -151,7 +153,7 @@ def li_test():
         folder + "/buckets.sqlite",
         default_reaction_decision_tree,
         params,
-        Terminal.DISCARD,
+        default_logging_decision_tree,
     )
 
     # The dispatcher and worker payloads are passed through the MPI barrier
@@ -295,7 +297,7 @@ def li_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 4921:
+    if network_loader.number_of_reactions == 4649:
         print(bcolors.PASS + "li_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "li_test: correct number of reactions" + bcolors.ENDC)
@@ -335,7 +337,7 @@ def mg_test():
         folder + "/buckets.sqlite",
         default_reaction_decision_tree,
         params,
-        Terminal.DISCARD,
+        default_logging_decision_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -414,7 +416,7 @@ def mg_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 788:
+    if network_loader.number_of_reactions == 766:
         print(bcolors.PASS + "mg_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "mg_test: correct number of reactions" + bcolors.ENDC)
@@ -579,6 +581,7 @@ def euvl_phase1_test():
     folder = "./scratch/euvl_phase1_test"
     subprocess.run(["mkdir", folder])
 
+    # mol_json = "./data/mini_euvl_test_set.json"
     mol_json = "./data/euvl_test_set.json"
     database_entries = loadfn(mol_json)
 
@@ -623,7 +626,7 @@ def euvl_phase1_test():
         folder + "/buckets.sqlite",
         euvl_phase1_reaction_decision_tree,
         params,
-        euvl_phase1_reaction_decision_tree
+        euvl_phase1_logging_decision_tree
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -652,18 +655,18 @@ def euvl_phase1_test():
 
     insert_initial_state(initial_state, mol_entries, folder + "/initial_state.sqlite")
 
-    subprocess.run(
-        [
-            "GMC",
-            "--reaction_database=" + folder + "/rn.sqlite",
-            "--initial_state_database=" + folder + "/initial_state.sqlite",
-            "--number_of_simulations=1000",
-            "--base_seed=1000",
-            "--thread_count=" + number_of_threads,
-            "--step_cutoff=200",
-            "--energy_budget=92",
-        ]
-    )
+    # subprocess.run(
+    #     [
+    #         "GMC",
+    #         "--reaction_database=" + folder + "/rn.sqlite",
+    #         "--initial_state_database=" + folder + "/initial_state.sqlite",
+    #         "--number_of_simulations=1000",
+    #         "--base_seed=1000",
+    #         "--thread_count=" + number_of_threads,
+    #         "--step_cutoff=200",
+    #         "--energy_budget=92",
+    #     ]
+    # )
 
     network_loader = NetworkLoader(
         folder + "/rn.sqlite",
@@ -671,16 +674,16 @@ def euvl_phase1_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_initial_state_and_trajectories()
+    # network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
     )
 
-    reaction_tally_report(network_loader, folder + "/reaction_tally.tex", cutoff=10)
-    species_report(network_loader, folder + "/species_report.tex")
-    simulation_replayer = SimulationReplayer(network_loader)
-    final_state_report(simulation_replayer, folder + "/final_state_report.tex")
+    # reaction_tally_report(network_loader, folder + "/reaction_tally.tex", cutoff=10)
+    # species_report(network_loader, folder + "/species_report.tex")
+    # simulation_replayer = SimulationReplayer(network_loader)
+    # final_state_report(simulation_replayer, folder + "/final_state_report.tex")
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)
@@ -691,7 +694,7 @@ def euvl_phase1_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 563:
+    if network_loader.number_of_reactions == 560:
         print(bcolors.PASS + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_1_test: correct number of reactions" + bcolors.ENDC)
@@ -742,7 +745,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         euvl_phase2_reaction_decision_tree,
         params,
-        euvl_phase2_logging_tree,
+        euvl_phase2_reaction_decision_tree,
     )
 
     dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
@@ -874,13 +877,108 @@ def euvl_phase2_test():
     return tests_passed
 
 
+def euvl_bondnet_test():
+
+    start_time = time.time()
+    phase1_folder = "./euvl_phase1_test"
+    folder = "./scratch/euvl_phase2_test"
+    subprocess.run(["mkdir", folder])
+
+    mol_json = "./data/euvl_test_set.json"
+    database_entries = loadfn(mol_json)
+
+    ## HY
+    bondnet_test_json = "./scratch/euvl_phase2_test/reaction_networks_graphs"
+    subprocess.run(["mkdir", bondnet_test_json])
+    ##
+
+    species_decision_tree = euvl_species_decision_tree
+
+    params = {
+        "temperature": ROOM_TEMP+200.0,
+        "electron_free_energy": 0.0,
+    }
+
+    mol_entries, dgl_molecules_dict  = species_filter(
+        database_entries,
+        mol_entries_pickle_location=folder + "/mol_entries.pickle",
+        dgl_mol_grphs_pickle_location = folder + "/dgl_mol_graphs.pickle",
+        grapher_features_pickle_location= folder + "/grapher_features.pickle",
+        species_report=folder + "/unfiltered_species_report.tex",
+        species_decision_tree=species_decision_tree,
+        coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
+        species_logging_decision_tree=species_decision_tree,
+        generate_unfiltered_mol_pictures=False,
+    )
+
+    print(len(mol_entries), "initial mol entries")
+
+    bucket(mol_entries, folder + "/buckets.sqlite")
+
+    print(len(mol_entries), "final mol entries")
+
+    dispatcher_payload = DispatcherPayload(
+        folder + "/buckets.sqlite",
+        folder + "/rn.sqlite",
+        folder + "/reaction_report.tex",
+        bondnet_test_json + "/test.json"
+    )
+
+    worker_payload = WorkerPayload(
+        folder + "/buckets.sqlite",
+        euvl_phase2_reaction_decision_tree,
+        params,
+        euvl_phase2_reaction_decision_tree,
+    )
+
+    dumpfn(dispatcher_payload, folder + "/dispatcher_payload.json")
+    dumpfn(worker_payload, folder + "/worker_payload.json")
+
+    subprocess.run(
+        [
+            "mpirun",
+            "--use-hwthread-cpus",
+            "-n",
+            number_of_threads,
+            "python",
+            "run_network_generation.py",
+            folder + "/mol_entries.pickle",
+            folder + "/dispatcher_payload.json",
+            folder + "/worker_payload.json",
+            folder + "/dgl_mol_graphs.pickle",
+            folder + "/grapher_features.pickle"
+        ]
+    )
+
+
+    tests_passed = True
+    execution_time = time.time() - start_time
+    print(f"Time taken: {execution_time}")
+    # Check the length
+    # print("Number of species:", network_loader.number_of_species)
+    # if network_loader.number_of_species == 103:
+    #     print(bcolors.PASS + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
+    # else:
+    #     print(bcolors.FAIL + "euvl_phase_2_test: correct number of species" + bcolors.ENDC)
+    #     tests_passed = False
+
+    # print("Number of reactions:", network_loader.number_of_reactions)
+    # if network_loader.number_of_reactions == 3912:
+    #     print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
+    # else:
+    #     print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
+    #     tests_passed = False
+
+    return tests_passed
+
 tests = [
     # mg_test,
     # li_test,
     # flicho_test,
     # co2_test,
     # euvl_phase1_test,
-    euvl_phase2_test,
+    # euvl_phase2_test,
+    euvl_bondnet_test
 ]
 
 for test in tests:

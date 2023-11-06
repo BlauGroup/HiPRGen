@@ -1,8 +1,9 @@
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings, build_compressed_graph
 from functools import partial
 from itertools import chain
 from monty.serialization import dumpfn
 import pickle
+import copy
 from HiPRGen.species_questions import run_decision_tree
 from HiPRGen.constants import Terminal
 import networkx as nx
@@ -14,6 +15,10 @@ from pymatgen.core.periodic_table import DummySpecies
 from pymatgen.core.sites import Site
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
+from bondnet.model.training_utils import get_grapher
+from bondnet.core.molwrapper import MoleculeWrapper
+from bondnet.data.transformers import HeteroGraphFeatureStandardScaler
+
 
 """
 Phase 1: species filtering
@@ -82,6 +87,8 @@ def log_message(string):
 def species_filter(
     dataset_entries,
     mol_entries_pickle_location,
+    dgl_mol_grphs_pickle_location,
+    grapher_features_pickle_location,
     species_report,
     species_decision_tree,
     coordimer_weight,
@@ -120,7 +127,7 @@ def species_filter(
 
     log_message("applying local filters")
     mol_entries_filtered = []
-
+    elements = set()
     # note: it is important here that we are applying the local filters before
     # the non local ones. We remove some molecules which are lower energy
     # than other more realistic lithomers.
@@ -132,6 +139,11 @@ def species_filter(
             mol_entries_filtered.append(mol)
 
         if run_decision_tree(mol, species_logging_decision_tree):
+            # create a set of elements
+            # log_message("create a set of elements")
+            for element in mol.species:
+                if element not in elements:
+                    elements.add(element)
 
             report_generator.emit_verbatim(
                 "\n".join([str(f) for f in decision_pathway])
@@ -188,6 +200,66 @@ def species_filter(
     for i, e in enumerate(mol_entries):
         e.ind = i
 
+
+    log_message("mapping fragments")
+    fragment_dict = {}
+    for mol in mol_entries:
+        # print(mol.entry_id)
+        for fragment_complex in mol.fragment_data:
+            for ii, fragment in enumerate(fragment_complex.fragment_objects):
+                hot_nbh_hashes = list(fragment.hot_atoms.keys())
+                assert len(hot_nbh_hashes) == 0 or len(hot_nbh_hashes) == 1 or len(hot_nbh_hashes) == 2
+                assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
+                if fragment.fragment_hash not in fragment_dict:
+                    fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
+                all_mappings = find_fragment_atom_mappings(
+                    fragment,
+                    fragment_dict[fragment.fragment_hash])
+                fragment_complex.fragment_mappings.append(all_mappings)
+        assert len(fragment_complex.fragment_objects) == len(fragment_complex.fragment_mappings)
+
+
+    log_message(str(len(fragment_dict.keys())) + " unique fragments found")
+
+    # Make DGL Molecule graphs via BonDNet functions
+    log_message("creating dgl molecule graphs")
+    dgl_molecules_dict = {}
+    dgl_molecules = []
+    extra_keys = []
+    
+    for mol in mol_entries:
+        # print(f"mol: {mol.mol_graph}")
+        molecule_grapher = get_grapher(extra_keys)
+
+        non_metal_bonds = [ (i, j) for i, j, _ in mol.covalent_graph.edges.data()]
+        # print(f"non metal bonds: {non_metal_bonds}")
+        mol_wrapper = MoleculeWrapper(mol_graph = mol.mol_graph, free_energy = None, id = mol.entry_id, non_metal_bonds = non_metal_bonds)
+        feature = {'charge': mol.charge}
+        dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(mol_wrapper, extra_feats_info = feature, dataset_species = elements)
+        dgl_molecules.append(dgl_molecule_graph)
+        for nt in ["global", "atom", "bond"]:
+            print(f"nt: {nt}")
+            fts = dgl_molecule_graph.nodes[nt].data["feat"]
+            print(f"features: {fts}")
+        dgl_molecules_dict[mol.entry_id] = mol.ind
+    grapher_features= {'feature_size':molecule_grapher.feature_size, 'feature_name': molecule_grapher.feature_name}
+    #mol_wrapper_dict[mol.entry_id] = mol_wrapper
+
+    # Normalize DGL molecule graphs
+    scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
+    normalized_graphs = scaler(dgl_molecules)
+
+    # print(f"mean: {scaler._mean}")
+    # print(f"std: {scaler._std}")
+    
+
+    # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
+    for key in dgl_molecules_dict.keys():
+        temp_index = dgl_molecules_dict[key]
+        dgl_molecules_dict[key] = normalized_graphs[temp_index]
+    #print(dgl_molecules_dict)
+
+
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
@@ -196,9 +268,15 @@ def species_filter(
     with open(mol_entries_pickle_location, "wb") as f:
         pickle.dump(mol_entries, f)
 
+    with open(dgl_mol_grphs_pickle_location, "wb") as f:
+        pickle.dump(dgl_molecules_dict, f)
+    
+    with open(grapher_features_pickle_location, "wb") as f:
+        pickle.dump(grapher_features, f)
+
     log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 
-    return mol_entries
+    return mol_entries, dgl_molecules_dict
 
 
 def add_electron_species(

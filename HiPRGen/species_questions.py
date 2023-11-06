@@ -1,4 +1,4 @@
-from HiPRGen.mol_entry import MoleculeEntry, FragmentComplex
+from HiPRGen.mol_entry import MoleculeEntry, FragmentComplex, FragmentObject, build_compressed_graph
 import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import copy
@@ -130,23 +130,54 @@ class add_star_hashes(MSONable):
 
 
 class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fragment complex"
-    def __init__(self):
-        pass
+    def __init__(self, neighborhood_width=None):
+        self.neighborhood_width = neighborhood_width
 
     def __call__(self, mol):
         if mol.formula in m_formulas:
             return False
 
-        fragment_complex = FragmentComplex(1, 0, [], [mol.covalent_hash])
+        fragment_objects = []
+        if self.neighborhood_width is not None:
+            neighborhood_hashes = {}
+            for i in mol.uncompressed_atoms:
+                hash_list = []
+                for d in range(self.neighborhood_width):
+                    neighborhood = nx.generators.ego.ego_graph(
+                        mol.compressed_graph,
+                        i,
+                        d,
+                        undirected=True)
 
-        mol.fragment_data.append(fragment_complex)
+                    neighborhood_hash = weisfeiler_lehman_graph_hash(
+                        neighborhood,
+                        node_attr='specie')
+
+                    hash_list.append(neighborhood_hash)
+
+                neighborhood_hashes[i] = str(hash(tuple(hash_list)))
+            fragment_object = FragmentObject(
+                fragment_hash=mol.covalent_hash,
+                atom_ids=mol.uncompressed_atoms,
+                neighborhood_hashes=neighborhood_hashes,
+                graph=mol.covalent_graph,
+                hot_atoms={},
+                compressed_graph=mol.compressed_graph
+            )
+            fragment_objects.append(fragment_object)
+
+        fragment_complex = FragmentComplex(1, 0, [], [mol.covalent_hash], fragment_objects)
+
+        if len(mol.fragment_data) == 0:
+            mol.fragment_data.append(fragment_complex)
 
         return False
 
 
 class add_single_bond_fragments(MSONable): #called for all species that have passed through filtration
-    def __init__(self, allow_ring_opening=True):
+    def __init__(self, allow_ring_opening=True, neighborhood_width=None):
         self.allow_ring_opening = allow_ring_opening
+        self.neighborhood_width = neighborhood_width
 
     def __call__(self, mol):
 
@@ -155,16 +186,23 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
         for edge in mol.covalent_graph.edges: #iterates through each bond in a molecule graph by iterating through a list of tuples
             fragment_hashes = []
+            fragment_objects = []
             h = copy.deepcopy(mol.covalent_graph)
             h.remove_edge(*edge) #"breaks a bond" in the molecule graph
             connected_components = nx.algorithms.components.connected_components(h) #generates a set of nodes for each "fragment"
+            list_of_c_dicts = []
             for c in connected_components:
-
+                tmp = {}
                 subgraph = h.subgraph(c) #generates a subgraph from one set of nodes (this is a fragment graph)
 
                 fragment_hash = weisfeiler_lehman_graph_hash( #saves the hash of this graph
                     subgraph, node_attr="specie"
                 )
+
+                tmp["c"] = copy.deepcopy(c)
+                tmp["subgraph"] = copy.deepcopy(subgraph)
+                tmp["fragment_hash"] = copy.deepcopy(fragment_hash)
+                list_of_c_dicts.append(tmp)
 
                 fragment_hashes.append(fragment_hash) #adds each fragment hash to the fragment hash list
 
@@ -178,11 +216,58 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
                 if len(fragment_hashes) == 1 and not self.allow_ring_opening:
                     pass
-                else:
 
-                    fragment_complex = FragmentComplex(                         #saves a FragmentComplex object after both fragment_hashes have been
-                        len(fragment_hashes), 1, [edge[0:2]], fragment_hashes   #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
-                    )                                                           #of the bond broken (as a list containing one tuple), and the list of fragment hashes
+                else:
+                    
+                    if self.neighborhood_width is not None:
+                        for entry in list_of_c_dicts:
+                            c = entry["c"]
+                            subgraph = entry["subgraph"]
+                            fragment_hash = entry["fragment_hash"]
+                            neighborhood_hashes = {}
+                            compressed_subgraph = build_compressed_graph(subgraph)
+                            for i in compressed_subgraph.nodes():
+                                hash_list = []
+                                for d in range(self.neighborhood_width):
+                                    neighborhood = nx.generators.ego.ego_graph(
+                                        compressed_subgraph,
+                                        i,
+                                        d,
+                                        undirected=True)
+
+                                    neighborhood_hash = weisfeiler_lehman_graph_hash(
+                                        neighborhood,
+                                        node_attr='specie')
+
+                                    hash_list.append(neighborhood_hash)
+
+                                neighborhood_hashes[i] = str(hash(tuple(hash_list)))
+                            hot_atom_inds = [i for i in c if i in edge[0:2]]
+                            assert len(hot_atom_inds) == 1 or len(hot_atom_inds) == 2
+                            hot_atoms = {}
+                            # We basically ignore the case where we have two hot atoms with
+                            # the same neighborhood hash. These have to be ring openings,
+                            # and not only that, but probably very unlikely ring openings
+                            # involving C-C bond breakages. I'm pretty sure that just taking
+                            # one of the equivalent atoms as "hot" won't cause issues.
+                            for hot_atom_ind in hot_atom_inds:
+                                hot_atoms[neighborhood_hashes[hot_atom_ind]] = hot_atom_ind
+                            fragment_object = FragmentObject(
+                                fragment_hash=fragment_hash,
+                                atom_ids=c,
+                                neighborhood_hashes=neighborhood_hashes,
+                                graph=subgraph,
+                                hot_atoms=hot_atoms,
+                                compressed_graph=compressed_subgraph
+                            )
+                            fragment_objects.append(fragment_object)
+
+                    if self.neighborhood_width is not None:
+                        assert len(fragment_objects) == len(fragment_hashes)
+
+                    fragment_complex = FragmentComplex(                                          #saves a FragmentComplex object after both fragment_hashes have been
+                        len(fragment_hashes), 1, [edge[0:2]], fragment_hashes, fragment_objects  #added to the list of fragments with len(fragments) fragments, 1 bond broken, the identity
+                    )                                                                            #of the bond broken (as a list containing one tuple), and the list of fragment hashes
 
                     mol.fragment_data.append(fragment_complex) #append the above FragmentComplex object to the molecule's fragment_data list
 
@@ -207,6 +292,7 @@ class has_covalent_ring(MSONable):
 
 
 class covalent_ring_fragments(MSONable):
+    # NOTE: haven't added fragment neighborhood hashes here yet!
     def __init__(self):
         pass
 
@@ -338,6 +424,7 @@ class fix_hydrogen_bonding(MSONable):
                             mol.graph.remove_edge(i, adjacent_atom)
                             if adjacent_atom in mol.covalent_graph:
                                 mol.covalent_graph.remove_edge(i, adjacent_atom)
+        mol.compressed_graph = build_compressed_graph(mol.covalent_graph)
 
         return False
 
@@ -464,6 +551,8 @@ class charge_too_big(MSONable):
 # any species filter which modifies bonding has to come before
 # any filter checking for connectivity (which includes the metal-centric complex filter)
 
+width = 6
+
 li_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (set_solvation_correction(li_ec), Terminal.KEEP),
@@ -476,8 +565,10 @@ li_species_decision_tree = [
     (metal_complex(), Terminal.DISCARD),
     (spin_multiplicity_filter(0.4), Terminal.DISCARD),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(), Terminal.KEEP),
+    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    (add_single_bond_fragments(neighborhood_width=width), Terminal.KEEP),
+    # (add_unbroken_fragment(), Terminal.KEEP),
+    # (add_single_bond_fragments(), Terminal.KEEP),
     # (has_covalent_ring(), [
     #     (covalent_ring_fragments(), Terminal.KEEP),
     #     (species_default_true(), Terminal.KEEP)
@@ -495,8 +586,10 @@ mg_species_decision_tree = [
     (mol_not_connected(), Terminal.DISCARD),
     (metal_complex(), Terminal.DISCARD),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(), Terminal.KEEP),
+    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    (add_single_bond_fragments(neighborhood_width=width), Terminal.KEEP),
+    # (add_unbroken_fragment(), Terminal.KEEP),
+    # (add_single_bond_fragments(), Terminal.KEEP),
     (species_default_true(), Terminal.KEEP),
 ]
 
@@ -509,6 +602,7 @@ nonmetal_species_decision_tree = [
     (species_default_true(), Terminal.KEEP),
 ]
 
+width = 6
 
 euvl_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
@@ -516,7 +610,7 @@ euvl_species_decision_tree = [
     (oh_plus_filter(), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (add_star_hashes(), Terminal.KEEP),
-    (add_unbroken_fragment(), Terminal.KEEP),
-    (add_single_bond_fragments(allow_ring_opening=False), Terminal.KEEP),
+    (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),
+    (add_single_bond_fragments(allow_ring_opening=False, neighborhood_width=width), Terminal.KEEP),
     (species_default_true(), Terminal.KEEP),
 ]

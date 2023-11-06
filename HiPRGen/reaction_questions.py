@@ -1,5 +1,5 @@
 import math
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings, sym_iterator, extend_mapping
 from functools import partial
 import itertools
 import copy
@@ -7,6 +7,10 @@ import networkx as nx
 from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 from HiPRGen.constants import Terminal, ROOM_TEMP, KB, PLANCK, m_formulas
 from monty.json import MSONable
+from pymatgen.analysis.local_env import OpenBabelNN
+from pymatgen.core.structure import Molecule
+from pymatgen.analysis.graphs import MoleculeGraph
+import os
 
 """
 The reaction decision tree:
@@ -65,6 +69,11 @@ fluorine_hash = weisfeiler_lehman_graph_hash(fluorine_graph, node_attr="specie")
 carbon_graph = nx.MultiGraph()
 carbon_graph.add_node(0, specie="C")
 carbon_hash = weisfeiler_lehman_graph_hash(carbon_graph, node_attr="specie")
+
+co3_mol = Molecule.from_file("xyz_files/co3.xyz")
+co3_mg = MoleculeGraph.with_local_env_strategy(co3_mol, OpenBabelNN())
+co3_g = co3_mg.graph.to_undirected()
+co3_hash = weisfeiler_lehman_graph_hash(co3_g, node_attr="specie")
 
 
 def run_decision_tree(
@@ -508,6 +517,33 @@ class star_count_diff_above_threshold(MSONable):
             return False
 
 
+class map_redox_reaction(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "map redox reaction"
+
+    def __call__(self, reaction, mol_entries, params):
+        assert reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 1
+        full_mapping = {}
+        reactant_fragment_complex = mol_entries[reaction["reactants"][0]].fragment_data[0]
+        product_fragment_complex = mol_entries[reaction["products"][0]].fragment_data[0]
+        assert len(reactant_fragment_complex.fragment_mappings) == 1
+        assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+        assert len(product_fragment_complex.fragment_mappings) == 1
+        assert len(product_fragment_complex.fragment_mappings[0]) == 1
+        full_mappping = extend_mapping(
+                            full_mapping,
+                            0,
+                            reactant_fragment_complex.fragment_mappings[0][0],
+                            0,
+                            product_fragment_complex.fragment_mappings[0][0]
+                        )
+        reaction["atom_map"] = full_mapping
+        return False
+
+
 class reaction_is_charge_transfer(MSONable):
     def __init__(self):
         pass
@@ -535,12 +571,58 @@ class reaction_is_charge_transfer(MSONable):
                 product_hash_list.append(product.covalent_hash)
 
             if len(reactant_total_hashes.intersection(product_total_hashes)) == 2:
+                full_mapping = {}
+                for reactant_index in range(reaction["number_of_reactants"]):
+                    reactant = mol_entries[reaction["reactants"][reactant_index]]
+                    for product_index in range(reaction["number_of_products"]):
+                        product = mol_entries[reaction["products"][product_index]]
+                        if reactant.covalent_hash == product.covalent_hash:
+                            reactant_fragment_complex = reactant.fragment_data[0]
+                            product_fragment_complex = product.fragment_data[0]
+                            if reactant_fragment_complex.fragment_mappings != []:
+                                assert len(reactant_fragment_complex.fragment_mappings) == 1
+                                assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+                                assert len(product_fragment_complex.fragment_mappings) == 1
+                                assert len(product_fragment_complex.fragment_mappings[0]) == 1
+                                full_mappping = extend_mapping(
+                                                    full_mapping,
+                                                    reactant_index,
+                                                    reactant_fragment_complex.fragment_mappings[0][0],
+                                                    product_index,
+                                                    product_fragment_complex.fragment_mappings[0][0]
+                                            )
+                if full_mapping != {}:
+                    reaction["atom_map"] = full_mapping
+                reaction["is_redox"] = True
                 return True
             elif len(reactant_total_hashes.intersection(product_total_hashes)) == 1 and reactant_hash_list[0] == reactant_hash_list[1] and product_hash_list[0] == product_hash_list[1]:
+                full_mapping = {}
+                for rctpro_index in range(reaction["number_of_reactants"]):
+                    reactant = mol_entries[reaction["reactants"][rctpro_index]]
+                    product = mol_entries[reaction["products"][rctpro_index]]
+                    reactant_fragment_complex = reactant.fragment_data[0]
+                    product_fragment_complex = product.fragment_data[0]
+                    if reactant_fragment_complex.fragment_mappings != []:
+                        assert len(reactant_fragment_complex.fragment_mappings) == 1
+                        assert len(reactant_fragment_complex.fragment_mappings[0]) == 1
+                        assert len(product_fragment_complex.fragment_mappings) == 1
+                        assert len(product_fragment_complex.fragment_mappings[0]) == 1
+                        full_mappping = extend_mapping(
+                                            full_mapping,
+                                            rctpro_index,
+                                            reactant_fragment_complex.fragment_mappings[0][0],
+                                            rctpro_index,
+                                            product_fragment_complex.fragment_mappings[0][0]
+                                        )
+                if full_mapping != {}:
+                    reaction["atom_map"] = full_mapping
+                reaction["is_redox"] = True
                 return True
             else:
+                assert reaction["is_redox"] == False
                 return False
 
+        assert reaction["is_redox"] == False
         return False
 
 
@@ -857,7 +939,11 @@ class fragment_matching_found(MSONable):
                 product_bonds_broken = []
 
                 reactant_hashes = dict()
-                for reactant_index, frag_complex_index in enumerate(reactant_fragment_indices):
+                reactant_fragment_objects = dict()
+                reactant_fragment_mappings = dict()
+                for reactant_index, frag_complex_index in enumerate(
+                    reactant_fragment_indices
+                ):
                     fragment_complex = mol_entries[                  #pulls out a fragment_complex whose index matches the above
                         reaction["reactants"][reactant_index]
                     ].fragment_data[frag_complex_index]
@@ -875,7 +961,18 @@ class fragment_matching_found(MSONable):
                         else:
                             reactant_hashes[tag] = 1
 
+                    reactant_fragment_objects[reactant_index] = fragment_complex.fragment_objects
+                    reactant_fragment_mappings[reactant_index] = {}
+                    for ii, mappings in enumerate(fragment_complex.fragment_mappings):
+                        if fragment_complex.fragment_hashes[ii] in reactant_fragment_mappings[reactant_index]:
+                            assert len(mappings) == 1
+                            reactant_fragment_mappings[reactant_index][fragment_complex.fragment_hashes[ii]].append(mappings[0])
+                        else:
+                            reactant_fragment_mappings[reactant_index][fragment_complex.fragment_hashes[ii]] = copy.deepcopy(mappings)
+
                 product_hashes = dict()
+                product_fragment_objects = dict()
+                product_fragment_mappings = dict()
                 for product_index, frag_complex_index in enumerate(
                     product_fragment_indices
                 ):
@@ -885,7 +982,9 @@ class fragment_matching_found(MSONable):
                     ].fragment_data[frag_complex_index]
 
                     for bond in fragment_complex.bonds_broken:
-                        product_bonds_broken.append([(product_index, x) for x in bond])
+                        product_bonds_broken.append(
+                            [(product_index, x) for x in bond]
+                        )
 
                     for i in range(fragment_complex.number_of_fragments):
                         product_fragment_count += 1
@@ -894,6 +993,15 @@ class fragment_matching_found(MSONable):
                             product_hashes[tag] += 1
                         else:
                             product_hashes[tag] = 1
+
+                    product_fragment_objects[product_index] = fragment_complex.fragment_objects
+                    product_fragment_mappings[product_index] = {}
+                    for ii, mappings in enumerate(fragment_complex.fragment_mappings):
+                        if fragment_complex.fragment_hashes[ii] in product_fragment_mappings[product_index]:
+                            assert len(mappings) == 1
+                            product_fragment_mappings[product_index][fragment_complex.fragment_hashes[ii]].append(mappings[0])
+                        else:
+                            product_fragment_mappings[product_index][fragment_complex.fragment_hashes[ii]] = copy.deepcopy(mappings)
 
                 # don't consider fragmentations with both a ring opening and closing
                 if (
@@ -904,6 +1012,34 @@ class fragment_matching_found(MSONable):
                 ):
                     continue
 
+                elif (
+                    reaction["number_of_reactants"] == 2
+                    and reaction["number_of_products"] == 2
+                    and reactant_fragment_count == 3
+                    and product_fragment_count == 3
+                    and len(list(reactant_hashes.keys())) == 3
+                ):
+                    # if each reactant is isomorphic to one of the products, then the reaction must
+                    # be a fragment transfer of the form AX + A -> A + AX, where charges must differ
+                    # on the left and right species. In some contexts, we will assume this is an
+                    # electron transfer, but in others we will assume its a fragment transfer. In the
+                    # case of a fragment transfer, the three fragments getting matched must include
+                    # two of the same fragment, e.g. A, A, and X. Otherwise, we can have a situation
+                    # where the same bond is broken on e.g. A on both sides of the reaction which is
+                    # unphysical and incorrect.
+                    if set([reactant_0.covalent_hash, reactant_1.covalent_hash]) == set([product_0.covalent_hash, product_1.covalent_hash]):
+                        continue
+                    else: 
+                        # If one reactant is isomorphic to one product, then the reaction is of the form
+                        # A + B -> A + C, where charges must differ on the left and right species else
+                        # the reaction will have been filtered out as covalently decomposable. If the
+                        # reaction truly is not covalently decomposable, then A must be the species to
+                        # include the bond breaking on both sides of the reaction. In other words, A must
+                        # not also be one of the fragments. 
+                        overlap = list(set([reactant_0.covalent_hash, reactant_1.covalent_hash]).intersection(set([product_0.covalent_hash, product_1.covalent_hash])))
+                        if len(overlap) == 1 and overlap[0] in reactant_hashes:
+                            continue
+
                 if reactant_hashes == product_hashes:
                     if hydrogen_hash in reactant_hashes:
                         reaction["reactant_bonds_broken"] = reactant_bonds_broken
@@ -911,6 +1047,10 @@ class fragment_matching_found(MSONable):
                         reaction["hashes"] = reactant_hashes
                         reaction["reactant_fragment_count"] = reactant_fragment_count
                         reaction["product_fragment_count"] = product_fragment_count
+                        reaction["reactant_fragment_objects"] = reactant_fragment_objects
+                        reaction["reactant_fragment_mappings"] = reactant_fragment_mappings
+                        reaction["product_fragment_objects"] = product_fragment_objects
+                        reaction["product_fragment_mappings"] = product_fragment_mappings
                         return True
                     else:
                         tmp = {}
@@ -919,6 +1059,10 @@ class fragment_matching_found(MSONable):
                         tmp["hashes"] = reactant_hashes
                         tmp["reactant_fragment_count"] = reactant_fragment_count
                         tmp["product_fragment_count"] = product_fragment_count
+                        tmp["reactant_fragment_objects"] = reactant_fragment_objects
+                        tmp["reactant_fragment_mappings"] = reactant_fragment_mappings
+                        tmp["product_fragment_objects"] = product_fragment_objects
+                        tmp["product_fragment_mappings"] = product_fragment_mappings
                         viable_fragment_matches.append(tmp)
 
         if len(viable_fragment_matches) > 0:
@@ -942,9 +1086,6 @@ class fragment_matching_found(MSONable):
                             connected_components = nx.algorithms.components.connected_components(hot_reactant_graph)
                             for c in connected_components:
                                 subgraph = hot_reactant_graph.subgraph(c)
-                                # if subgraph.number_of_nodes() == 1:
-                                #     for node in subgraph:
-                                #         print(nx.get_node_attributes(hot_reactant_graph, "specie")[node])
                                 if subgraph.number_of_nodes() < min_frag_size:
                                     min_frag_size = subgraph.number_of_nodes()
                                     best_matching = copy.deepcopy(viable_match)
@@ -953,9 +1094,299 @@ class fragment_matching_found(MSONable):
             reaction["hashes"] = best_matching["hashes"]
             reaction["reactant_fragment_count"] = best_matching["reactant_fragment_count"]
             reaction["product_fragment_count"] = best_matching["product_fragment_count"]
+            reaction["reactant_fragment_objects"] = best_matching["reactant_fragment_objects"]
+            reaction["reactant_fragment_mappings"] = best_matching["reactant_fragment_mappings"]
+            reaction["product_fragment_objects"] = best_matching["product_fragment_objects"]
+            reaction["product_fragment_mappings"] = best_matching["product_fragment_mappings"]
             return True
 
         return False
+
+
+class mapping_with_reaction_center_not_found(MSONable):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "determine atom mapping"
+
+    def __call__(self, reaction, mol_entries, params):
+
+        full_mapping = {}
+
+        if len(reaction["hashes"].keys()) == 3:
+            # This must be A+B -> C+D where all three fragments are different
+            assert reaction["reactant_fragment_count"] == 3
+
+            for reactant_index in range(reaction["number_of_reactants"]):
+                reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                for product_index in range(reaction["number_of_products"]):
+                    product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                    overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                    assert len(overlapping_hash_list) == 0 or len(overlapping_hash_list) == 1
+                    for overlapping_hash in overlapping_hash_list:
+                        assert len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 1
+                        assert len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 1
+                        full_mappping = extend_mapping(
+                            full_mapping,
+                            reactant_index,
+                            reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
+                            product_index,
+                            reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
+                        )
+
+        elif len(reaction["hashes"].keys()) == 2:
+            if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 1:
+            # A -> B e.g. intramolecular H-transfer
+                assert reaction["reactant_fragment_count"] == 2
+
+                for reactant_index in range(reaction["number_of_reactants"]):
+                    reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                    for product_index in range(reaction["number_of_products"]):
+                        product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                        overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                        assert len(overlapping_hash_list) == 2
+                        for overlapping_hash in overlapping_hash_list:
+                            assert len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 1
+                            assert len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 1
+                            full_mappping = extend_mapping(
+                                full_mapping,
+                                reactant_index,
+                                reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
+                                product_index,
+                                reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
+                            )
+
+            elif reaction["number_of_reactants"] + reaction["number_of_products"] == 3:
+            # A -> B+C aka break 1 or A+B -> C aka form 1
+                assert reaction["reactant_fragment_count"] == 2
+
+                for reactant_index in range(reaction["number_of_reactants"]):
+                    reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                    for product_index in range(reaction["number_of_products"]):
+                        product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                        overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                        assert len(overlapping_hash_list) == 1
+                        for overlapping_hash in overlapping_hash_list:
+                            assert len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 1
+                            assert len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 1
+                            full_mappping = extend_mapping(
+                                full_mapping,
+                                reactant_index,
+                                reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
+                                product_index,
+                                reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
+                            )
+
+            elif reaction["number_of_reactants"] == 2 and reaction["number_of_products"] == 2:
+            # A+B -> C+D where fragments are of the form 2X, Y
+            # more specifically, two cases:
+            # AA + B -> A + AB
+            # AB + A -> A + BA (where AB != BA) - this looks like it should be covalently decomposable, but
+            # once you account for charges, it can be not, e.g. AH- + A -> A- + HA
+                assert reaction["reactant_fragment_count"] == 3
+
+                for frag_hash in reaction["hashes"]:
+                    if reaction["hashes"][frag_hash] == 2:
+                        double_hash = frag_hash
+                    elif reaction["hashes"][frag_hash] == 1:
+                        single_hash = frag_hash
+
+                double_hash_on_same_specie = False
+                for ind in range(reaction["number_of_reactants"]):
+                    if double_hash in reaction["reactant_fragment_mappings"][ind]:
+                        if len(reaction["reactant_fragment_mappings"][ind][double_hash]) == 2:
+                            assert double_hash_on_same_specie == False
+                            double_hash_on_same_specie = True
+                    if double_hash in reaction["product_fragment_mappings"][ind]:
+                        if len(reaction["product_fragment_mappings"][ind][double_hash]) == 2:
+                            assert double_hash_on_same_specie == False
+                            double_hash_on_same_specie = True
+
+                if not double_hash_on_same_specie:
+                    for reactant_index in range(reaction["number_of_reactants"]):
+                        reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                        for product_index in range(reaction["number_of_products"]):
+                            product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                            if len(reactant_frag_hash_set) == 2 and len(product_frag_hash_set) == 2:
+                                full_mappping = extend_mapping(
+                                    full_mapping,
+                                    reactant_index,
+                                    reaction["reactant_fragment_mappings"][reactant_index][single_hash][0],
+                                    product_index,
+                                    reaction["product_fragment_mappings"][product_index][single_hash][0]
+                                )
+                            elif len(reactant_frag_hash_set) + len(product_frag_hash_set) == 3:
+                                full_mappping = extend_mapping(
+                                    full_mapping,
+                                    reactant_index,
+                                    reaction["reactant_fragment_mappings"][reactant_index][double_hash][0],
+                                    product_index,
+                                    reaction["product_fragment_mappings"][product_index][double_hash][0]
+                                )
+                else:
+                    double_ind = 0
+                    for reactant_index in range(reaction["number_of_reactants"]):
+                        reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                        for product_index in range(reaction["number_of_products"]):
+                            product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                            overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                            for overlapping_hash in overlapping_hash_list:
+                                if len(reactant_frag_hash_set) == 1 and len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 2:
+                                    assert overlapping_hash == double_hash
+                                    full_mappping = extend_mapping(
+                                        full_mapping,
+                                        reactant_index,
+                                        reaction["reactant_fragment_mappings"][reactant_index][double_hash][double_ind],
+                                        product_index,
+                                        reaction["product_fragment_mappings"][product_index][double_hash][0]
+                                    )
+                                    double_ind += 1
+                                elif len(product_frag_hash_set) == 1 and len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 2:
+                                    assert overlapping_hash == double_hash
+                                    full_mappping = extend_mapping(
+                                        full_mapping,
+                                        reactant_index,
+                                        reaction["reactant_fragment_mappings"][reactant_index][double_hash][0],
+                                        product_index,
+                                        reaction["product_fragment_mappings"][product_index][double_hash][double_ind]
+                                    )
+                                    double_ind += 1
+                                elif len(reactant_frag_hash_set) + len(product_frag_hash_set) == 3:
+                                    assert overlapping_hash == single_hash
+                                    full_mappping = extend_mapping(
+                                        full_mapping,
+                                        reactant_index,
+                                        reaction["reactant_fragment_mappings"][reactant_index][single_hash][0],
+                                        product_index,
+                                        reaction["product_fragment_mappings"][product_index][single_hash][0]
+                                    )
+
+            else:
+                raise RuntimeError("Number of reactants and number of products must both be either 1 or 2! Exiting...")
+
+        elif len(reaction["hashes"].keys()) == 1:
+            if reaction["number_of_reactants"] == 1 and reaction["number_of_products"] == 1:
+            # This would have to be a ring opening or ring closing
+                assert reaction["reactant_fragment_count"] == 1
+
+                for reactant_index in range(reaction["number_of_reactants"]):
+                    reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                    for product_index in range(reaction["number_of_products"]):
+                        product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                        overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                        assert len(overlapping_hash_list) == 1
+                        for overlapping_hash in overlapping_hash_list:
+                            assert len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 1
+                            assert len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 1
+                            full_mappping = extend_mapping(
+                                full_mapping,
+                                reactant_index,
+                                reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash][0],
+                                product_index,
+                                reaction["product_fragment_mappings"][product_index][overlapping_hash][0]
+                            )
+
+            else:
+            # This would have to be A+A -> B (modulo charge)
+                assert reaction["number_of_reactants"] + reaction["number_of_products"] == 3
+                assert reaction["reactant_fragment_count"] == 2
+
+                for frag_hash in reaction["hashes"]:
+                    if reaction["hashes"][frag_hash] == 2:
+                        double_hash = frag_hash
+
+                double_hash_on_same_specie = False
+                for ind in range(reaction["number_of_reactants"]):
+                    if double_hash in reaction["reactant_fragment_mappings"][ind]:
+                        if len(reaction["reactant_fragment_mappings"][ind][double_hash]) == 2:
+                            assert double_hash_on_same_specie == False
+                            double_hash_on_same_specie = True
+                for ind in range(reaction["number_of_products"]):
+                    if double_hash in reaction["product_fragment_mappings"][ind]:
+                        if len(reaction["product_fragment_mappings"][ind][double_hash]) == 2:
+                            assert double_hash_on_same_specie == False
+                            double_hash_on_same_specie = True
+
+                assert double_hash_on_same_specie
+
+                double_ind = 0
+                for reactant_index in range(reaction["number_of_reactants"]):
+                    reactant_frag_hash_set = set(reaction["reactant_fragment_mappings"][reactant_index].keys())
+                    for product_index in range(reaction["number_of_products"]):
+                        product_frag_hash_set = set(reaction["product_fragment_mappings"][product_index].keys())
+                        overlapping_hash_list = list(reactant_frag_hash_set.intersection(product_frag_hash_set))
+                        for overlapping_hash in overlapping_hash_list:
+                            if len(reactant_frag_hash_set) == 1 and len(reaction["reactant_fragment_mappings"][reactant_index][overlapping_hash]) == 2:
+                                assert overlapping_hash == double_hash
+                                full_mappping = extend_mapping(
+                                    full_mapping,
+                                    reactant_index,
+                                    reaction["reactant_fragment_mappings"][reactant_index][double_hash][double_ind],
+                                    product_index,
+                                    reaction["product_fragment_mappings"][product_index][double_hash][0]
+                                )
+                                double_ind += 1
+                            elif len(product_frag_hash_set) == 1 and len(reaction["product_fragment_mappings"][product_index][overlapping_hash]) == 2:
+                                assert overlapping_hash == double_hash
+                                full_mappping = extend_mapping(
+                                    full_mapping,
+                                    reactant_index,
+                                    reaction["reactant_fragment_mappings"][reactant_index][double_hash][0],
+                                    product_index,
+                                    reaction["product_fragment_mappings"][product_index][double_hash][double_ind]
+                                )
+                                double_ind += 1
+                            else:
+                                raise RuntimeError("Mapping should be length 2 on either reactant or product! Exiting...")
+
+        # Map metals, if present:
+        reactant_m_inds = []
+        for reactant_index in range(reaction["number_of_reactants"]):
+            for m_ind in mol_entries[reaction["reactants"][reactant_index]].m_inds:
+                reactant_m_inds.append((reactant_index, m_ind))
+
+        product_m_inds = []
+        for product_index in range(reaction["number_of_products"]):
+            for m_ind in mol_entries[reaction["products"][product_index]].m_inds:
+                product_m_inds.append((product_index, m_ind))
+
+        assert len(reactant_m_inds) == len(product_m_inds)
+
+        # For now, we will arbitrarily map metals. In the future, if there are multiple metal atoms present,
+        # it would be better to e.g. compare the graph distance of each metal from the reaction center and
+        # then have the closer metal to the reaction center in the reactants mapped to the closer metal to
+        # the reaction center in the products. That's just one idea, but there may be better approaches.
+        for ii, reactant_m_ind in enumerate(reactant_m_inds):
+            full_mapping[reactant_m_ind] = product_m_inds[ii]
+
+
+        reaction["atom_map"] = full_mapping
+
+        if len(reaction["reactant_bonds_broken"]) + len(reaction["product_bonds_broken"]) < 2:
+            return False
+
+        elif len(reaction["reactant_bonds_broken"]) == 1 and len(reaction["product_bonds_broken"]) == 1:
+
+            hot_reactant_atoms = reaction["reactant_bonds_broken"][0]
+            hot_product_atoms = reaction["product_bonds_broken"][0]
+
+            reaction["reaction_center"] = None
+
+            for hot_reactant_atom in hot_reactant_atoms:
+                if reaction["atom_map"][hot_reactant_atom] in hot_product_atoms:
+                    if reaction["reaction_center"] is not None:
+                        raise RuntimeError("Should never find two reaction centers! Exiting...")
+                    else:
+                        reaction["reaction_center"] = (hot_reactant_atom, reaction["atom_map"][hot_reactant_atom])
+
+            if reaction["reaction_center"] is None:
+                return True
+
+            else:
+                return False
+        else:
+            raise RuntimeError("Reaction center not implemented for " + str(len(reaction["reactant_bonds_broken"])) + " reactant bonds broken and " + str(len(reaction["product_bonds_broken"])) + " product bonds broken! Exiting...")
 
 
 class single_reactant_single_product_not_atom_transfer(MSONable):
@@ -1303,6 +1734,7 @@ default_reaction_decision_tree = [
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
         ],
     ),
@@ -1320,7 +1752,44 @@ default_reaction_decision_tree = [
         [
             (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
             (reaction_default_true(), Terminal.KEEP),
+        ],
+    ),
+    (reaction_default_true(), Terminal.DISCARD),
+]
+
+
+default_logging_decision_tree = [
+    (metal_metal_reaction(), Terminal.DISCARD),
+    # redox branch
+    (
+        is_redox_reaction(),
+        [
+            (too_many_reactants_or_products(), Terminal.DISCARD),
+            (dcharge_too_large(), Terminal.DISCARD),
+            (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.DISCARD),
+        ],
+    ),
+    (dG_above_threshold(0.0, "solvation_free_energy", 0.0), Terminal.DISCARD),
+    # (single_reactant_with_ring_break_two(), Terminal.KEEP),
+    # (single_product_with_ring_form_two(), Terminal.KEEP),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (reaction_is_covalent_decomposable(), Terminal.DISCARD),
+    (concerted_metal_coordination(), Terminal.DISCARD),
+    (concerted_metal_coordination_one_product(), Terminal.DISCARD),
+    (concerted_metal_coordination_one_reactant(), Terminal.DISCARD),
+    (metal_coordination_passthrough(), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (mapping_with_reaction_center_not_found(), Terminal.KEEP),
+            (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
     (reaction_default_true(), Terminal.DISCARD),
@@ -1359,6 +1828,7 @@ euvl_phase1_reaction_decision_tree = [
             (too_many_reactants_or_products(), Terminal.DISCARD),
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
             (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
@@ -1382,6 +1852,7 @@ euvl_phase1_reaction_decision_tree = [
                     (not_h_transfer(), Terminal.DISCARD),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (h_minus_abstraction(), Terminal.DISCARD),
+                    (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
                     (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.KEEP),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
@@ -1397,6 +1868,7 @@ euvl_phase1_reaction_decision_tree = [
         fragment_matching_found(),
         [
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
         ],
@@ -1406,13 +1878,14 @@ euvl_phase1_reaction_decision_tree = [
 ]
 
 
-euvl_phase1_reaction_logging_tree = [
+euvl_phase1_logging_decision_tree = [
     (
         is_redox_reaction(),
         [
             (too_many_reactants_or_products(), Terminal.DISCARD),
             (dcharge_too_large(), Terminal.DISCARD),
             (reactant_and_product_not_isomorphic(), Terminal.DISCARD),
+            (map_redox_reaction(), Terminal.DISCARD),
             (add_electron_species(), Terminal.DISCARD),
             (dG_above_threshold(-float("inf"), "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
@@ -1436,6 +1909,7 @@ euvl_phase1_reaction_logging_tree = [
                     (not_h_transfer(), Terminal.DISCARD),
                     (h_abstraction_from_closed_shell_reactant(), Terminal.DISCARD),
                     (h_minus_abstraction(), Terminal.DISCARD),
+                    (mapping_with_reaction_center_not_found(), Terminal.KEEP),
                     (dG_above_threshold(0.0, "free_energy", 0.0, 0.1), Terminal.DISCARD),
                     (reaction_default_true(), Terminal.DISCARD),
                 ],
@@ -1451,6 +1925,7 @@ euvl_phase1_reaction_logging_tree = [
         fragment_matching_found(),
         [
             (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (mapping_with_reaction_center_not_found(), Terminal.KEEP),
             (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
             (reaction_default_true(), Terminal.DISCARD),
         ],
@@ -1464,29 +1939,31 @@ euvl_phase2_reaction_decision_tree = [
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
     (reaction_is_charge_transfer(), Terminal.KEEP),
-    (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
-    (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
-    (star_count_diff_above_threshold(6), Terminal.DISCARD),
-    (
-        fragment_matching_found(),
-        [
-            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
-            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-            (reaction_is_hindered(), Terminal.DISCARD),
-            (
-                reaction_is_covalent_decomposable(),
-                [
-                    (fragments_are_not_2A_B(), Terminal.DISCARD),
-                    (reaction_default_true(), Terminal.KEEP),
-                ],
-            ),
-            (reaction_default_true(), Terminal.KEEP),
-        ],
-    ),
+    # (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
+    # (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
+    # (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    # (
+    #     fragment_matching_found(),
+    #     [
+    #         (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+    #         (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+    #         (reaction_is_hindered(), Terminal.DISCARD),
+    #         (
+    #             reaction_is_covalent_decomposable(),
+    #             [
+    #                 (fragments_are_not_2A_B(), Terminal.DISCARD),
+    #                 (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
+    #                 (reaction_default_true(), Terminal.KEEP),
+    #             ],
+    #         ),
+    #         (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
+    #         (reaction_default_true(), Terminal.KEEP),
+    #     ],
+    # ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
-euvl_phase2_logging_tree = [
+euvl_phase2_logging_decision_tree = [
     (is_redox_reaction(), Terminal.DISCARD),
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
@@ -1504,9 +1981,11 @@ euvl_phase2_logging_tree = [
                 reaction_is_covalent_decomposable(),
                 [
                     (fragments_are_not_2A_B(), Terminal.DISCARD),
-                    (reaction_default_true(), Terminal.KEEP),
+                    (mapping_with_reaction_center_not_found(), Terminal.KEEP),
+                    (reaction_default_true(), Terminal.DISCARD),
                 ],
             ),
+            (mapping_with_reaction_center_not_found(), Terminal.KEEP),
             (reaction_default_true(), Terminal.DISCARD),
         ],
     ),
