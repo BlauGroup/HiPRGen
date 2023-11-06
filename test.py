@@ -3,8 +3,9 @@ import sys
 import subprocess
 import sqlite3
 import pickle
+import copy
 
-
+import matplotlib.colors as mcolors
 from HiPRGen.network_loader import NetworkLoader
 from HiPRGen.initial_state import find_mol_entry_from_xyz_and_charge
 from monty.serialization import loadfn, dumpfn
@@ -218,8 +219,7 @@ def li_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+    network_loader.load_initial_state_and_trajectories()
 
     # HiPRGen has analysis tools to understand what happened in our simulation.
     # The output files are written into the same folder in which the reaction
@@ -385,8 +385,7 @@ def mg_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+    network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -503,8 +502,7 @@ def mg_test():
 #         folder + "/initial_state.sqlite",
 #     )
 
-#     network_loader.load_trajectories()
-#     network_loader.load_initial_state()
+#     network_loader.load_initial_state_and_trajectories()
 
 #     report_generator = ReportGenerator(
 #         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -673,8 +671,7 @@ def euvl_phase1_test():
         folder + "/initial_state.sqlite",
     )
 
-    network_loader.load_trajectories()
-    network_loader.load_initial_state()
+    network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -770,8 +767,7 @@ def euvl_phase2_test():
         phase1_folder + "/mol_entries.pickle",
         phase1_folder + f"/initial_state.sqlite",
     )
-    phase1_network_loader.load_trajectories()
-    phase1_network_loader.load_initial_state()
+    phase1_network_loader.load_initial_state_and_trajectories()
     phase1_simulation_replayer = SimulationReplayer(phase1_network_loader)
     phase1_simulation_replayer.compute_trajectory_final_states()
 
@@ -807,8 +803,7 @@ def euvl_phase2_test():
 
     for seed in range(1000, 2000):
         network_loader.set_initial_state_db(folder + "/initial_state_"+str(seed)+".sqlite")
-        network_loader.load_trajectories()
-    network_loader.load_initial_state()
+        network_loader.load_initial_state_and_trajectories()
 
     report_generator = ReportGenerator(
         network_loader.mol_entries, folder + "/dummy.tex", rebuild_mol_pictures=True
@@ -819,6 +814,47 @@ def euvl_phase2_test():
     final_state_report(simulation_replayer, folder + "/final_state_report.tex")
 
     sink_report(simulation_replayer, folder + "/sink_report.tex")
+
+    tps_plus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tps.xyz", 1)
+    phs_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/phs.xyz", 0)
+    tba_0_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/tba.xyz", 0)
+    nf_minus1_id = find_mol_entry_from_xyz_and_charge(mol_entries, "./xyz_files/nf.xyz", -1)
+
+    phase2_important_species = [tps_plus1_id, phs_0_id, tba_0_id, nf_minus1_id]
+
+    colors = list(mcolors.TABLEAU_COLORS.values())
+    phase2_colorstyle_list = []
+    for ii, species in enumerate(phase2_important_species):        
+        phase2_colorstyle_list.append([colors[ii], "solid"])
+
+    ii = 0
+    for mol_id in simulation_replayer.sinks:
+        if mol_id not in phase2_important_species:
+            phase2_important_species.append(mol_id)
+            phase2_colorstyle_list.append([colors[ii%len(colors)], "dashed"])
+            ii += 1
+
+    phase1_important_species = copy.deepcopy(phase2_important_species)
+    phase1_important_species.append(len(mol_entries))
+
+    phase1_colorstyle_list = copy.deepcopy(phase2_colorstyle_list)
+    phase1_colorstyle_list.append(["black", "dotted"])
+
+    phase1_simulation_replayer.time_series_graph(
+        seeds=[i for i in range(1000,2000)],
+        species_of_interest=phase1_important_species,
+        path=os.path.join(folder,"phase1_time_series"),
+        custom_y_max=36,
+        custom_colorstyle_list=phase1_colorstyle_list
+    )
+
+    simulation_replayer.time_series_graph(
+        seeds=[i for i in range(1000,1000+1000*int(number_of_threads))],
+        species_of_interest=phase2_important_species,
+        path=os.path.join(folder,"phase2_time_series"),
+        custom_y_max=36,
+        custom_colorstyle_list=phase2_colorstyle_list
+    )
 
     tests_passed = True
     print("Number of species:", network_loader.number_of_species)

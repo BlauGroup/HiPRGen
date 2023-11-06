@@ -527,7 +527,7 @@ def reaction_tally_report(
     for (reaction_index, number) in sorted(
             reaction_tally.items(), key=lambda pair: -pair[1]):
         if number > cutoff:
-            report_generator.emit_text(str(number) + " occourances of:")
+            report_generator.emit_text(str(number) + " occurrences of:")
             report_generator.emit_reaction(
                 network_loader.index_to_reaction(reaction_index),
                 label=str(reaction_index)
@@ -839,7 +839,7 @@ class SimulationReplayer:
         )
 
         for seed in self.network_loader.trajectories:
-            state = np.copy(self.network_loader.initial_state_array)
+            state = np.copy(self.network_loader.initial_state_array[seed])
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
@@ -861,7 +861,7 @@ class SimulationReplayer:
     def compute_trajectory_final_states(self):
         self.final_states = {}
         for seed in self.network_loader.trajectories:
-            state = np.copy(self.network_loader.initial_state_array)
+            state = np.copy(self.network_loader.initial_state_array[seed])
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
@@ -906,13 +906,13 @@ class SimulationReplayer:
                         self.producing_reactions[product_index][reaction_index] += 1
 
     def compute_state_time_series(self, seed):
-        state_dimension_size = len(self.network_loader.initial_state_array)
+        state_dimension_size = len(self.network_loader.initial_state_array[seed])
         step_dimension_size = len(self.network_loader.trajectories[seed])
         time_series = np.zeros(
             (step_dimension_size, state_dimension_size),
             dtype=int)
 
-        state = np.copy(self.network_loader.initial_state_array)
+        state = np.copy(self.network_loader.initial_state_array[seed])
         for step in self.network_loader.trajectories[seed]:
             reaction_index = self.network_loader.trajectories[seed][step][0]
             time = self.network_loader.trajectories[seed][step][1]
@@ -936,9 +936,11 @@ class SimulationReplayer:
             seeds,
             species_of_interest,
             path,
+            custom_y_max=None,
+            custom_colorstyle_list=None,
             colors = list(mcolors.TABLEAU_COLORS.values()),
-            styles = ['solid', 'dotted', 'dashed', 'dashdot'],
-            internal_index_labels=True
+            styles = ['solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot'],
+            internal_index_labels=True,
     ):
 
 
@@ -970,11 +972,16 @@ class SimulationReplayer:
 
         line_dict = {}
         i = 0
-        for species_index in species_of_interest:
-            r = i % len(colors)
-            q = i // len(colors)
-            line_dict[species_index] = (colors[r], styles[q])
-            i += 1
+        if custom_colorstyle_list is None:
+            for species_index in species_of_interest:
+                r = i % len(colors)
+                q = i // len(colors)
+                line_dict[species_index] = (colors[r], styles[q])
+                i += 1
+        else:
+            for species_index in species_of_interest:
+                line_dict[species_index] = (custom_colorstyle_list[i][0], custom_colorstyle_list[i][1])
+                i += 1
 
 
         fig, (ax0, ax1, ax2) = plt.subplots(
@@ -983,15 +990,19 @@ class SimulationReplayer:
             gridspec_kw={'height_ratios':[2,2,1]})
 
         y_max = 0
-        for step in range(total_time_series.shape[0]):
-            for species_index in species_of_interest:
-                y_max = max(y_max, total_time_series[step,species_index])
+        if custom_y_max is None:
+            for step in range(total_time_series.shape[0]):
+                for species_index in species_of_interest:
+                    y_max = max(y_max, total_time_series[step,species_index])
+            y_max += 1
+        else:
+            y_max = custom_y_max
 
         ax0.set_xlim([0,total_time_series.shape[0]])
-        ax0.set_ylim([0,y_max+1])
+        ax0.set_ylim([0,y_max])
 
         ax1.set_xlim([0,total_time_series.shape[0]])
-        ax1.set_ylim([0,(y_max+1)/10])
+        ax1.set_ylim([0,(y_max)/10])
 
 
         ticks = np.arange(0, total_time_series.shape[0])
