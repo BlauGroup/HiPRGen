@@ -240,7 +240,9 @@ def dispatcher(
                  reaction['is_redox']
                  ))
 
+            # Create reaction graph + add to LMDB
             rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index)
+
             reaction_index += 1
             if reaction_index % dispatcher_payload.commit_frequency == 0:
                 rn_con.commit()
@@ -349,12 +351,6 @@ def worker(
                     reaction,
                     dest=DISPATCHER_RANK,
                     tag=NEW_REACTION_DB)
-                
-                # rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index)
-                # reaction_index += 1
-                # if reaction_index % dispatcher_payload.commit_frequency == 0:
-                #     rn_con.commit()
-
                 
 
 
