@@ -5,7 +5,7 @@ from pathlib import Path
 import copy
 from collections import defaultdict
 from monty.serialization import dumpfn
-from bondnet.data.utils import create_rxn_graph
+from bondnet.data.utils import construct_rxn_graph_empty
 from HiPRGen.lmdb_dataset import LmdbDataset
 import lmdb
 import tqdm
@@ -229,36 +229,40 @@ class rxn_networks_graph:
         # print(f"has_bonds: {has_bonds}")
         # print(f"mappings: {mappings}")
 
-        # step 5: Create a reaction graphs and features
-        rxn_graph, features = create_rxn_graph(
-                                                reactants = reactants_dgl_graphs,
-                                                products = products_dgl_graphs,
-                                                mappings = mappings,
-                                                has_bonds = has_bonds,
-                                                device = None,
-                                                ntypes=("global", "atom", "bond"),
-                                                ft_name="feat",
-                                                reverse=False,
-                                            )
+        # # step 5: Create a reaction graphs and features
+        # rxn_graph, features = create_rxn_graph(
+        #                                         reactants = reactants_dgl_graphs,
+        #                                         products = products_dgl_graphs,
+        #                                         mappings = mappings,
+        #                                         has_bonds = has_bonds,
+        #                                         device = None,
+        #                                         ntypes=("global", "atom", "bond"),
+        #                                         ft_name="feat",
+        #                                         reverse=False,
+        #                                         zero_fts=True,
+        #                                     )
 
-        # print(f"rxn_graph: {rxn_graph}")
-        if rxn['is_redox']:
-            print(f"mappings: {mappings}")
-            print(f"features: {features}")
-            print(f"transformed_atom_map: {transformed_atom_map}")
-            print(f"atom_map: {atom_map}")
+        # # print(f"rxn_graph: {rxn_graph}")
+        # if rxn['is_redox']:
+        #     print(f"mappings: {mappings}")
+        #     print(f"features: {features}")
+        #     print(f"transformed_atom_map: {transformed_atom_map}")
+        #     print(f"atom_map: {atom_map}")
 
-        # step 5: update reaction features to the reaction graph
-        for nt, ft in features.items():
-            # print(f"nt: {nt}")
-            # print(f"ft: {ft}")
-            rxn_graph.nodes[nt].data.update({'ft': ft})
+        # # step 5: update reaction features to the reaction graph
+        # for nt, ft in features.items():
+        #     # print(f"nt: {nt}")
+        #     # print(f"ft: {ft}")
+        #     rxn_graph.nodes[nt].data.update({'ft': ft})
+
+        rxn_graph = construct_rxn_graph_empty(mappings)
 
         # step 6: save a reaction graph and dG
         self.data[rxn_id] = {} # {'id': {}}
         self.data[rxn_id]['rxn_graph'] = rxn_graph
         self.data[rxn_id]['value'] = rxn['dG']  #torch.tensor([rxn['dG']])
-        self.data[rxn_id]['reaction_features'] = features
+        self.data[rxn_id]['mappings'] = mappings
+        # self.data[rxn_id]['reaction_features'] = features
         
 
         #### Write LMDB ####

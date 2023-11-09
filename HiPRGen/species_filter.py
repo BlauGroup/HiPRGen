@@ -305,6 +305,9 @@ def species_filter(
     #print(dgl_molecules_dict)
 
 
+    #ADD WRITING MOLECULE LMDB HERE!!!
+
+
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
