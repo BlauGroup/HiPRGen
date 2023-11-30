@@ -1,7 +1,6 @@
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN
-from pymatgen.analysis.fragmenter import metal_edge_extender
+from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender#, oxygen_edge_extender
 import sqlite3
 
 
@@ -16,6 +15,7 @@ def find_mol_entry_from_xyz_and_charge(mol_entries, xyz_file_path, charge):
 
     # correction to the molecule graph
     target_mol_graph = metal_edge_extender(target_mol_graph)
+    # target_mol_graph = oxygen_edge_extender(target_mol_graph)
 
     match = False
     index = -1
@@ -65,14 +65,30 @@ create_factors_table = """
     );
 """
 
+create_interrupt_state_table = """
+    CREATE TABLE interrupt_state (
+            seed                   INTEGER NOT NULL,
+            species_id             INTEGER NOT NULL,
+            count                  INTEGER NOT NULL
+    );
+"""
+
+create_interrupt_cutoff_table = """
+    CREATE TABLE interrupt_cutoff (
+            seed                   INTEGER NOT NULL,
+            step                   INTEGER NOT NULL,
+            time                   INTEGER NOT NULL
+    );
+"""
+
 
 def insert_initial_state(
         initial_state,
         mol_entries,
         initial_state_db,
         factor_zero = 1.0,
-        factor_two = 1.0,
-        factor_duplicate = 0.5
+        factor_two = 0.5,
+        factor_duplicate = 1.0,
 ):
     """
     initial state is a dict mapping species ids to counts.
@@ -83,6 +99,8 @@ def insert_initial_state(
     rn_cur.execute(create_initial_state_table)
     rn_cur.execute(create_trajectories_table)
     rn_cur.execute(create_factors_table)
+    rn_cur.execute(create_interrupt_state_table)
+    rn_cur.execute(create_interrupt_cutoff_table)
     rn_con.commit()
 
     rn_cur.execute(

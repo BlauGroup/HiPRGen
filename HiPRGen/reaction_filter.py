@@ -1,18 +1,23 @@
 from mpi4py import MPI
+from HiPRGen.rxn_networks_graph import rxn_networks_graph
 from itertools import permutations, product
 from HiPRGen.report_generator import ReportGenerator
-from time import time
-from HiPRGen.logging import log_message
 import sqlite3
+from time import localtime, strftime, time
 from enum import Enum
 from math import floor
+from HiPRGen.reaction_filter_payloads import (
+    DispatcherPayload,
+    WorkerPayload
+)
 
 from HiPRGen.reaction_questions import (
     run_decision_tree
 )
 
+
 """
-Phases 3 & 4 run in paralell using MPI
+Phases 3 & 4 run in parallel using MPI
 
 Phase 3: reaction gen and filtering
 input: a bucket labeled by atom count
@@ -93,9 +98,19 @@ class WorkerState(Enum):
     RUNNING = 1
     FINISHED = 2
 
+
+def log_message(*args, **kwargs):
+    print(
+        '[' + strftime('%H:%M:%S', localtime()) + ']',
+        *args, **kwargs)
+
 def dispatcher(
         mol_entries,
-        dispatcher_payload
+        dgl_molecules_dict,
+        grapher_features,
+        dispatcher_payload,
+        #wx
+        reaction_lmdb_path
 ):
 
     comm = MPI.COMM_WORLD
@@ -121,6 +136,19 @@ def dispatcher(
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
     rn_con.commit()
+
+    #### HY
+    ## initialize preprocess data 
+
+#wx: writting lmdbs in dispatcher ?
+    rxn_networks_g = rxn_networks_graph(
+        mol_entries,
+        dgl_molecules_dict,
+        grapher_features,
+        dispatcher_payload.bondnet_test,
+        reaction_lmdb_path #wx
+    )
+    ####
 
     log_message("initializing report generator")
 
@@ -182,6 +210,7 @@ def dispatcher(
         tag = status.Get_tag()
         rank = status.Get_source()
 
+        #this is the last step when worker is out of work.
         if tag == SEND_ME_A_WORK_BATCH:
             if len(work_batch_list) == 0:
                 comm.send(None, dest=rank, tag=HERE_IS_A_WORK_BATCH)
@@ -197,8 +226,10 @@ def dispatcher(
                     ": group ids:",
                     group_id_0, group_id_1
                 )
-
-
+        #this is where worker is doing things. found a good reation and send to dispatcher.
+        #if this is correct, then create_rxn_networks_graph operates on worker instead of dispatcher. 
+        #This is the reason why adding samples one by one. QA: where is batch of reactions?
+#ten reactions, first filter out, second send , next eight
         elif tag == NEW_REACTION_DB:
             reaction = data
             rn_cur.execute(
@@ -215,6 +246,9 @@ def dispatcher(
                  reaction['dG_barrier'],
                  reaction['is_redox']
                  ))
+
+            # Create reaction graph + add to LMDB
+            rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index)
 
             reaction_index += 1
             if reaction_index % dispatcher_payload.commit_frequency == 0:
@@ -240,7 +274,7 @@ def dispatcher(
          reaction_index)
     )
 
-
+    
     report_generator.finished()
     rn_con.commit()
     bucket_con.close()
@@ -324,6 +358,7 @@ def worker(
                     reaction,
                     dest=DISPATCHER_RANK,
                     tag=NEW_REACTION_DB)
+                
 
 
             if run_decision_tree(reaction,

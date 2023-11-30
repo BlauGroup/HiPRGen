@@ -39,36 +39,28 @@ HiPRGen is supported for MacOS and Linux and has been tested on MacOS 11.6 and 1
 On the LRC cluster, an environment where HiPRGen can be run is set up as follows:
 
 ```
-module load python/3.9.12
-conda init
-
-logout, log back in
-
+cd $HOME
 module load python/3.8.2-gcc
-module load gcc/7.4.0
-module load openmpi/4.0.1-gcc
+pip3 install --user mpi4py pymatgen
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
 
-pip3 install --user mpi4py
+# load miniconda
+source ./.bashrc
+
 conda create -n HiPRGen_RNMC python=3.8
 conda activate HiPRGen_RNMC
-conda install -c conda-forge openbabel pygraphviz pycairo
-pip install pymatgen==2023.3.10
+conda install -c conda-forge openbabel pygraphviz pymatgen pycairo
 
+
+git clone https://github.com/BlauGroup/HiPRGen.git
 git clone https://github.com/BlauGroup/RNMC.git
 cd RNMC
 module load gsl
-CXX=g++ ./build.sh
+CC=g++ ./build.sh
 export PATH=$PATH:$PROJ/RNMC/build
-
-
-can pick up from reloading the environment:
-
-conda activate HiPRGen_RNMC
-module load python/3.8.2-gcc
-module load gcc/7.4.0 
-module load openmpi/4.0.1-gcc
-module load gsl
-export PATH=$PATH:$PROJ/RNMC/build
+cd ../HiPRGen
+python test.py 2
 ```
 
 ### Tests

@@ -46,7 +46,6 @@
             monty
             openbabel-bindings
             pygraphviz
-            pyright
             mpi4py
             pycairo
             (if installHiPRGen then (HiPRGen systemString) else null)

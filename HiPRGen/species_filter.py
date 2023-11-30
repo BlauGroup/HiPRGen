@@ -1,11 +1,32 @@
-from HiPRGen.mol_entry import MoleculeEntry
+from HiPRGen.mol_entry import MoleculeEntry, find_fragment_atom_mappings, build_compressed_graph
+from functools import partial
+from itertools import chain
+from monty.serialization import dumpfn
 import pickle
+import copy
 from HiPRGen.species_questions import run_decision_tree
 from HiPRGen.constants import Terminal
-from HiPRGen.logging import log_message
 import networkx as nx
+from time import localtime, strftime
+from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
 import networkx.algorithms.isomorphism as iso
 from HiPRGen.report_generator import ReportGenerator
+from pymatgen.core.periodic_table import DummySpecies
+from pymatgen.core.sites import Site
+from pymatgen.core.structure import Molecule
+from pymatgen.analysis.graphs import MoleculeGraph
+
+from bondnet.model.training_utils import get_grapher
+from bondnet.core.molwrapper import MoleculeWrapper
+from bondnet.data.transformers import HeteroGraphFeatureStandardScaler
+from bondnet.core.molwrapper import create_wrapper_mol_from_atoms_and_bonds
+from bondnet.utils import int_atom
+
+#wx
+from bondnet.data.utils import find_rings
+from HiPRGen.lmdb_dataset import dump_molecule_lmdb
+import numpy as np
+import copy
 
 """
 Phase 1: species filtering
@@ -17,6 +38,7 @@ species isomorphism filtering:
 
 The input dataset entries will often contain isomorphic molecules. Identifying such isomorphisms doesn't fit into the species decision tree, so we have it as a preprocessing phase.
 """
+
 
 def sort_into_tags(mols):
     isomorphism_buckets = {}
@@ -41,9 +63,8 @@ def really_covalent_isomorphic(mol1, mol2):
     return nx.is_isomorphic(
         mol1.covalent_graph,
         mol2.covalent_graph,
-        node_match = iso.categorical_node_match('specie', None)
+        node_match=iso.categorical_node_match("specie", None),
     )
-
 
 
 def groupby(equivalence_relation, xs):
@@ -67,14 +88,21 @@ def groupby(equivalence_relation, xs):
     return groups
 
 
+def log_message(string):
+    print("[" + strftime("%H:%M:%S", localtime()) + "]", string)
+
+
 def species_filter(
-        dataset_entries,
-        mol_entries_pickle_location,
-        species_report,
-        species_decision_tree,
-        coordimer_weight,
-        species_logging_decision_tree=Terminal.DISCARD,
-        generate_unfiltered_mol_pictures=False
+    dataset_entries,
+    mol_entries_pickle_location,
+    dgl_mol_grphs_pickle_location,
+    grapher_features_pickle_location,
+    species_report,
+    species_decision_tree,
+    coordimer_weight,
+    species_logging_decision_tree=Terminal.DISCARD,
+    generate_unfiltered_mol_pictures=False,
+    mol_lmdb_path = None,  #path to molecular lmdb
 ):
 
     """
@@ -85,24 +113,30 @@ def species_filter(
     log_message("starting species filter")
     log_message("loading molecule entries from json")
 
-    mol_entries_unfiltered = [
-        MoleculeEntry.from_dataset_entry(e) for e in dataset_entries ]
+    if "has_props" in dataset_entries[0].keys():
+        mol_entries_unfiltered = [MoleculeEntry.from_mp_doc(e) for e in dataset_entries]
+        log_message("MP doc entries passed")
+    else:
+        log_message("dataset entries passed")
+        mol_entries_unfiltered = [
+            MoleculeEntry.from_dataset_entry(e) for e in dataset_entries
+        ]
 
-
+    log_message("found " + str(len(mol_entries_unfiltered)) + " molecule entries")
     log_message("generating unfiltered mol pictures")
 
     report_generator = ReportGenerator(
         mol_entries_unfiltered,
         species_report,
-        mol_pictures_folder_name='mol_pictures_unfiltered',
-        rebuild_mol_pictures=generate_unfiltered_mol_pictures
+        mol_pictures_folder_name="mol_pictures_unfiltered",
+        rebuild_mol_pictures=generate_unfiltered_mol_pictures,
     )
 
     report_generator.emit_text("species report")
 
     log_message("applying local filters")
     mol_entries_filtered = []
-
+    elements = set()
     # note: it is important here that we are applying the local filters before
     # the non local ones. We remove some molecules which are lower energy
     # than other more realistic lithomers.
@@ -114,32 +148,36 @@ def species_filter(
             mol_entries_filtered.append(mol)
 
         if run_decision_tree(mol, species_logging_decision_tree):
+            # create a set of elements
+            # log_message("create a set of elements")
+            for element in mol.species:
+                if element not in elements:
+                    elements.add(element)
 
             report_generator.emit_verbatim(
-                '\n'.join([str(f) for f in decision_pathway]))
+                "\n".join([str(f) for f in decision_pathway])
+            )
 
             report_generator.emit_text("number: " + str(i))
             report_generator.emit_text("entry id: " + mol.entry_id)
-            report_generator.emit_text("uncorrected free energy: " +
-                                       str(mol.free_energy))
-
             report_generator.emit_text(
-                "number of coordination bonds: " +
-                str(mol.number_of_coordination_bonds))
+                "uncorrected free energy: " + str(mol.free_energy)
+            )
 
-            report_generator.emit_text(
-                "corrected free energy: " +
-                str(mol.solvation_free_energy))
+            # report_generator.emit_text(
+            #     "number of coordination bonds: " + str(mol.number_of_coordination_bonds)
+            # )
 
-            report_generator.emit_text(
-                "formula: " + mol.formula)
+            # report_generator.emit_text(
+            #     "corrected free energy: " + str(mol.solvation_free_energy)
+            # )
+
+            report_generator.emit_text("formula: " + mol.formula)
 
             report_generator.emit_molecule(i, include_index=False)
             report_generator.emit_newline()
 
-
     report_generator.finished()
-
 
     # python doesn't have shared memory. That means that every worker during
     # reaction filtering must maintain its own copy of the molecules.
@@ -156,19 +194,15 @@ def species_filter(
     # currently, take lowest energy mol in each iso class
     log_message("applying non local filters")
 
-
     def collapse_isomorphism_group(g):
-        lowest_energy_coordimer = min(g,key=coordimer_weight)
+        lowest_energy_coordimer = min(g, key=coordimer_weight)
         return lowest_energy_coordimer
-
 
     mol_entries = []
 
     for tag_group in sort_into_tags(mol_entries_filtered).values():
         for iso_group in groupby(really_covalent_isomorphic, tag_group):
-            mol_entries.append(
-                collapse_isomorphism_group(iso_group))
-
+            mol_entries.append(collapse_isomorphism_group(iso_group))
 
     log_message("assigning indices")
 
@@ -176,16 +210,201 @@ def species_filter(
         e.ind = i
 
 
+    log_message("mapping fragments")
+    fragment_dict = {}
+    for mol in mol_entries:
+        # print(mol.entry_id)
+        for fragment_complex in mol.fragment_data:
+            for ii, fragment in enumerate(fragment_complex.fragment_objects):
+                hot_nbh_hashes = list(fragment.hot_atoms.keys())
+                assert len(hot_nbh_hashes) == 0 or len(hot_nbh_hashes) == 1 or len(hot_nbh_hashes) == 2
+                assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
+                if fragment.fragment_hash not in fragment_dict:
+                    fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
+                all_mappings = find_fragment_atom_mappings(
+                    fragment,
+                    fragment_dict[fragment.fragment_hash])
+                fragment_complex.fragment_mappings.append(all_mappings)
+        assert len(fragment_complex.fragment_objects) == len(fragment_complex.fragment_mappings)
+
+
+    log_message(str(len(fragment_dict.keys())) + " unique fragments found")
+
+    
+    # Make DGL Molecule graphs via BonDNet functions
+    log_message("creating dgl molecule graphs")
+    dgl_molecules_dict = {}
+    dgl_molecules = []
+    extra_keys = []
+
+    #wx, dump molecule lmdbs.
+    pmg_objects = []
+    molecule_ind_list = []
+    charge_set = set()
+    ring_size_set = set()
+    element_set = set()
+
+
+    # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS
+    for ind, mol in enumerate(mol_entries):
+        # print(f"mol: {mol.mol_graph}")
+        molecule_grapher = get_grapher(
+            features = extra_keys,
+            allowed_charges=[-2,-1,0,1,2],
+            global_feats=["charge"],
+            ) # same
+        non_metal_bonds = [ (i, j) for i, j, _ in mol.covalent_graph.edges.data()] # same
+        
+        # print(f"non metal bonds: {non_metal_bonds}")
+        # use create molecule wrapper instead here
+        #mol_wrapper = MoleculeWrapper(
+        #    mol_graph = mol.mol_graph, 
+        #    free_energy = None, id = mol.entry_id, 
+        #    non_metal_bonds = non_metal_bonds,
+        #    extra_keys = extra_keys
+        #)
+        #print(mol.mol_graph.molecule.sites)
+        #print(mol.mol_graph.graph)
+        #print(mol.mol_graph.graph.edges())
+        
+        species = [i.specie for i in mol.mol_graph.molecule.sites]
+        coords =  [i.coords for i in mol.mol_graph.molecule.sites]
+        
+        bonds = [
+             [i[0], i[1]] for i in mol.mol_graph.graph.edges()
+        ]
+
+        mol_wrapper = create_wrapper_mol_from_atoms_and_bonds(
+            species, 
+            coords, 
+            bonds, 
+            charge = mol.charge,
+            functional_group=None, 
+            identifier=mol.entry_id,
+            original_atom_ind=None,
+            original_bond_ind=None,
+            atom_features=None,
+            bond_features=None,
+            global_features={"charge": mol.charge}
+        )
+        mol_wrapper.nonmetal_bonds = non_metal_bonds
+        feature = {'charge': mol.charge}
+        dgl_molecule_graph = molecule_grapher.build_graph_and_featurize(
+            mol_wrapper, 
+            extra_feats_info = feature, 
+            element_set = elements
+        )
+        dgl_molecules.append(dgl_molecule_graph)
+        for nt in ["global", "atom", "bond"]:
+            print(f"nt: {nt}")
+            fts = dgl_molecule_graph.nodes[nt].data["feat"]
+            print(f"features: {fts}")
+        dgl_molecules_dict[mol.entry_id] = mol.ind
+
+
+        # #wx, collect data for molecule lmdbs
+        pmg_objects.append(mol_wrapper.pymatgen_mol)
+        molecule_ind_list.append(ind) #can use mol.ind
+
+        _formula = mol_wrapper.pymatgen_mol.composition.formula.split()
+        _elements = [clean(x) for x in _formula]   #otherwise override variable.
+        element_set.update(_elements)
+        atom_num = np.sum(np.array([int(clean_op(x)) for x in _formula]))
+
+        charge = mol_wrapper.pymatgen_mol.charge
+        charge_set.add(charge)
+        bond_list = [[i[0], i[1]] for i in mol_wrapper.mol_graph.graph.edges]
+        cycles = find_rings(atom_num, bond_list, edges=False)
+        ring_len_list = [len(i) for i in cycles]
+        ring_size_set.update(ring_len_list)
+
+
+    # import pdb
+    # pdb.set_trace()
+
+    print(molecule_grapher.feature_name)
+    grapher_features= {'feature_size':molecule_grapher.feature_size, 'feature_name': molecule_grapher.feature_name}
+    #mol_wrapper_dict[mol.entry_id] = mol_wrapper
+
+    # Normalize DGL molecule graphs
+    scaler = HeteroGraphFeatureStandardScaler(mean = None, std = None)
+    normalized_graphs = scaler(dgl_molecules)
+    # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS 
+    
+    # print(f"mean: {scaler._mean}")
+    # print(f"std: {scaler._std}")
+    
+    # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
+    for key in dgl_molecules_dict.keys():
+        temp_index = dgl_molecules_dict[key]
+        dgl_molecules_dict[key] = normalized_graphs[temp_index]
+    #print(dgl_molecules_dict)
+
+
+    #ADD WRITING MOLECULE LMDB HERE!!!
+    #wx, dump molecule lmdb.
+    dump_molecule_lmdb(
+        molecule_ind_list,
+        dgl_molecules, #dgl_graphs
+        pmg_objects,
+        charge_set,
+        ring_size_set,
+        element_set,
+        mol_lmdb_path
+    )
+
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
     # some of the auxilary_data we compute
     # has frozen set keys, so doesn't seralize well into json format.
     # pickles work better in this setting
-    with open(mol_entries_pickle_location, 'wb') as f:
+    with open(mol_entries_pickle_location, "wb") as f:
         pickle.dump(mol_entries, f)
 
-    log_message("species filtering finished. " +
-                str(len(mol_entries)) +
-                " species")
+    with open(dgl_mol_grphs_pickle_location, "wb") as f:
+        pickle.dump(dgl_molecules_dict, f)
+    
+    with open(grapher_features_pickle_location, "wb") as f:
+        pickle.dump(grapher_features, f)
 
+
+    log_message("species filtering finished. " + str(len(mol_entries)) + " species")
+
+    return mol_entries, dgl_molecules_dict
+
+
+def add_electron_species(
+    mol_entries, mol_entries_pickle_location, electron_free_energy
+):
+    e_site = Site(
+        DummySpecies("E", oxidation_state=None, properties=None), [0.0, 0.0, 0.0]
+    )
+    e_mol = Molecule.from_sites([e_site])
+    e_mol.set_charge_and_spin(-1, 2)
+    e_graph = MoleculeGraph.with_empty_graph(molecule=e_mol)
+    electron_entry = MoleculeEntry(
+        molecule=e_mol,
+        energy=electron_free_energy,
+        enthalpy=0,
+        entropy=0,
+        entry_id=None,
+        mol_graph=e_graph,
+        partial_charges_resp=None,
+        partial_charges_mulliken=None,
+        partial_charges_nbo=None,
+        electron_affinity=None,
+        ionization_energy=None,
+        spin_multiplicity=None,
+        partial_spins_nbo=None,
+    )
+    electron_entry.ind = len(mol_entries)
+    mol_entries.append(electron_entry)
+    with open(mol_entries_pickle_location, "wb") as f:
+        pickle.dump(mol_entries, f)
     return mol_entries
+
+
+def clean(input):
+    return "".join([i for i in input if not i.isdigit()])
+def clean_op(input):
+    return "".join([i for i in input if i.isdigit()])

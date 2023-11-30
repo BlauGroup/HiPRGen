@@ -527,7 +527,7 @@ def reaction_tally_report(
     for (reaction_index, number) in sorted(
             reaction_tally.items(), key=lambda pair: -pair[1]):
         if number > cutoff:
-            report_generator.emit_text(str(number) + " occourances of:")
+            report_generator.emit_text(str(number) + " occurrences of:")
             report_generator.emit_reaction(
                 network_loader.index_to_reaction(reaction_index),
                 label=str(reaction_index)
@@ -551,7 +551,7 @@ def species_report(network_loader, species_report_path):
         report_generator.emit_text(str(mol.entry_id))
         report_generator.emit_text(
             "formula: " + mol.formula)
-
+        report_generator.emit_text("free energy = " + str(mol.free_energy) + " eV")
         report_generator.emit_molecule(i)
         report_generator.emit_newline()
 
@@ -750,7 +750,7 @@ def export_pathways_to_json(pathfinding, species_id, path):
 
 
 
-def generate_pathway_report(
+def pathway_report(
         pathfinding,
         species_id,
         report_file_path,
@@ -839,7 +839,7 @@ class SimulationReplayer:
         )
 
         for seed in self.network_loader.trajectories:
-            state = np.copy(self.network_loader.initial_state_array)
+            state = np.copy(self.network_loader.initial_state_array[seed])
             for step in self.network_loader.trajectories[seed]:
                 reaction_index = self.network_loader.trajectories[seed][step][0]
                 time = self.network_loader.trajectories[seed][step][1]
@@ -857,6 +857,24 @@ class SimulationReplayer:
 
         self.expected_final_state = (
             self.expected_final_state / len(self.network_loader.trajectories))
+
+    def compute_trajectory_final_states(self):
+        self.final_states = {}
+        for seed in self.network_loader.trajectories:
+            state = np.copy(self.network_loader.initial_state_array[seed])
+            for step in self.network_loader.trajectories[seed]:
+                reaction_index = self.network_loader.trajectories[seed][step][0]
+                time = self.network_loader.trajectories[seed][step][1]
+                reaction = self.network_loader.index_to_reaction(reaction_index)
+
+                for i in range(reaction['number_of_reactants']):
+                    reactant_index = reaction['reactants'][i]
+                    state[reactant_index] -= 1
+
+                for j in range(reaction['number_of_products']):
+                    product_index = reaction['products'][j]
+                    state[product_index] += 1
+            self.final_states[seed] = state
 
     def compute_production_consumption_info(self):
         self.consuming_reactions = {}
@@ -888,13 +906,13 @@ class SimulationReplayer:
                         self.producing_reactions[product_index][reaction_index] += 1
 
     def compute_state_time_series(self, seed):
-        state_dimension_size = len(self.network_loader.initial_state_array)
+        state_dimension_size = len(self.network_loader.initial_state_array[seed])
         step_dimension_size = len(self.network_loader.trajectories[seed])
         time_series = np.zeros(
             (step_dimension_size, state_dimension_size),
             dtype=int)
 
-        state = np.copy(self.network_loader.initial_state_array)
+        state = np.copy(self.network_loader.initial_state_array[seed])
         for step in self.network_loader.trajectories[seed]:
             reaction_index = self.network_loader.trajectories[seed][step][0]
             time = self.network_loader.trajectories[seed][step][1]
@@ -918,9 +936,11 @@ class SimulationReplayer:
             seeds,
             species_of_interest,
             path,
+            custom_y_max=None,
+            custom_colorstyle_list=None,
             colors = list(mcolors.TABLEAU_COLORS.values()),
-            styles = ['solid', 'dotted', 'dashed', 'dashdot'],
-            internal_index_labels=True
+            styles = ['solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot','solid', 'dotted', 'dashed', 'dashdot'],
+            internal_index_labels=True,
     ):
 
 
@@ -952,11 +972,16 @@ class SimulationReplayer:
 
         line_dict = {}
         i = 0
-        for species_index in species_of_interest:
-            r = i % len(colors)
-            q = i // len(colors)
-            line_dict[species_index] = (colors[r], styles[q])
-            i += 1
+        if custom_colorstyle_list is None:
+            for species_index in species_of_interest:
+                r = i % len(colors)
+                q = i // len(colors)
+                line_dict[species_index] = (colors[r], styles[q])
+                i += 1
+        else:
+            for species_index in species_of_interest:
+                line_dict[species_index] = (custom_colorstyle_list[i][0], custom_colorstyle_list[i][1])
+                i += 1
 
 
         fig, (ax0, ax1, ax2) = plt.subplots(
@@ -965,15 +990,19 @@ class SimulationReplayer:
             gridspec_kw={'height_ratios':[2,2,1]})
 
         y_max = 0
-        for step in range(total_time_series.shape[0]):
-            for species_index in species_of_interest:
-                y_max = max(y_max, total_time_series[step,species_index])
+        if custom_y_max is None:
+            for step in range(total_time_series.shape[0]):
+                for species_index in species_of_interest:
+                    y_max = max(y_max, total_time_series[step,species_index])
+            y_max += 1
+        else:
+            y_max = custom_y_max
 
         ax0.set_xlim([0,total_time_series.shape[0]])
-        ax0.set_ylim([0,y_max+1])
+        ax0.set_ylim([0,y_max])
 
         ax1.set_xlim([0,total_time_series.shape[0]])
-        ax1.set_ylim([0,(y_max+1)/10])
+        ax1.set_ylim([0,(y_max)/10])
 
 
         ticks = np.arange(0, total_time_series.shape[0])
@@ -1097,8 +1126,8 @@ class SimulationReplayer:
         mol = self.network_loader.mol_entries[species_index]
         if (number_of_consuming_reactions + number_of_producing_reactions > 0  and
             ratio > 1.5 and
-            expected_value > 0.1 and
-            mol.spin_multiplicity == 1):
+            expected_value > 0.1):# and
+            #mol.spin_multiplicity == 1):
             return True
         else:
             return False
@@ -1121,11 +1150,11 @@ def export_consumption_to_json(simulation_replayer, species_index, path):
             }
         reactions[reaction_id] = json_reaction
 
-        dumpfn({
-            'reactions' : reactions,
-            'producing_reactions' : producing_reactions,
-            'consuming_reactions' : consuming_reactions},
-               path)
+    dumpfn({
+        'reactions' : reactions,
+        'producing_reactions' : producing_reactions,
+        'consuming_reactions' : consuming_reactions},
+           path)
 
 def pad_time_series(time_series, max_number_of_steps):
     num_steps = time_series.shape[0]
@@ -1144,14 +1173,21 @@ def pad_time_series(time_series, max_number_of_steps):
 
 
 
-def export_sinks_to_json(simulation_replayer, path):
-    sink_data = simulation_replayer.sink_data
+def export_full_sink_data_to_json(simulation_replayer, path):
     sink_data_json = {}
-    for i in sink_data:
+    for i in simulation_replayer.sink_data: # All molecules formed at least once are in sink_data
         mol = simulation_replayer.network_loader.mol_entries[i]
-        sink_data_json[mol.entry_id] = sink_data[i]
+        sink_data_json[mol.entry_id] = simulation_replayer.sink_data[i]
 
     dumpfn(sink_data_json, path)
+
+def export_sinks_to_json(simulation_replayer, path):
+    sinks_json = {}
+    for i in simulation_replayer.sinks: # Only molecules that pass sink_filter are in sinks
+        mol = simulation_replayer.network_loader.mol_entries[i]
+        sinks_json[mol.entry_id] = simulation_replayer.sink_data[i]
+
+    dumpfn(sinks_json, path)
 
 def export_species_report_to_json(network_loader, path):
     data = {}
@@ -1260,3 +1296,26 @@ def sink_report(
         report_generator.emit_newline()
 
     report_generator.finished()
+
+
+def final_state_report(
+        simulation_replayer,
+        final_state_report_path
+):
+    final_state = []
+    for species_index, value in enumerate(simulation_replayer.expected_final_state):
+        if value > 0.0:
+            final_state.append({"index": species_index, "value": value})
+    sorted_final_state = sorted(final_state, key=lambda x: -x["value"])
+
+    report_generator = ReportGenerator(
+        simulation_replayer.network_loader.mol_entries,
+        final_state_report_path,
+        rebuild_mol_pictures=False)
+
+    for entry in sorted_final_state:
+        report_generator.emit_text("amount: " + str(entry["value"]))
+        report_generator.emit_molecule(entry["index"])
+        report_generator.emit_newline()
+    report_generator.finished()
+
