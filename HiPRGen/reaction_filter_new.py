@@ -104,11 +104,12 @@ def log_message(*args, **kwargs):
         '[' + strftime('%H:%M:%S', localtime()) + ']',
         *args, **kwargs)
 
-def dispatcher(
-        mol_entries,
+def dispatcher( #input of dispatcher.
+        mol_entries, #1
         dgl_molecules_dict,
         grapher_features,
-        dispatcher_payload,
+        dispatcher_payload,   #2
+        #wx
         reaction_lmdb_path
 ):
 
@@ -138,14 +139,15 @@ def dispatcher(
 
     #### HY
     ## initialize preprocess data 
-    
+
 #wx: writting lmdbs in dispatcher ?
+#wx: each worker needs to initlize rxn_networks_graph at worker level.
     rxn_networks_g = rxn_networks_graph(
         mol_entries,
         dgl_molecules_dict,
         grapher_features,
         dispatcher_payload.bondnet_test,
-        reaction_lmdb_path
+        reaction_lmdb_path #wx.  different 
     )
     ####
 
@@ -209,6 +211,7 @@ def dispatcher(
         tag = status.Get_tag()
         rank = status.Get_source()
 
+        #this is the last step when worker is out of work.
         if tag == SEND_ME_A_WORK_BATCH:
             if len(work_batch_list) == 0:
                 comm.send(None, dest=rank, tag=HERE_IS_A_WORK_BATCH)
@@ -224,9 +227,11 @@ def dispatcher(
                     ": group ids:",
                     group_id_0, group_id_1
                 )
-
-
-        elif tag == NEW_REACTION_DB:
+        #this is where worker is doing things. found a good reation and send to dispatcher.
+        #if this is correct, then create_rxn_networks_graph operates on worker instead of dispatcher. 
+        #This is the reason why adding samples one by one. QA: where is batch of reactions?
+#ten reactions, first filter out, second send , next eight
+        elif tag == NEW_REACTION_DB:  
             reaction = data
             rn_cur.execute(
                 insert_reaction,
@@ -243,8 +248,10 @@ def dispatcher(
                  reaction['is_redox']
                  ))
 
-            # Create reaction graph + add to LMDB
-            rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index)
+            # # Create reaction graph + add to LMDB
+            rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index) #wx in worker level
+
+#dispatch tracks global index, worker tracks local index in that batch. 
 
             reaction_index += 1
             if reaction_index % dispatcher_payload.commit_frequency == 0:
@@ -278,16 +285,30 @@ def dispatcher(
 
 
 def worker(
-        mol_entries,
+        mol_entries,  #input of worker
         worker_payload
 ):
+
+#wx 
+    local_reaction_idx = 0
 
     comm = MPI.COMM_WORLD
     con = sqlite3.connect(worker_payload.bucket_db_file)
     cur = con.cursor()
 
-
     comm.send(None, dest=DISPATCHER_RANK, tag=INITIALIZATION_FINISHED)
+
+#wx
+    rank = comm.Get_rank() #id of that worker
+
+    rxn_networks_g = rxn_networks_graph(
+        mol_entries,
+        dgl_molecules_dict,
+        grapher_features,
+        #dispatcher_payload.bondnet_test,
+        reaction_lmdb_path + rank #wx.  different 
+    )
+
 
     while True:
         comm.send(None, dest=DISPATCHER_RANK, tag=SEND_ME_A_WORK_BATCH)
@@ -355,6 +376,10 @@ def worker(
                     dest=DISPATCHER_RANK,
                     tag=NEW_REACTION_DB)
                 
+                #comm.send, send reaction to dispatchers.
+
+                rxn_networks_g.create_rxn_networks_graph(reaction, local_reaction_idx)
+                local_reaction_idx+=1
 
 
             if run_decision_tree(reaction,

@@ -22,6 +22,12 @@ from bondnet.data.transformers import HeteroGraphFeatureStandardScaler
 from bondnet.core.molwrapper import create_wrapper_mol_from_atoms_and_bonds
 from bondnet.utils import int_atom
 
+#wx
+from bondnet.data.utils import find_rings
+from HiPRGen.lmdb_dataset import dump_molecule_lmdb
+import numpy as np
+import copy
+
 """
 Phase 1: species filtering
 input: a list of dataset entries
@@ -96,6 +102,7 @@ def species_filter(
     coordimer_weight,
     species_logging_decision_tree=Terminal.DISCARD,
     generate_unfiltered_mol_pictures=False,
+    mol_lmdb_path = None,  #path to molecular lmdb
 ):
 
     """
@@ -230,8 +237,16 @@ def species_filter(
     dgl_molecules = []
     extra_keys = []
 
+    #wx, dump molecule lmdbs.
+    pmg_objects = []
+    molecule_ind_list = []
+    charge_set = set()
+    ring_size_set = set()
+    element_set = set()
+
+
     # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS # BONDNET EDITS
-    for mol in mol_entries:
+    for ind, mol in enumerate(mol_entries):
         # print(f"mol: {mol.mol_graph}")
         molecule_grapher = get_grapher(
             features = extra_keys,
@@ -285,6 +300,28 @@ def species_filter(
             fts = dgl_molecule_graph.nodes[nt].data["feat"]
             print(f"features: {fts}")
         dgl_molecules_dict[mol.entry_id] = mol.ind
+
+
+        # #wx, collect data for molecule lmdbs
+        pmg_objects.append(mol_wrapper.pymatgen_mol)
+        molecule_ind_list.append(ind) #can use mol.ind
+
+        _formula = mol_wrapper.pymatgen_mol.composition.formula.split()
+        _elements = [clean(x) for x in _formula]   #otherwise override variable.
+        element_set.update(_elements)
+        atom_num = np.sum(np.array([int(clean_op(x)) for x in _formula]))
+
+        charge = mol_wrapper.pymatgen_mol.charge
+        charge_set.add(charge)
+        bond_list = [[i[0], i[1]] for i in mol_wrapper.mol_graph.graph.edges]
+        cycles = find_rings(atom_num, bond_list, edges=False)
+        ring_len_list = [len(i) for i in cycles]
+        ring_size_set.update(ring_len_list)
+
+
+    # import pdb
+    # pdb.set_trace()
+
     print(molecule_grapher.feature_name)
     grapher_features= {'feature_size':molecule_grapher.feature_size, 'feature_name': molecule_grapher.feature_name}
     #mol_wrapper_dict[mol.entry_id] = mol_wrapper
@@ -297,7 +334,6 @@ def species_filter(
     # print(f"mean: {scaler._mean}")
     # print(f"std: {scaler._std}")
     
-
     # Create a dictionary where key is mol.entry_id and value is a normalized dgl molecule graph
     for key in dgl_molecules_dict.keys():
         temp_index = dgl_molecules_dict[key]
@@ -306,7 +342,16 @@ def species_filter(
 
 
     #ADD WRITING MOLECULE LMDB HERE!!!
-
+    #wx, dump molecule lmdb.
+    dump_molecule_lmdb(
+        molecule_ind_list,
+        dgl_molecules, #dgl_graphs
+        pmg_objects,
+        charge_set,
+        ring_size_set,
+        element_set,
+        mol_lmdb_path
+    )
 
     log_message("creating molecule entry pickle")
     # ideally we would serialize mol_entries to a json
@@ -321,6 +366,7 @@ def species_filter(
     
     with open(grapher_features_pickle_location, "wb") as f:
         pickle.dump(grapher_features, f)
+
 
     log_message("species filtering finished. " + str(len(mol_entries)) + " species")
 
@@ -356,3 +402,9 @@ def add_electron_species(
     with open(mol_entries_pickle_location, "wb") as f:
         pickle.dump(mol_entries, f)
     return mol_entries
+
+
+def clean(input):
+    return "".join([i for i in input if not i.isdigit()])
+def clean_op(input):
+    return "".join([i for i in input if i.isdigit()])

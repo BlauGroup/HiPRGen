@@ -592,6 +592,7 @@ def euvl_phase1_test():
         "electron_free_energy": 0.0,
     }
 
+    #wx, dump molecule lmdbs inside species_filter function. 
     mol_entries = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
@@ -642,7 +643,7 @@ def euvl_phase1_test():
             "run_network_generation.py",
             folder + "/mol_entries.pickle",
             folder + "/dispatcher_payload.json",
-            folder + "/worker_payload.json",
+            folder + "/worker_payload.json"
         ]
     )
 
@@ -899,7 +900,11 @@ def euvl_bondnet_test():
         "electron_free_energy": 0.0,
     }
 
+    # import pdb
+    # pdb.set_trace()
+
     mol_entries, dgl_molecules_dict  = species_filter(
+        #wx: dump mol lmdb at the end of species filter.
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         dgl_mol_grphs_pickle_location = folder + "/dgl_mol_graphs.pickle",
@@ -909,13 +914,17 @@ def euvl_bondnet_test():
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
+        mol_lmdb_path = folder + "/mol.lmdb",
     )
+
 
     print(len(mol_entries), "initial mol entries")
 
     bucket(mol_entries, folder + "/buckets.sqlite")
 
     print(len(mol_entries), "final mol entries")
+
+#first test terminates here.
 
     dispatcher_payload = DispatcherPayload(
         folder + "/buckets.sqlite",
@@ -936,7 +945,7 @@ def euvl_bondnet_test():
 
     subprocess.run(
         [
-            "mpirun",
+            "mpirun",  #call mpi.
             "--use-hwthread-cpus",
             "-n",
             number_of_threads,
@@ -946,7 +955,10 @@ def euvl_bondnet_test():
             folder + "/dispatcher_payload.json",
             folder + "/worker_payload.json",
             folder + "/dgl_mol_graphs.pickle",
-            folder + "/grapher_features.pickle"
+            folder + "/grapher_features.pickle",
+
+            #wx, path to write reaction lmdb
+            folder + "/reaction.lmdb"
         ]
     )
 
