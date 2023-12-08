@@ -19,14 +19,14 @@ class rxn_networks_graph:
         mol_entries,
         dgl_molecules_dict,
         grapher_features,
-        report_file_path,
+        #report_file_path,
         reaction_lmdb_path #wx
     ):  
         #wx, which one should come from molecule lmdbs?
         self.mol_entries = mol_entries
         self.dgl_mol_dict = dgl_molecules_dict
         self.grapher_features = grapher_features
-        self.report_file_path = report_file_path
+        #self.report_file_path = report_file_path
         
         self.reaction_lmdb_path = reaction_lmdb_path
         
