@@ -5,12 +5,13 @@ from pathlib import Path
 import copy
 from collections import defaultdict
 from monty.serialization import dumpfn
-from bondnet.data.utils import construct_rxn_graph_empty
-from HiPRGen.lmdb_dataset import LmdbDataset
+from bondnet.data.utils import construct_rxn_graph_empty, create_rxn_graph
+from HiPRGen.lmdb_dataset import LmdbReactionDataset
 import lmdb
 import tqdm
 import pickle
 from HiPRGen.lmdb_dataset import write_to_lmdb
+
 
 class rxn_networks_graph:
     def __init__(
@@ -18,17 +19,20 @@ class rxn_networks_graph:
         mol_entries,
         dgl_molecules_dict,
         grapher_features,
-        report_file_path
-    ):
+        #report_file_path,
+        reaction_lmdb_path #wx
+    ):  
+        #wx, which one should come from molecule lmdbs?
         self.mol_entries = mol_entries
         self.dgl_mol_dict = dgl_molecules_dict
         self.grapher_features = grapher_features
-        self.report_file_path = report_file_path
+        #self.report_file_path = report_file_path
+        
+        self.reaction_lmdb_path = reaction_lmdb_path
         
         # initialize data
         self.data = {} 
         
-
     def create_rxn_networks_graph(self, rxn, rxn_id):
 
         """
@@ -62,7 +66,11 @@ class rxn_networks_graph:
         The goal of this function is to create a reaction graph with a reaction filtered from HiPRGen, specifically, reaction_filter.py
         """
 
-        
+        #wx:
+        #rxn: 1. reactants, products, number_of_reactants, number_of_products, is_redox, dG, dG_barrier, rate, atom_mp.
+        #import pdb;
+        #pdb.set_trace()
+
         atom_map = rxn['atom_map']
         num_reactants = rxn['number_of_reactants']
         num_products = rxn['number_of_products'] 
@@ -101,8 +109,7 @@ class rxn_networks_graph:
         # Find "total_atoms" in mapping
         num_tot_atoms = sum([len(i) for i in reactants])
         total_atoms = [i for i in range(num_tot_atoms)]
-        
-
+    
         # step 2: Get total_bonds which are a union of bonds in reactants and products
 
         # define a function to find total bonds in reactants or products
@@ -156,9 +163,6 @@ class rxn_networks_graph:
         if rxn['is_redox']:
             assert len(set(reactants_total_bonds)) == len(set(products_total_bonds))
         
-
-        
-            
         # step 3: Get bond_mapping
         bond_mapping = []
 
@@ -208,12 +212,13 @@ class rxn_networks_graph:
         mappings['num_atoms_total'] = len(total_atoms)
         # if rxn['is_redox']:
         #     print(f"mappings: {mappings}")
-        #print(f"mapping: {mappings}")
+        # print(f"mapping: {mappings}")
         # print(f"atom_map: {atom_map}")
         # print(f"reactants: {reactants}")
         # print(f"products: {products}")
 
         # grab dgl graphs of reactants or products
+        #wx, extract mol.feature_info. from here, and 
         reactants_dgl_graphs  = [self.dgl_mol_dict[entry_i] for entry_i in reactants_entry_ids]       
         products_dgl_graphs = [self.dgl_mol_dict[entry_i] for entry_i in products_entry_ids]
         # print(f"reactants_dgl_graphs: {reactants_dgl_graphs}")
@@ -229,50 +234,87 @@ class rxn_networks_graph:
         # print(f"has_bonds: {has_bonds}")
         # print(f"mappings: {mappings}")
 
-        # # step 5: Create a reaction graphs and features
-        # rxn_graph, features = create_rxn_graph(
-        #                                         reactants = reactants_dgl_graphs,
-        #                                         products = products_dgl_graphs,
-        #                                         mappings = mappings,
-        #                                         has_bonds = has_bonds,
-        #                                         device = None,
-        #                                         ntypes=("global", "atom", "bond"),
-        #                                         ft_name="feat",
-        #                                         reverse=False,
-        #                                         zero_fts=True,
-        #                                     )
+        #wx, step 5: create an empty graph and set features to be all zero
+        rxn_graph, features = create_rxn_graph(
+                                                reactants = reactants_dgl_graphs,
+                                                products = products_dgl_graphs,
+                                                mappings = mappings,
+                                                has_bonds = has_bonds,
+                                                device = None,
+                                                ntypes=("global", "atom", "bond"),
+                                                ft_name="feat",
+                                                reverse=False,
+                                                zero_fts=True,
+                                            )
 
-        # # print(f"rxn_graph: {rxn_graph}")
-        # if rxn['is_redox']:
-        #     print(f"mappings: {mappings}")
-        #     print(f"features: {features}")
-        #     print(f"transformed_atom_map: {transformed_atom_map}")
-        #     print(f"atom_map: {atom_map}")
+        #wx, step 6: structure and save reaction graph.
+        self.data["reaction_index"] = rxn_id
+        self.data["reaction_graph"] = rxn_graph
+        self.data["reaction_feature"] = features
+        self.data["reaction_molecule_info"] = {
+                "reactants" : { "reactants" : list(rxn["reactants"]),  #TODO, keep unique value if two reactants are same?
+                                "atom_map": mappings["atom_map"][0],
+                                "bond_map": mappings["bond_map"][0],
+                                "init_reactants": list(rxn["reactants"])
 
-        # # step 5: update reaction features to the reaction graph
-        # for nt, ft in features.items():
-        #     # print(f"nt: {nt}")
-        #     # print(f"ft: {ft}")
-        #     rxn_graph.nodes[nt].data.update({'ft': ft})
+                },
+                "products" : { "products" : list(rxn["products"]),  # rxn['reactants'] (94, 96)
+                                "atom_map": mappings["atom_map"][1],
+                                "bond_map": mappings["bond_map"][1],
+                                "init_products": list(rxn["products"])
 
-        rxn_graph = construct_rxn_graph_empty(mappings)
+                }
+        }
+        # self.data["reaction_molecule_info"] = {
+        #         "reactants" : { "molecule_index" : list(rxn["reactants"]),  #TODO, keep unique value if two reactants are same?
+        #                         "atom_map": mappings["atom_map"][0],
+        #                         "bond_map": mappings["bond_map"][0]
 
-        # step 6: save a reaction graph and dG
-        self.data[rxn_id] = {} # {'id': {}}
-        self.data[rxn_id]['rxn_graph'] = rxn_graph
-        self.data[rxn_id]['value'] = rxn['dG']  #torch.tensor([rxn['dG']])
-        self.data[rxn_id]['mappings'] = mappings
-        # self.data[rxn_id]['reaction_features'] = features
-        
+        #         },
+        #         "products" : { "molecule_index" : list(rxn["products"]),  # rxn['reactants'] (94, 96)
+        #                         "atom_map": mappings["atom_map"][1],
+        #                         "bond_map": mappings["bond_map"][1]
+        #         }
+        # }
+        self.data["label"] = torch.Tensor([rxn['dG']]) 
+        self.data["reverse_label"] = torch.Tensor([0]) #TODO
+        self.data["extra_info"] = {} #TODO
+        self.data["mappings"] = mappings
+        self.data["has_bonds"] = has_bonds
+
+        # # # print(f"rxn_graph: {rxn_graph}")
+        # # if rxn['is_redox']:
+        # #     print(f"mappings: {mappings}")
+        # #     print(f"features: {features}")
+        # #     print(f"transformed_atom_map: {transformed_atom_map}")
+        # #     print(f"atom_map: {atom_map}")
+
+        #wx, since we create empty graph. just neglect this step
+        # # # step 5: update reaction features to the reaction graph
+        # # for nt, ft in features.items():
+        # #     # print(f"nt: {nt}")
+        # #     # print(f"ft: {ft}")
+        # #     rxn_graph.nodes[nt].data.update({'ft': ft})
+
+        # rxn_graph = construct_rxn_graph_empty(mappings)
+
+        # # step 6: save a reaction graph and dG
+        # self.data[rxn_id] = {} # {'id': {}}
+        # self.data[rxn_id]['rxn_graph'] = rxn_graph
+        # self.data[rxn_id]['value'] = rxn['dG']  #torch.tensor([rxn['dG']])
+        # self.data[rxn_id]['mappings'] = mappings
+        # # self.data[rxn_id]['reaction_features'] = features
+
+
 
         #### Write LMDB ####
         #1 load lmdb
-        
-        lmdb_path = "training_trial5.lmdb"
+
+        lmdb_path = self.reaction_lmdb_path
         lmdb_file = Path(lmdb_path)
         if lmdb_file.is_file():
             # file exists
-            current_lmdb = LmdbDataset({'src': lmdb_path})
+            current_lmdb = LmdbReactionDataset({'src': lmdb_path})
             lmdb_update = {
             "mean" : current_lmdb.mean,
             "std":   current_lmdb.std,
@@ -315,15 +357,19 @@ class rxn_networks_graph:
         updated_variance = (n-1)/(n)*prev_variance + (n-1)/n*(prev_mean-updated_mean)**2 + (current_y - updated_mean)**2/n
         lmdb_update["std"] = math.sqrt(updated_variance)
 
-        
-        labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': torch.tensor([0]), 'id': [str(rxn_id)], "reaction_type": ['']}
-        data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], labels)
-        # print(f"data: {data}")
-        # print(f"lmdb_update: {lmdb_update}")
-        write_to_lmdb([data], current_length, lmdb_update, lmdb_path)
+        write_to_lmdb([self.data], current_length, lmdb_update, lmdb_path)
 
-        
 
-    def write_data(self): 
-        # write a json file
-        dumpfn(self.data, self.report_file_path)
+        # import pdb
+        # pdb.set_trace()
+        
+        # labels = {'value': torch.tensor([rxn['dG']]), 'value_rev': torch.tensor([0]), 'id': [str(rxn_id)], "reaction_type": ['']}
+        # data = (self.data[rxn_id]['rxn_graph'], self.data[rxn_id]['reaction_features'], labels)
+        # # print(f"data: {data}")
+        # # print(f"lmdb_update: {lmdb_update}")
+        # write_to_lmdb([data], current_length, lmdb_update, lmdb_path)
+
+#wx no need this.
+    # def write_data(self): 
+    #     # write a json file
+    #     dumpfn(self.data, self.report_file_path)

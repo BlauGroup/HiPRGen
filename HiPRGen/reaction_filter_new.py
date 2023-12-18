@@ -104,13 +104,13 @@ def log_message(*args, **kwargs):
         '[' + strftime('%H:%M:%S', localtime()) + ']',
         *args, **kwargs)
 
-#restructure input of dispatcher
-def dispatcher(
+def dispatcher( #input of dispatcher.
         mol_entries, #1
-        #dgl_molecules_dict,
-        #grapher_features,
-        dispatcher_payload, #2
-        #reaction_lmdb_path
+        dgl_molecules_dict,
+        grapher_features,
+        dispatcher_payload,   #2
+        #wx
+        reaction_lmdb_path
 ):
 
     comm = MPI.COMM_WORLD
@@ -140,16 +140,16 @@ def dispatcher(
     #### HY
     ## initialize preprocess data 
 
-# #wx: writting lmdbs in dispatcher ?
-# #wx: each worker needs to initlize rxn_networks_graph at worker level.
-#     rxn_networks_g = rxn_networks_graph(
-#         mol_entries,
-#         dgl_molecules_dict,
-#         grapher_features,
-#         dispatcher_payload.bondnet_test,
-#         reaction_lmdb_path #wx.  different 
-#     )
-#     ####
+#wx: writting lmdbs in dispatcher ?
+#wx: each worker needs to initlize rxn_networks_graph at worker level.
+    rxn_networks_g = rxn_networks_graph(
+        mol_entries,
+        dgl_molecules_dict,
+        grapher_features,
+        dispatcher_payload.bondnet_test,
+        reaction_lmdb_path #wx.  different 
+    )
+    ####
 
     log_message("initializing report generator")
 
@@ -164,7 +164,6 @@ def dispatcher(
     worker_states = {}
 
     worker_ranks = [i for i in range(comm.Get_size()) if i != DISPATCHER_RANK]
-    print("worker_states",worker_states)
 
     for i in worker_ranks:
         worker_states[i] = WorkerState.INITIALIZING
@@ -176,7 +175,6 @@ def dispatcher(
 
     log_message("all workers running")
 
-    #global index which is different with local index in worker
     reaction_index = 0
 
     log_message("handling requests")
@@ -250,8 +248,8 @@ def dispatcher(
                  reaction['is_redox']
                  ))
 
-            # # # Create reaction graph + add to LMDB
-            # rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index) #wx in worker level
+            # # Create reaction graph + add to LMDB
+            rxn_networks_g.create_rxn_networks_graph(reaction, reaction_index) #wx in worker level
 
 #dispatch tracks global index, worker tracks local index in that batch. 
 
@@ -288,17 +286,11 @@ def dispatcher(
 
 def worker(
         mol_entries,  #input of worker
-        worker_payload,
-        dgl_molecules_dict,
-        grapher_features,
-        reaction_lmdb_path
-
+        worker_payload
 ):
 
-    # import pdb
-    # pdb.set_trace()
-
-    local_reaction_idx = 0 #wx add local_idx
+#wx 
+    local_reaction_idx = 0
 
     comm = MPI.COMM_WORLD
     con = sqlite3.connect(worker_payload.bucket_db_file)
@@ -306,17 +298,17 @@ def worker(
 
     comm.send(None, dest=DISPATCHER_RANK, tag=INITIALIZATION_FINISHED)
 
-    rank = comm.Get_rank() #get id of that worker
-    
-    lmdb_name_i = reaction_lmdb_path.split(".lmdb")[0] + "_" + str(rank) + ".lmdb"
+#wx
+    rank = comm.Get_rank() #id of that worker
 
     rxn_networks_g = rxn_networks_graph(
         mol_entries,
         dgl_molecules_dict,
         grapher_features,
-        #dispatcher_payload.bondnet_test, #can be removed
-        lmdb_name_i #wx.  different 
+        #dispatcher_payload.bondnet_test,
+        reaction_lmdb_path + rank #wx.  different 
     )
+
 
     while True:
         comm.send(None, dest=DISPATCHER_RANK, tag=SEND_ME_A_WORK_BATCH)

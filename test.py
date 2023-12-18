@@ -592,6 +592,7 @@ def euvl_phase1_test():
         "electron_free_energy": 0.0,
     }
 
+    #wx, dump molecule lmdbs inside species_filter function. 
     mol_entries = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
@@ -642,7 +643,7 @@ def euvl_phase1_test():
             "run_network_generation.py",
             folder + "/mol_entries.pickle",
             folder + "/dispatcher_payload.json",
-            folder + "/worker_payload.json",
+            folder + "/worker_payload.json"
         ]
     )
 
@@ -877,6 +878,11 @@ def euvl_phase2_test():
     return tests_passed
 
 
+
+
+
+
+
 def euvl_bondnet_test():
 
     start_time = time.time()
@@ -889,7 +895,11 @@ def euvl_bondnet_test():
 
     ## HY
     bondnet_test_json = "./scratch/euvl_phase2_test/reaction_networks_graphs"
+    lmdbs_path_mol    = "./scratch/euvl_phase2_test/lmdbs/mol"
+    lmdbs_path_reaction = "./scratch/euvl_phase2_test/lmdbs/reaction"
     subprocess.run(["mkdir", bondnet_test_json])
+    subprocess.run(["mkdir", "-p",lmdbs_path_mol])
+    subprocess.run(["mkdir", "-p",lmdbs_path_reaction])
     ##
 
     species_decision_tree = euvl_species_decision_tree
@@ -899,7 +909,16 @@ def euvl_bondnet_test():
         "electron_free_energy": 0.0,
     }
 
+    # with open(folder + "/mol_entries.pickle", 'rb') as f:
+    #     mol_entries = pickle.load(f)
+
+    # import pdb
+    # pdb.set_trace()
+    # with open("/global/home/users/wenbinxu/data/rep/rep/HiPRGen/test/euvl_phase2_test/mol_entries.pickle", 'rb') as f:
+    #     mol_entries = pickle.load(f)
+
     mol_entries, dgl_molecules_dict  = species_filter(
+        #wx: dump mol lmdb at the end of species filter.
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
         dgl_mol_grphs_pickle_location = folder + "/dgl_mol_graphs.pickle",
@@ -909,13 +928,17 @@ def euvl_bondnet_test():
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
+        mol_lmdb_path = folder + "/lmdbs/mol/mol.lmdb",
     )
+
 
     print(len(mol_entries), "initial mol entries")
 
     bucket(mol_entries, folder + "/buckets.sqlite")
 
     print(len(mol_entries), "final mol entries")
+
+#first test terminates here.
 
     dispatcher_payload = DispatcherPayload(
         folder + "/buckets.sqlite",
@@ -936,17 +959,24 @@ def euvl_bondnet_test():
 
     subprocess.run(
         [
-            "mpirun",
+            "mpirun",  #call mpi.
             "--use-hwthread-cpus",
             "-n",
             number_of_threads,
             "python",
             "run_network_generation.py",
+            # "/global/home/users/wenbinxu/data/rep/rep/HiPRGen/test/euvl_phase2_test" + "/mol_entries.pickle",
             folder + "/mol_entries.pickle",
             folder + "/dispatcher_payload.json",
             folder + "/worker_payload.json",
+
+            # "/global/home/users/wenbinxu/data/rep/rep/HiPRGen/test/euvl_phase2_test" + "/dgl_mol_graphs.pickle",
+            # "/global/home/users/wenbinxu/data/rep/rep/HiPRGen/test/euvl_phase2_test" + "/grapher_features.pickle",
             folder + "/dgl_mol_graphs.pickle",
-            folder + "/grapher_features.pickle"
+            folder + "/grapher_features.pickle",
+
+            #wx, path to write reaction lmdb
+            folder + "/lmdbs/reaction/reaction.lmdb"
         ]
     )
 
