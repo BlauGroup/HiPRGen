@@ -710,8 +710,23 @@ def euvl_phase2_test():
     folder = "./scratch/euvl_phase2_test"
     subprocess.run(["mkdir", folder])
 
+    bondnet_test_json = "./scratch/euvl_phase2_test/reaction_networks_graphs"
+    lmdbs_path_mol    = "./scratch/euvl_phase2_test/lmdbs/mol"
+    lmdbs_path_reaction = "./scratch/euvl_phase2_test/lmdbs/reaction"
+    subprocess.run(["mkdir", bondnet_test_json])
+    subprocess.run(["mkdir", "-p",lmdbs_path_mol])
+    subprocess.run(["mkdir", "-p",lmdbs_path_reaction])
+
     mol_json = "./data/euvl_test_set.json"
+    #mol_json = "./data/problem_entries.json"
     database_entries = loadfn(mol_json)
+    #database_entries = [database_entries[2], database_entries[4]]
+    #database_entries = [database_entries[3], database_entries[4]]
+
+    problem_entries = loadfn("./data/big_entries.json")
+    for entry in problem_entries:
+        database_entries.append(entry)
+
 
     species_decision_tree = euvl_species_decision_tree
 
@@ -720,14 +735,17 @@ def euvl_phase2_test():
         "electron_free_energy": 0.0,
     }
 
-    mol_entries = species_filter(
+    mol_entries, dgl_molecules_dict = species_filter(
         database_entries,
         mol_entries_pickle_location=folder + "/mol_entries.pickle",
+        dgl_mol_grphs_pickle_location = folder + "/dgl_mol_graphs.pickle",
+        grapher_features_pickle_location= folder + "/grapher_features.pickle",
         species_report=folder + "/unfiltered_species_report.tex",
         species_decision_tree=species_decision_tree,
         coordimer_weight=lambda mol: (mol.get_free_energy(params["temperature"])),
         species_logging_decision_tree=species_decision_tree,
         generate_unfiltered_mol_pictures=False,
+        mol_lmdb_path = folder + "/lmdbs/mol/mol.lmdb",
     )
 
     print(len(mol_entries), "initial mol entries")
@@ -740,6 +758,7 @@ def euvl_phase2_test():
         folder + "/buckets.sqlite",
         folder + "/rn.sqlite",
         folder + "/reaction_report.tex",
+        bondnet_test_json + "/test.json"
     )
 
     worker_payload = WorkerPayload(
@@ -763,6 +782,9 @@ def euvl_phase2_test():
             folder + "/mol_entries.pickle",
             folder + "/dispatcher_payload.json",
             folder + "/worker_payload.json",
+            folder + "/dgl_mol_graphs.pickle",
+            folder + "/grapher_features.pickle",
+            folder + "/lmdbs/reaction/reaction.lmdb"
         ]
     )
 
@@ -869,7 +891,7 @@ def euvl_phase2_test():
         tests_passed = False
 
     print("Number of reactions:", network_loader.number_of_reactions)
-    if network_loader.number_of_reactions == 3912:
+    if network_loader.number_of_reactions == 3905:
         print(bcolors.PASS + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
     else:
         print(bcolors.FAIL + "euvl_phase_2_test: correct number of reactions" + bcolors.ENDC)
@@ -1007,8 +1029,8 @@ tests = [
     # flicho_test,
     # co2_test,
     # euvl_phase1_test,
-    # euvl_phase2_test,
-    euvl_bondnet_test
+    euvl_phase2_test,
+    # euvl_bondnet_test
 ]
 
 for test in tests:

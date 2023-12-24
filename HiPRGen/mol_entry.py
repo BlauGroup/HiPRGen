@@ -46,9 +46,12 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
             hot_f2_indices.append(fragment_2.hot_atoms[hot_nbh_hash])
         hot_f1_indices.append(fragment_1.hot_atoms[hot_nbh_hash])
 
+    #print("hot_f1_indices:", hot_f1_indices)
+    #print("hot_f2_indices:", hot_f2_indices)
 
     for left_index in fragment_1.compressed_graph.nodes():
-
+        #print("left_index:", left_index)
+        
         neighborhood_hash = fragment_1.neighborhood_hashes[left_index]
         if neighborhood_hash in match_hot_atoms and left_index in hot_f1_indices:
             neighborhood_hash = neighborhood_hash + "hot"
@@ -57,27 +60,40 @@ def find_fragment_atom_mappings(fragment_1, fragment_2, return_one=True):
 
         groups_by_hash[neighborhood_hash][0].append(left_index)
 
+    #print("groups_by_hash:", groups_by_hash)
 
     for right_index in fragment_2.compressed_graph.nodes():
+        #print("right_index:", right_index)
 
         neighborhood_hash = fragment_2.neighborhood_hashes[right_index]
         if neighborhood_hash in match_hot_atoms and right_index in hot_f2_indices:
             neighborhood_hash = neighborhood_hash + "hot"
         if neighborhood_hash not in groups_by_hash:
+            #print("NEW HASH HOW IS THIS POSSIBLE?!!!??!?!")
+            #print(huh)
             groups_by_hash[neighborhood_hash] = ([],[])
 
         groups_by_hash[neighborhood_hash][1].append(right_index)
 
+    #print("groups_by_hash:", groups_by_hash)
+
     groups = list(groups_by_hash.values())
+    #print("groups:", groups)
 
     product_sym_iterator = product(*[sym_iterator(len(p[0])) for p in groups])
 
+    #print("product_sym_iterator:", product_sym_iterator)
     mappings = []
 
     for product_perm in product_sym_iterator:
+        #print("product_perm:", product_perm)
         mapping = {}
         for perm, vals in zip(product_perm, groups):
+            #print("perm:", perm)
+            #print("vals:", vals)
             for i, j in enumerate(perm):
+                #print("i:", i)
+                #print("j:", j)
                 mapping[vals[0][i]] = vals[1][j]
 
         isomorphism = True
