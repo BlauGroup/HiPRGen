@@ -213,14 +213,28 @@ def species_filter(
     log_message("mapping fragments")
     fragment_dict = {}
     for mol in mol_entries:
-        # print(mol.entry_id)
+        log_message("")
+        log_message(mol.entry_id)
+        f = open("mapping_record", "a")
+        f.write("Mapping " + mol.entry_id + "\n")
+        f.close()
         for fragment_complex in mol.fragment_data:
+            log_message("new fragment complex")
+            log_message("bonds broken:" + str(fragment_complex.bonds_broken))
             for ii, fragment in enumerate(fragment_complex.fragment_objects):
+                log_message(str(ii))
                 hot_nbh_hashes = list(fragment.hot_atoms.keys())
+                log_message("hot_nbh_hashes:" + str(hot_nbh_hashes))
                 assert len(hot_nbh_hashes) == 0 or len(hot_nbh_hashes) == 1 or len(hot_nbh_hashes) == 2
                 assert fragment.fragment_hash == fragment_complex.fragment_hashes[ii]
                 if fragment.fragment_hash not in fragment_dict:
+                    log_message("Adding new fragment! Hash:" + fragment.fragment_hash)
                     fragment_dict[fragment.fragment_hash] = copy.deepcopy(fragment)
+                else:
+                    log_message("Fragment hash already in dict")
+                log_message("fragment hash:" + fragment.fragment_hash)
+                #print("fragment:", fragment)
+                #print("fragment_dict[fragment.fragment_hash]):", fragment_dict[fragment.fragment_hash])
                 all_mappings = find_fragment_atom_mappings(
                     fragment,
                     fragment_dict[fragment.fragment_hash])

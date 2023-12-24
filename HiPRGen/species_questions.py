@@ -123,7 +123,7 @@ class add_star_hashes(MSONable):
                 )                                             #covalently bonded to
 
                 mol.star_hashes[i] = weisfeiler_lehman_graph_hash( #star_hashes is a dictionary, and this adds an entry to it
-                    neighborhood, node_attr="specie"               #with the atom index, i, as the key and a graph_hash (string)
+                    neighborhood, node_attr="specie", iterations=6               #with the atom index, i, as the key and a graph_hash (string)
                 )                                                  #as the value
 
         return False
@@ -151,7 +151,9 @@ class add_unbroken_fragment(MSONable):  #aka adds unfragmented molecule as a "fr
 
                     neighborhood_hash = weisfeiler_lehman_graph_hash(
                         neighborhood,
-                        node_attr='specie')
+                        node_attr='specie',
+                        iterations=6,
+                    )
 
                     hash_list.append(neighborhood_hash)
 
@@ -196,7 +198,7 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
                 subgraph = h.subgraph(c) #generates a subgraph from one set of nodes (this is a fragment graph)
 
                 fragment_hash = weisfeiler_lehman_graph_hash( #saves the hash of this graph
-                    subgraph, node_attr="specie"
+                    subgraph, node_attr="specie", iterations=6
                 )
 
                 tmp["c"] = copy.deepcopy(c)
@@ -237,7 +239,9 @@ class add_single_bond_fragments(MSONable): #called for all species that have pas
 
                                     neighborhood_hash = weisfeiler_lehman_graph_hash(
                                         neighborhood,
-                                        node_attr='specie')
+                                        node_attr='specie',
+                                        iterations=6,
+                                    )
 
                                     hash_list.append(neighborhood_hash)
 
@@ -342,7 +346,7 @@ class covalent_ring_fragments(MSONable):
                             subgraph = h.subgraph(c)
 
                             fragment_hash = weisfeiler_lehman_graph_hash(
-                                subgraph, node_attr="specie"
+                                subgraph, node_attr="specie", iterations=6
                             )
 
                             fragments.append(fragment_hash)
@@ -388,6 +392,14 @@ class oh_plus_filter(MSONable):
         # if mol is OH+
         return mol.formula == "H1 O1" and mol.charge == 1
 
+
+class formula_filter(MSONable):
+    def __init__(self, formula):
+        self.formula = formula
+
+    def __call__(self, mol):
+        return mol.formula == self.formula
+        
 
 class fix_hydrogen_bonding(MSONable):
     def __init__(self):
@@ -514,10 +526,10 @@ class species_default_true(MSONable):
 
 
 def compute_graph_hashes(mol):
-    mol.total_hash = weisfeiler_lehman_graph_hash(mol.graph, node_attr="specie")
+    mol.total_hash = weisfeiler_lehman_graph_hash(mol.graph, node_attr="specie", iterations=6)
 
     mol.covalent_hash = weisfeiler_lehman_graph_hash(
-        mol.covalent_graph, node_attr="specie"
+        mol.covalent_graph, node_attr="specie", iterations=6
     )
 
     return False
@@ -608,6 +620,7 @@ euvl_species_decision_tree = [
     (fix_hydrogen_bonding(), Terminal.KEEP),
     (h_atom_filter(), Terminal.DISCARD),
     (oh_plus_filter(), Terminal.DISCARD),
+    (formula_filter("C36 H28 S2"), Terminal.DISCARD),
     (compute_graph_hashes, Terminal.KEEP),
     (add_star_hashes(), Terminal.KEEP),
     (add_unbroken_fragment(neighborhood_width=width), Terminal.KEEP),

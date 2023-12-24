@@ -60,20 +60,20 @@ generation_report_path
 
 hydrogen_graph = nx.MultiGraph()
 hydrogen_graph.add_node(0, specie="H")
-hydrogen_hash = weisfeiler_lehman_graph_hash(hydrogen_graph, node_attr="specie")
+hydrogen_hash = weisfeiler_lehman_graph_hash(hydrogen_graph, node_attr="specie", iterations=4)
 
 fluorine_graph = nx.MultiGraph()
 fluorine_graph.add_node(0, specie="F")
-fluorine_hash = weisfeiler_lehman_graph_hash(fluorine_graph, node_attr="specie")
+fluorine_hash = weisfeiler_lehman_graph_hash(fluorine_graph, node_attr="specie", iterations=4)
 
 carbon_graph = nx.MultiGraph()
 carbon_graph.add_node(0, specie="C")
-carbon_hash = weisfeiler_lehman_graph_hash(carbon_graph, node_attr="specie")
+carbon_hash = weisfeiler_lehman_graph_hash(carbon_graph, node_attr="specie", iterations=4)
 
 co3_mol = Molecule.from_file("xyz_files/co3.xyz")
 co3_mg = MoleculeGraph.with_local_env_strategy(co3_mol, OpenBabelNN())
 co3_g = co3_mg.graph.to_undirected()
-co3_hash = weisfeiler_lehman_graph_hash(co3_g, node_attr="specie")
+co3_hash = weisfeiler_lehman_graph_hash(co3_g, node_attr="specie", iterations=4)
 
 
 def run_decision_tree(
@@ -1939,27 +1939,27 @@ euvl_phase2_reaction_decision_tree = [
     (dG_above_threshold(0.0, "free_energy", 0.0), Terminal.DISCARD),
     (reactants_are_both_anions_or_both_cations(), Terminal.DISCARD),
     (reaction_is_charge_transfer(), Terminal.KEEP),
-    # (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
-    # (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
-    # (star_count_diff_above_threshold(6), Terminal.DISCARD),
-    # (
-    #     fragment_matching_found(),
-    #     [
-    #         (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
-    #         (single_reactant_double_product_ring_close(), Terminal.DISCARD),
-    #         (reaction_is_hindered(), Terminal.DISCARD),
-    #         (
-    #             reaction_is_covalent_decomposable(),
-    #             [
-    #                 (fragments_are_not_2A_B(), Terminal.DISCARD),
-    #                 (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
-    #                 (reaction_default_true(), Terminal.KEEP),
-    #             ],
-    #         ),
-    #         (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
-    #         (reaction_default_true(), Terminal.KEEP),
-    #     ],
-    # ),
+    (reaction_is_covalent_charge_decomposable(), Terminal.DISCARD),
+    (reaction_is_coupled_electron_fragment_transfer(), Terminal.DISCARD),
+    (star_count_diff_above_threshold(6), Terminal.DISCARD),
+    (
+        fragment_matching_found(),
+        [
+            (single_reactant_single_product_not_atom_transfer(), Terminal.DISCARD),
+            (single_reactant_double_product_ring_close(), Terminal.DISCARD),
+            (reaction_is_hindered(), Terminal.DISCARD),
+            (
+                reaction_is_covalent_decomposable(),
+                [
+                    (fragments_are_not_2A_B(), Terminal.DISCARD),
+                    (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
+                    (reaction_default_true(), Terminal.KEEP),
+                ],
+            ),
+            (mapping_with_reaction_center_not_found(), Terminal.DISCARD),
+            (reaction_default_true(), Terminal.KEEP),
+        ],
+    ),
     (reaction_default_true(), Terminal.DISCARD),
 ]
 
