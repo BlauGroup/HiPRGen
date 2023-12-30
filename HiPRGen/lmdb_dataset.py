@@ -16,6 +16,35 @@ import pickle
 from tqdm import tqdm
 import glob 
 
+import io
+import dgl
+import tempfile
+import bisect
+
+def load_dgl_graph_from_serialized(serialized_graph):
+    with tempfile.NamedTemporaryFile(mode='wb', delete=True) as tmpfile:
+        tmpfile.write(serialized_graph)
+        tmpfile.flush()  # Ensure all data is written
+
+        # Rewind the file to the beginning before reading
+        tmpfile.seek(0)
+
+        # Load the graph using the file handle
+        graphs, _ = dgl.load_graphs(tmpfile.name)
+
+    return graphs[0]  # Assuming there's only one graph
+
+def TransformMol(data_object):
+    serialized_graph = data_object['molecule_graph']
+    dgl_graph = load_dgl_graph_from_serialized(serialized_graph)
+    data_object["molecule_graph"] = dgl_graph
+    return data_object
+
+def TransformReaction(data_object):
+    serialized_graph = data_object['reaction_graph']
+    dgl_graph = load_dgl_graph_from_serialized(serialized_graph)
+    data_object["reaction_graph"] = dgl_graph
+    return data_object
 
 class LmdbBaseDataset(Dataset):
 
@@ -124,9 +153,9 @@ class LmdbBaseDataset(Dataset):
 
             data_object = pickle.loads(datapoint_pickled)
 
-            # TODO
-            if self.transform is not None:
-                data_object = self.transform(data_object)
+        # TODO
+        if self.transform is not None:
+            data_object = self.transform(data_object)
 
         return data_object
 
@@ -631,6 +660,21 @@ def write2moleculelmdb(mp_args
     db.close()
 
 
+def serialize_dgl_graph(dgl_graph):
+    # import pdb
+    # pdb.set_trace()
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile() as tmpfile:
+        # Save the graph to the temporary file
+        
+        dgl.save_graphs(tmpfile.name, [dgl_graph])
+
+        # Read the content of the file
+        tmpfile.seek(0)
+        serialized_data = tmpfile.read()
+
+    return serialized_data
+
 def dump_molecule_lmdb(
         indices,
         graphs,
@@ -649,7 +693,9 @@ def dump_molecule_lmdb(
     # else:
     key_tempalte = ["molecule_index", "molecule_graph", "molecule_wrapper"]
 
-    dataset = [{k: v for k, v in zip(key_tempalte, values)} for values in zip(indices, graphs, pmgs)]
+    serialized_graphs = [serialize_dgl_graph(graph) for graph in graphs]
+
+    dataset = [{k: v for k, v in zip(key_tempalte, values)} for values in zip(indices, serialized_graphs, pmgs)]
 
     global_keys = {
     "charges" : charges,

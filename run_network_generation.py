@@ -8,8 +8,8 @@ from HiPRGen.reaction_filter import (
     worker,
     DISPATCHER_RANK
 )
-
-
+import dgl
+from HiPRGen.lmdb_dataset import load_dgl_graph_from_serialized
 # python run_network_generation.py mol_entries_pickle_file dispatcher_payload.json worker_payload.json
 
 
@@ -30,6 +30,8 @@ with open(mol_entries_pickle_file, 'rb') as f:
 
 with open(dgl_molecules_dict_pickle_file, 'rb') as f:
     dgl_molecules_dict_pickle_file = pickle.load(f)
+for graph_i in dgl_molecules_dict_pickle_file:
+    dgl_molecules_dict_pickle_file[graph_i] =  load_dgl_graph_from_serialized(dgl_molecules_dict_pickle_file[graph_i])
 
 with open(grapher_features_dict_pickle_file, 'rb') as f:
     grapher_features_dict_pickle_file = pickle.load(f)

@@ -11,6 +11,7 @@ import lmdb
 import tqdm
 import pickle
 from HiPRGen.lmdb_dataset import write_to_lmdb
+from HiPRGen.lmdb_dataset import serialize_dgl_graph
 
 
 class rxn_networks_graph:
@@ -24,7 +25,7 @@ class rxn_networks_graph:
     ):  
         #wx, which one should come from molecule lmdbs?
         self.mol_entries = mol_entries
-        self.dgl_mol_dict = dgl_molecules_dict
+        self.dgl_mol_dict = dgl_molecules_dict  #not used at all?
         self.grapher_features = grapher_features
         #self.report_file_path = report_file_path
         
@@ -249,7 +250,8 @@ class rxn_networks_graph:
 
         #wx, step 6: structure and save reaction graph.
         self.data["reaction_index"] = rxn_id
-        self.data["reaction_graph"] = rxn_graph
+        #self.data["reaction_graph"] = rxn_graph
+        self.data["reaction_graph"] = serialize_dgl_graph(rxn_graph)
         self.data["reaction_feature"] = features
         self.data["reaction_molecule_info"] = {
                 "reactants" : { "reactants" : list(rxn["reactants"]),  #TODO, keep unique value if two reactants are same?

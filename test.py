@@ -994,7 +994,7 @@ def euvl_bondnet_test():
 
             # "/global/home/users/wenbinxu/data/rep/rep/HiPRGen/test/euvl_phase2_test" + "/dgl_mol_graphs.pickle",
             # "/global/home/users/wenbinxu/data/rep/rep/HiPRGen/test/euvl_phase2_test" + "/grapher_features.pickle",
-            folder + "/dgl_mol_graphs.pickle",
+            folder + "/dgl_mol_graphs.pickle", #use dgl.save
             folder + "/grapher_features.pickle",
 
             #wx, path to write reaction lmdb
@@ -1029,8 +1029,8 @@ tests = [
     # flicho_test,
     # co2_test,
     # euvl_phase1_test,
-    euvl_phase2_test,
-    # euvl_bondnet_test
+    #euvl_phase2_test,
+    euvl_bondnet_test
 ]
 
 for test in tests:

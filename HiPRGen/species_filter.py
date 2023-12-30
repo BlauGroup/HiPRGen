@@ -27,6 +27,8 @@ from bondnet.data.utils import find_rings
 from HiPRGen.lmdb_dataset import dump_molecule_lmdb
 import numpy as np
 import copy
+import dgl
+from HiPRGen.lmdb_dataset import serialize_dgl_graph
 
 """
 Phase 1: species filtering
@@ -359,7 +361,7 @@ def species_filter(
     #wx, dump molecule lmdb.
     dump_molecule_lmdb(
         molecule_ind_list,
-        dgl_molecules, #dgl_graphs
+        dgl_molecules, #molecular wrapper
         pmg_objects,
         charge_set,
         ring_size_set,
@@ -375,6 +377,14 @@ def species_filter(
     with open(mol_entries_pickle_location, "wb") as f:
         pickle.dump(mol_entries, f)
 
+    #use dgl serialize
+    # import pdb
+    # pdb.set_trace()
+    for graph_id in dgl_molecules_dict:
+        dgl_molecules_dict[graph_id] = serialize_dgl_graph(dgl_molecules_dict[graph_id])
+
+    
+    # dgl.save_graphs(dgl_mol_grphs_pickle_location, list(dgl_molecules_dict.values()))
     with open(dgl_mol_grphs_pickle_location, "wb") as f:
         pickle.dump(dgl_molecules_dict, f)
     
