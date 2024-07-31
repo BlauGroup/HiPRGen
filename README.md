@@ -40,21 +40,22 @@ HiPRGen is supported for MacOS and Linux and has been tested on MacOS 11.6 and 1
 On the LRC cluster, an environment where HiPRGen can be run is set up as follows:
 
 ```
-module load python/3.9.12
+module load anaconda3/2024.02-1-11.4
 conda init
 
 logout, log back in
 
-module load python/3.8.2-gcc
-module load gcc/7.4.0
-module load openmpi/4.0.1-gcc
+module load gcc/11.4.0
+module load openmpi/4.1.6
 
 pip3 install --user mpi4py
 conda create -n HiPRGen_RNMC python=3.8
 conda activate HiPRGen_RNMC
 conda install -c conda-forge openbabel pygraphviz pycairo
 pip install pymatgen==2023.3.10
+pip install pydantic==V1.10.12
 
+cd $PROJ
 git clone https://github.com/BlauGroup/RNMC.git
 cd RNMC
 module load gsl
@@ -65,9 +66,8 @@ export PATH=$PATH:$PROJ/RNMC/build
 can pick up from reloading the environment:
 
 conda activate HiPRGen_RNMC
-module load python/3.8.2-gcc
-module load gcc/7.4.0 
-module load openmpi/4.0.1-gcc
+module load gcc/11.4.0
+module load openmpi/4.1.6
 module load gsl
 export PATH=$PATH:$PROJ/RNMC/build
 ```
