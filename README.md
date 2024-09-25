@@ -60,7 +60,7 @@ git clone https://github.com/BlauGroup/RNMC.git
 cd RNMC
 module load gsl
 CXX=g++ ./build.sh
-export PATH=$PATH:$PROJ/RNMC/build
+export PATH=$PATH:$PROJ/RNMC/GMC
 
 
 can pick up from reloading the environment:
@@ -69,7 +69,7 @@ conda activate HiPRGen_RNMC
 module load gcc/11.4.0
 module load openmpi/4.1.6
 module load gsl
-export PATH=$PATH:$PROJ/RNMC/build
+export PATH=$PATH:$PROJ/RNMC/GMC
 ```
 
 ### Tests
