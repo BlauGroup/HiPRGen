@@ -59,7 +59,7 @@ cd $PROJ
 git clone https://github.com/BlauGroup/RNMC.git
 cd RNMC
 module load gsl
-CXX=g++ ./build.sh
+CXX=g++ make
 export PATH=$PATH:$PROJ/RNMC/GMC
 
 
