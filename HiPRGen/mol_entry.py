@@ -54,7 +54,8 @@ class MoleculeEntry:
         electron_affinity,
         ionization_energy,
         spin_multiplicity,
-        partial_spins_nbo
+        partial_spins_nbo,
+        **kwargs,
     ):
         self.energy = energy
         self.enthalpy = enthalpy
@@ -62,12 +63,20 @@ class MoleculeEntry:
         self.electron_affinity = electron_affinity
         self.ionization_energy = ionization_energy
         self.spin_multiplicity = spin_multiplicity
+        
 
         self.ind = None
         self.entry_id = entry_id
 
         self.star_hashes = {}
         self.fragment_data = []
+        
+        # Make sure that the free energy is not passed
+        kwargs.pop("free_energy")
+        kwargs.pop("solvation_free_energy")
+
+        # If there are additional kwargs, add them 
+        self.__dict__.update(kwargs)
 
 
         if not mol_graph:
@@ -105,13 +114,12 @@ class MoleculeEntry:
         self.atom_locations = [
             site.coords for site in self.molecule]
 
-
         self.free_energy = self.get_free_energy()
 
         self.non_metal_atoms = [
             i for i in range(self.num_atoms)
             if self.species[i] not in metals]
-
+        
 
 
 
