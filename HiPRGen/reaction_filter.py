@@ -110,6 +110,26 @@ def dispatcher(
             work_batch_list.append(
                 (composition_id, i, j))
 
+    # Sort ascending by estimated batch cost (the product of the two
+    # groups' member counts) so that the main loop's
+    # work_batch_list.pop() - which removes from the end of the list -
+    # hands out the largest, slowest batches first. This is the
+    # Longest-Processing-Time-first (LPT) scheduling heuristic:
+    # front-loading the big batches and saving the smallest ones for last
+    # keeps the run's tail short, since by the time only a few batches
+    # remain they're all cheap, so no single straggler batch can leave
+    # the rest of the worker fleet idle waiting on it.
+    group_member_counts = {}
+    for (composition_id, group_id, member_count) in bucket_cur.execute(
+            "SELECT composition_id, group_id, COUNT(*) FROM complexes "
+            "GROUP BY composition_id, group_id"):
+        group_member_counts[(composition_id, group_id)] = member_count
+
+    work_batch_list.sort(
+        key=lambda batch: (
+            group_member_counts[(batch[0], batch[1])] *
+            group_member_counts[(batch[0], batch[2])]))
+
     composition_names = {}
     res = bucket_cur.execute("SELECT * FROM compositions")
     for (composition_id, composition) in res:
@@ -117,6 +137,18 @@ def dispatcher(
 
     log_message("creating reaction network db")
     rn_con = sqlite3.connect(dispatcher_payload.reaction_network_db_file)
+    # rn.sqlite is only ever opened here - a single connection from the
+    # dispatcher, for the lifetime of the run - so there's no
+    # multi-connection exposure for WAL's usual network-filesystem caveat
+    # (its shared-memory wal-index doesn't coordinate reliably across
+    # processes on Lustre/NFS) to apply to. WAL replaces the rollback
+    # journal's per-commit create/delete-file churn with appends to a
+    # single -wal file, and synchronous=NORMAL (safe under WAL - the WAL
+    # file itself is the durability mechanism) skips an fsync per commit;
+    # both matter when this is a high-commit-rate file on a
+    # Lustre-backed path.
+    rn_con.execute("PRAGMA journal_mode=WAL")
+    rn_con.execute("PRAGMA synchronous=NORMAL")
     rn_cur = rn_con.cursor()
     rn_cur.execute(create_metadata_table)
     rn_cur.execute(create_reactions_table)
@@ -243,6 +275,12 @@ def dispatcher(
 
     report_generator.finished()
     rn_con.commit()
+    # Fold the WAL file back into rn.sqlite and drop back to the default
+    # rollback-journal mode, so everything downstream (report generation,
+    # NetworkLoader, ad hoc sqlite3 opens from analysis scripts) sees an
+    # ordinary single-file db with no WAL/shm machinery to worry about.
+    rn_con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    rn_con.execute("PRAGMA journal_mode=DELETE")
     bucket_con.close()
     rn_con.close()
 
@@ -266,6 +304,13 @@ def worker(
         if work_batch is None:
             break
 
+        # fragment_matching_found (HiPRGen.reaction_questions) memoizes
+        # its per-complex work in this dict when present, since the same
+        # complex recurs many times across a batch's pairings and its
+        # per-complex result never depends on the pairing partner. Reset
+        # fresh each batch so it never grows past what a single batch's
+        # complexes need.
+        worker_payload.params['_fragment_summary_cache'] = {}
 
         composition_id, group_id_0, group_id_1 = work_batch
 
