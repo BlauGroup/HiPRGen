@@ -448,6 +448,85 @@ class metal_coordination_passthrough(MSONable):
         return False
 
 
+def _build_side_summaries(complex_ids, mols):
+    """
+    Computes the (hashes, bonds_broken, fragment_count) summary list for
+    one side (reactants or products) of a reaction. This depends only on
+    complex_ids (which molecule(s) make up that side) and mols - never on
+    the other side of the reaction - which is what makes it safe to
+    memoize per complex across many different pairings (see
+    _side_summaries below).
+    """
+    n = 1 if complex_ids[1] == -1 else 2
+
+    fragment_indices_list = []
+    if n == 1:
+        mol = mols[complex_ids[0]]
+        for i in range(len(mol.fragment_data)):
+            fragment_indices_list.append([i])
+    else:
+        mol_0 = mols[complex_ids[0]]
+        mol_1 = mols[complex_ids[1]]
+        for i in range(len(mol_0.fragment_data)):
+            for j in range(len(mol_1.fragment_data)):
+                if (mol_0.fragment_data[i].number_of_bonds_broken +
+                    mol_1.fragment_data[j].number_of_bonds_broken <= 1):
+
+                    fragment_indices_list.append([i, j])
+
+    summaries = []
+    for fragment_indices in fragment_indices_list:
+        fragment_count = 0
+        bonds_broken = []
+        hashes = dict()
+
+        for index, frag_complex_index in enumerate(fragment_indices):
+
+            fragment_complex = mols[
+                complex_ids[index]].fragment_data[
+                    frag_complex_index]
+
+            for bond in fragment_complex.bonds_broken:
+                bonds_broken.append(
+                    [(index, x) for x in bond])
+
+            for i in range(fragment_complex.number_of_fragments):
+                fragment_count += 1
+                tag = fragment_complex.fragment_hashes[i]
+                if tag in hashes:
+                    hashes[tag] += 1
+                else:
+                    hashes[tag] = 1
+
+        summaries.append((hashes, bonds_broken, fragment_count))
+    return summaries
+
+
+def _side_summaries(complex_ids, mols, cache):
+    """
+    Same result as _build_side_summaries(complex_ids, mols), memoized in
+    `cache` (a dict, or None to disable caching) keyed by complex_ids.
+    The same complex tuple recurs across many different reaction pairings
+    within a work batch, and since _build_side_summaries never looks at
+    the other side of the reaction, its result is identical every time a
+    given complex recurs - caching it (scoped to one batch, so this
+    doesn't grow unbounded over a worker's lifetime; see
+    reaction_filter.worker) turns that repeat work into a single lookup.
+    One cache is shared across both reactant and product calls, since a
+    complex's summary doesn't depend on which role it's playing either.
+    """
+    if cache is None:
+        return _build_side_summaries(complex_ids, mols)
+
+    cached = cache.get(complex_ids)
+    if cached is not None:
+        return cached
+
+    result = _build_side_summaries(complex_ids, mols)
+    cache[complex_ids] = result
+    return result
+
+
 class fragment_matching_found(MSONable):
     def __init__(self):
         pass
@@ -457,91 +536,13 @@ class fragment_matching_found(MSONable):
 
     def __call__(self, reaction, mols, params):
 
-        reactant_fragment_indices_list = []
-        product_fragment_indices_list = []
+        cache = params.get('_fragment_summary_cache') if params is not None else None
 
-        if reaction['number_of_reactants'] == 1:
-            reactant = mols[reaction['reactants'][0]]
-            for i in range(len(reactant.fragment_data)):
-                reactant_fragment_indices_list.append([i])
+        reactant_summaries = _side_summaries(reaction['reactants'], mols, cache)
+        product_summaries = _side_summaries(reaction['products'], mols, cache)
 
-
-        if reaction['number_of_reactants'] == 2:
-            reactant_0 = mols[reaction['reactants'][0]]
-            reactant_1 = mols[reaction['reactants'][1]]
-            for i in range(len(reactant_0.fragment_data)):
-                for j in range(len(reactant_1.fragment_data)):
-                    if (reactant_0.fragment_data[i].number_of_bonds_broken +
-                        reactant_1.fragment_data[j].number_of_bonds_broken <= 1):
-
-                        reactant_fragment_indices_list.append([i,j])
-
-
-        if reaction['number_of_products'] == 1:
-            product = mols[reaction['products'][0]]
-            for i in range(len(product.fragment_data)):
-                product_fragment_indices_list.append([i])
-
-
-        if reaction['number_of_products'] == 2:
-            product_0 = mols[reaction['products'][0]]
-            product_1 = mols[reaction['products'][1]]
-            for i in range(len(product_0.fragment_data)):
-                for j in range(len(product_1.fragment_data)):
-                    if (product_0.fragment_data[i].number_of_bonds_broken +
-                        product_1.fragment_data[j].number_of_bonds_broken <= 1):
-
-                        product_fragment_indices_list.append([i,j])
-
-
-        for reactant_fragment_indices in reactant_fragment_indices_list:
-            for product_fragment_indices in product_fragment_indices_list:
-                reactant_fragment_count = 0
-                product_fragment_count = 0
-                reactant_bonds_broken = []
-                product_bonds_broken = []
-
-                reactant_hashes = dict()
-                for reactant_index, frag_complex_index in enumerate(
-                        reactant_fragment_indices):
-
-                    fragment_complex = mols[
-                        reaction['reactants'][reactant_index]].fragment_data[
-                            frag_complex_index]
-
-                    for bond in fragment_complex.bonds_broken:
-                        reactant_bonds_broken.append(
-                            [(reactant_index, x) for x in bond])
-
-                    for i in range(fragment_complex.number_of_fragments):
-                        reactant_fragment_count += 1
-                        tag = fragment_complex.fragment_hashes[i]
-                        if tag in reactant_hashes:
-                            reactant_hashes[tag] += 1
-                        else:
-                            reactant_hashes[tag] = 1
-
-                product_hashes = dict()
-                for product_index, frag_complex_index in enumerate(
-                        product_fragment_indices):
-
-                    fragment_complex = mols[
-                        reaction['products'][product_index]].fragment_data[
-                            frag_complex_index]
-
-                    for bond in fragment_complex.bonds_broken:
-                        product_bonds_broken.append(
-                            [(product_index, x) for x in bond])
-
-
-                    for i in range(fragment_complex.number_of_fragments):
-                        product_fragment_count += 1
-                        tag = fragment_complex.fragment_hashes[i]
-                        if tag in product_hashes:
-                            product_hashes[tag] += 1
-                        else:
-                            product_hashes[tag] = 1
-
+        for reactant_hashes, reactant_bonds_broken, reactant_fragment_count in reactant_summaries:
+            for product_hashes, product_bonds_broken, product_fragment_count in product_summaries:
 
                 # don't consider fragmentations with both a ring opening and closing
                 if (reaction['number_of_reactants'] == 2 and
@@ -549,7 +550,6 @@ class fragment_matching_found(MSONable):
                     reactant_fragment_count == 2 and
                     product_fragment_count == 2):
                     continue
-
 
                 if reactant_hashes == product_hashes:
                     reaction['reactant_bonds_broken'] = reactant_bonds_broken
